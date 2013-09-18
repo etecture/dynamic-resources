@@ -7,7 +7,7 @@
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 	
-    <name>Dynamic CDI Entity Resources</name>
+    <name>Dynamic CDI Resources</name>
     <description>A CDI extension to use a dynamically implemented interface to provide ReST Resources automatically</description>
 
     <organization>
@@ -35,6 +35,7 @@
     <modules>
         <module>dynamic-resources-api</module>
         <module>dynamic-resources-extension</module>
+        <module>dynamic-resources-test</module>
     </modules>
 
     <build>

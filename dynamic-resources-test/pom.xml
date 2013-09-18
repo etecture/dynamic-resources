@@ -8,16 +8,70 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>dynamic-resources-api</artifactId>
-    <packaging>jar</packaging>
+    <artifactId>dynamic-resources-test</artifactId>
+    <packaging>war</packaging>
 	
-    <name>Dynamic CDI Resources - API</name>
+    <name>Dynamic CDI Resources - Test Project</name>
 
     <properties>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>de.etecture.opensource</groupId>
+            <artifactId>dynamic-resources-api</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>de.etecture.opensource</groupId>
+            <artifactId>dynamic-resources-extension</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>javax.ws.rs-api</artifactId>
+            <version>2.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.json-simple</groupId>
+            <artifactId>json-simple</artifactId>
+            <version>1.1.1</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>javax</groupId>
+            <artifactId>javaee-api</artifactId>
+            <version>7.0</version>
+            <type>jar</type>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <!-- the implementation of dynamic-repositories with neo4j remote access -->
+            <groupId>de.etecture.opensource</groupId>
+            <artifactId>dynamic-repositories-remote-neo4j</artifactId>
+            <version>[1.2.10,)</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <!-- for implementation of the neo4j-uplink-api -->
+            <groupId>de.herschke</groupId>
+            <artifactId>neo4j-uplink-api</artifactId>
+            <version>[1.1.10,)</version>
+        </dependency>
+        <dependency>
+            <!-- for implementation of the neo4j-uplink-api -->
+            <groupId>de.herschke</groupId>
+            <artifactId>neo4j-uplink-ejb</artifactId>
+            <version>[1.1.11,)</version>
+            <type>ejb</type>
+        </dependency>
+    </dependencies>
+    
     <build>
         <plugins>
             <plugin>
@@ -68,7 +122,7 @@
                             <goal>perform</goal>
                         </goals>
                         <configuration>
-                            <pomFileName>dynamic-resources-api/pom.xml</pomFileName>
+                            <pomFileName>dynamic-resources-test/pom.xml</pomFileName>
                         </configuration>
                     </execution>
                 </executions>
@@ -81,30 +135,10 @@
         <developerConnection>scm:git:https://github.com/etecture/dynamic-resources.git</developerConnection>
         <url>https://github.com/etecture/dynamic-resources</url>
     </scm>
-    <dependencies>
-        <dependency>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>jsr311-api</artifactId>
-            <version>1.1.1</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish</groupId>
-            <artifactId>javax.json</artifactId>
-            <version>1.0</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>javax</groupId>
-            <artifactId>javaee-api</artifactId>
-            <version>6.0</version>
-            <scope>provided</scope>
-        </dependency>
-    </dependencies>
     <distributionManagement>
         <site>
             <id>http://commons.maven.intern.etecture.de</id>
-            <url>scp://maven:maven@jenkins.intern.etecture.de/home/maven/commons/resources/dynamic-resources-api</url>
+            <url>scp://maven:maven@jenkins.intern.etecture.de/home/maven/commons/resources/dynamic-resources-test</url>
         </site>
     </distributionManagement>
     
