@@ -22,7 +22,11 @@ public class ExceptionJSONWriter implements JSONWriter {
 
     private void internalProcess(JsonGenerator jg, Throwable ex) {
         jg.write("exception", ex.getClass().getSimpleName());
-        jg.write("message", ex.getMessage());
+        if (ex.getMessage() == null) {
+            jg.writeNull("message");
+        } else {
+            jg.write("message", ex.getMessage());
+        }
         jg.writeStartArray("trace");
         for (StackTraceElement ste : ex.getStackTrace()) {
             jg.writeStartObject();

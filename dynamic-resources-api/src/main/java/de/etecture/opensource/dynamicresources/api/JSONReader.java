@@ -37,27 +37,32 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.extension;
+package de.etecture.opensource.dynamicresources.api;
 
-import de.etecture.opensource.dynamicresources.api.XMLWriter;
-import javax.enterprise.inject.Default;
-import javax.ws.rs.core.UriInfo;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
+import javax.json.stream.JsonParser;
 
 /**
  *
  * @author rhk
  */
-@Default
-public class DefaultXMLWriter implements XMLWriter {
+public interface JSONReader {
 
-    @Override
-    public void process(Object element, XMLStreamWriter writer, UriInfo uriInfo)
-            throws XMLStreamException {
-        writer.writeStartElement("response");
-        writer.writeCharacters(element == null ? "null" : element
-                .toString());
-        writer.writeEndElement();
-    }
+    /**
+     * parses the JSON by using the parser and returns the parsed object.
+     * <p>
+     * if the given element is null, the implementation of this method must
+     * create a new object and return this object.
+     * <p>
+     * if the given element is not null, the implementation may decide if it
+     * patches the given element or if it creates another element. Anyway the
+     * implementation must return an element.
+     *
+     * @param <T>
+     * @param parser
+     * @param type
+     * @param element
+     * @return
+     * @throws Exception
+     */
+    <T> T process(JsonParser parser, Class<T> type, T element) throws Exception;
 }

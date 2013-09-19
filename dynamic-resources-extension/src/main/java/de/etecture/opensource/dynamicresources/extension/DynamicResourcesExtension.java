@@ -40,8 +40,10 @@
 package de.etecture.opensource.dynamicresources.extension;
 
 import de.etecture.opensource.dynamicresources.api.ForEntity;
+import de.etecture.opensource.dynamicresources.api.JSONReader;
 import de.etecture.opensource.dynamicresources.api.JSONWriter;
 import de.etecture.opensource.dynamicresources.api.Resource;
+import de.etecture.opensource.dynamicresources.api.XMLReader;
 import de.etecture.opensource.dynamicresources.api.XMLWriter;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -64,6 +66,10 @@ public class DynamicResourcesExtension implements Extension {
     private Map<Class<? extends Object>, JSONWriter> jsonWriters =
             new HashMap<>();
     private Map<Class<? extends Object>, XMLWriter> xmlWriters =
+            new HashMap<>();
+    private Map<Class<? extends Object>, JSONReader> jsonReaders =
+            new HashMap<>();
+    private Map<Class<? extends Object>, XMLReader> xmlReaders =
             new HashMap<>();
     public Set<Class<?>> resourcesInterfaces = new HashSet<>();
     private final Logger log = Logger.getLogger("RepositoryExtension");
@@ -116,6 +122,38 @@ public class DynamicResourcesExtension implements Extension {
                 }
             }
         }
+        if (pat.getAnnotatedType().getJavaClass().isEnum() && JSONReader.class
+                .isAssignableFrom(pat.getAnnotatedType().getJavaClass())) {
+            log.info(String.format("processing enum: %s",
+                    pat.getAnnotatedType().getJavaClass().getName()));
+            for (AnnotatedField af : pat.getAnnotatedType().getFields()) {
+                if (af.isAnnotationPresent(ForEntity.class)) {
+                    log.info(String.format(
+                            "... found Reader for Entity: %s in class: %s",
+                            af.getAnnotation(ForEntity.class).value().getName(),
+                            af.getJavaMember().getName()));
+                    jsonReaders.put(af.getAnnotation(ForEntity.class).value(),
+                            (JSONReader) af.getJavaMember().get(pat
+                            .getAnnotatedType().getJavaClass()));
+                }
+            }
+        }
+        if (pat.getAnnotatedType().getJavaClass().isEnum() && XMLReader.class
+                .isAssignableFrom(pat.getAnnotatedType().getJavaClass())) {
+            log.info(String.format("processing enum: %s",
+                    pat.getAnnotatedType().getJavaClass().getName()));
+            for (AnnotatedField af : pat.getAnnotatedType().getFields()) {
+                if (af.isAnnotationPresent(ForEntity.class)) {
+                    log.info(String.format(
+                            "... found Reader for Entity: %s in class: %s",
+                            af.getAnnotation(ForEntity.class).value().getName(),
+                            af.getJavaMember().getName()));
+                    xmlReaders.put(af.getAnnotation(ForEntity.class).value(),
+                            (XMLReader) af.getJavaMember().get(pat
+                            .getAnnotatedType().getJavaClass()));
+                }
+            }
+        }
     }
 
     void afterBeanDiscovery(@Observes AfterBeanDiscovery abd) {
@@ -127,6 +165,14 @@ public class DynamicResourcesExtension implements Extension {
         for (Map.Entry<Class<? extends Object>, XMLWriter> e : xmlWriters
                 .entrySet()) {
             abd.addBean(new XMLWriterBean(e.getKey(), e.getValue()));
+        }
+        for (Map.Entry<Class<? extends Object>, JSONReader> e : jsonReaders
+                .entrySet()) {
+            abd.addBean(new JSONReaderBean(e.getKey(), e.getValue()));
+        }
+        for (Map.Entry<Class<? extends Object>, XMLReader> e : xmlReaders
+                .entrySet()) {
+            abd.addBean(new XMLReaderBean(e.getKey(), e.getValue()));
         }
     }
 }

@@ -40,6 +40,7 @@
 package de.etecture.opensource.dynamicresources.extension;
 
 import de.etecture.opensource.dynamicresources.api.JSONWriter;
+import de.etecture.opensource.dynamicresources.api.XMLReader;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -56,14 +57,14 @@ import javax.enterprise.util.AnnotationLiteral;
  *
  * @author rhk
  */
-public class JSONWriterBean implements Bean<JSONWriter> {
+public class XMLReaderBean implements Bean<XMLReader> {
 
-    private final JSONWriter instance;
+    private final XMLReader instance;
     private final Class<? extends Object> entityClass;
 
-    public JSONWriterBean(
+    public XMLReaderBean(
             Class<? extends Object> entityClass,
-            JSONWriter instance) {
+            XMLReader instance) {
         this.entityClass = entityClass;
         this.instance = instance;
     }
@@ -102,7 +103,7 @@ public class JSONWriterBean implements Bean<JSONWriter> {
 
     @Override
     public Class<?> getBeanClass() {
-        return JSONWriter.class;
+        return XMLReader.class;
     }
 
     @Override
@@ -121,12 +122,12 @@ public class JSONWriterBean implements Bean<JSONWriter> {
     }
 
     @Override
-    public JSONWriter create(CreationalContext ctx) {
+    public XMLReader create(CreationalContext ctx) {
         return instance;
     }
 
     @Override
-    public void destroy(JSONWriter instance,
+    public void destroy(XMLReader instance,
             CreationalContext ctx) {
         ctx.release();
     }
