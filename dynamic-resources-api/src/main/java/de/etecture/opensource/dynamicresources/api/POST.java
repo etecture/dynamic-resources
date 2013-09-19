@@ -85,4 +85,13 @@ public @interface POST {
      * @return
      */
     String path() default "";
+
+    /**
+     * the status code to be provided by the response in case of no exception.
+     * <p>
+     * defaults to 201 - CREATED
+     *
+     * @return
+     */
+    int status() default 201;
 }

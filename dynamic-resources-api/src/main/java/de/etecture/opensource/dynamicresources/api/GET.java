@@ -85,4 +85,13 @@ public @interface GET {
      * @return
      */
     String path() default "";
+
+    /**
+     * the status code to be provided by the response in case of no exception.
+     * <p>
+     * defaults to 200
+     *
+     * @return
+     */
+    int status() default 200;
 }

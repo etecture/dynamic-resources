@@ -87,7 +87,8 @@ public class DynamicResourceExecutor {
             DefaultQueryMetaData<T> queryMetaData = new DefaultQueryMetaData(
                     resourceClazz, QueryMetaData.Kind.RETRIEVE, get.query(),
                     null, values);
-            return execute(resourceClazz, queryMetaData, get.technology());
+            return execute(resourceClazz, queryMetaData, get.technology(), get
+                    .status());
         } else {
             return Response.status(Response.Status.fromStatusCode(405)).entity(
                     "cannot find GET method for this resource.").build();
@@ -102,7 +103,8 @@ public class DynamicResourceExecutor {
                     resourceClazz, QueryMetaData.Kind.UPDATE, put.query(),
                     null, values);
 
-            return execute(resourceClazz, queryMetaData, put.technology());
+            return execute(resourceClazz, queryMetaData, put.technology(), put
+                    .status());
         } else {
             return Response.status(Response.Status.fromStatusCode(405)).entity(
                     "cannot find PUT method for this resource.").build();
@@ -116,7 +118,8 @@ public class DynamicResourceExecutor {
             DefaultQueryMetaData<T> queryMetaData = new DefaultQueryMetaData(
                     resourceClazz, QueryMetaData.Kind.CREATE, post.query(),
                     null, values);
-            return execute(resourceClazz, queryMetaData, post.technology());
+            return execute(resourceClazz, queryMetaData, post.technology(), post
+                    .status());
         } else {
             return Response.status(Response.Status.fromStatusCode(405)).entity(
                     "cannot find POST method for this resource.").build();
@@ -130,8 +133,10 @@ public class DynamicResourceExecutor {
             DefaultQueryMetaData<T> queryMetaData = new DefaultQueryMetaData(
                     resourceClazz, QueryMetaData.Kind.DELETE, delete.query(),
                     null, values);
-            execute(resourceClazz, queryMetaData, delete.technology());
-            return Response.ok().build();
+            execute(resourceClazz, queryMetaData, delete.technology(), delete
+                    .status());
+            return Response.status(Response.Status.fromStatusCode(delete
+                    .status())).build();
         } else {
             return Response.status(Response.Status.fromStatusCode(405)).entity(
                     "cannot find DELETE method for this resource.").build();
@@ -139,8 +144,8 @@ public class DynamicResourceExecutor {
     }
 
     private <T> Response execute(
-            Class<T> resourceClazz,
-            DefaultQueryMetaData<T> queryMetaData, String technology) {
+            Class<T> resourceClazz, DefaultQueryMetaData<T> queryMetaData,
+            String technology, int status) {
         if (resourceClazz.isAnnotationPresent(Param.class)) {
             Param param = resourceClazz.getAnnotation(Param.class);
             queryMetaData.addParameter(param);
@@ -151,7 +156,9 @@ public class DynamicResourceExecutor {
             }
         }
         try {
-            return Response.ok(getExecutorByTechnology(technology)
+            return Response
+                    .status(Response.Status.fromStatusCode(status))
+                    .entity(getExecutorByTechnology(technology)
                     .execute(queryMetaData)).build();
         } catch (EntityNotFoundException ex) {
             return Response.status(404).entity(ex).build();

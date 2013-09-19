@@ -85,4 +85,13 @@ public @interface DELETE {
      * @return
      */
     String path() default "";
+
+    /**
+     * the status code to be provided by the response in case of no exception.
+     * <p>
+     * defaults to 204 - NO CONTENT
+     *
+     * @return
+     */
+    int status() default 204;
 }
