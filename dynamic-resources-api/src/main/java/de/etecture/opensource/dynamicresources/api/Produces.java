@@ -37,25 +37,32 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.extension;
+package de.etecture.opensource.dynamicresources.api;
 
-import de.etecture.opensource.dynamicresources.api.JSONReader;
-import javax.enterprise.inject.Default;
-import javax.json.stream.JsonParser;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import javax.enterprise.util.Nonbinding;
+import javax.inject.Qualifier;
 
 /**
  *
  * @author rhk
  */
-@Default
-public class DefaultJSONReader implements JSONReader {
+@Qualifier
+@Inherited
+@Target({ElementType.METHOD,
+    ElementType.FIELD,
+    ElementType.PARAMETER,
+    ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Produces {
 
-    @Override
-    public <T> T process(JsonParser parser,
-            Class<T> type, T element) throws Exception {
-        if (element == null) {
-            element = type.newInstance();
-        }
-        return element;
-    }
+    @Nonbinding
+    String[] mimeType() default "text/plain";
+
+    @Nonbinding
+    String version() default "";
 }

@@ -1,32 +1,37 @@
 package de.etecture.opensource.dynamicresources.test;
 
 import de.etecture.opensource.dynamicrepositories.api.EntityNotFoundException;
-import de.etecture.opensource.dynamicresources.api.ForEntity;
-import de.etecture.opensource.dynamicresources.api.JSONWriter;
+import de.etecture.opensource.dynamicresources.api.Entity;
+import de.etecture.opensource.dynamicresources.api.MediaType;
+import de.etecture.opensource.dynamicresources.api.Produces;
+import de.etecture.opensource.dynamicresources.api.ResponseWriter;
+import java.io.IOException;
 import java.io.Serializable;
+import java.io.Writer;
+import java.util.Collections;
+import javax.json.Json;
 import javax.json.stream.JsonGenerator;
-import javax.ws.rs.core.UriInfo;
+import javax.json.stream.JsonGeneratorFactory;
 
 /**
  *
  * @author rhk
  */
-public enum JSONTest implements JSONWriter {
+@Produces(mimeType = "application/json")
+public enum JSONTest implements ResponseWriter {
 
-    @ForEntity(String.class)
+    @Entity(String.class)
     BLABLA {
         @Override
-        public void process(Object element, JsonGenerator generator,
-                UriInfo uriInfo) {
+        protected void process(Object element, JsonGenerator generator) {
             generator.writeStartObject().write("test", element.toString())
                     .writeEnd();
         }
     },
-    @ForEntity(EntityNotFoundException.class)
+    @Entity(EntityNotFoundException.class)
     NOT_FOUND {
         @Override
-        public void process(Object element, JsonGenerator generator,
-                UriInfo uriInfo) {
+        protected void process(Object element, JsonGenerator generator) {
             final EntityNotFoundException enfe =
                     (EntityNotFoundException) element;
             final Serializable entityId =
@@ -37,20 +42,18 @@ public enum JSONTest implements JSONWriter {
                     .writeEnd();
         }
     },
-    @ForEntity(TestResources.class)
+    @Entity(TestResources.class)
     TESTS {
         @Override
-        public void process(Object element, JsonGenerator generator,
-                UriInfo uriInfo) {
+        protected void process(Object element, JsonGenerator generator) {
             generator.writeStartObject().write("count",
                     ((TestResources) element).getCount()).writeEnd();
         }
     },
-    @ForEntity(TestResource.class)
+    @Entity(TestResource.class)
     TEST {
         @Override
-        public void process(Object element, JsonGenerator generator,
-                UriInfo uriInfo) {
+        protected void process(Object element, JsonGenerator generator) {
             TestResource resource = (TestResource) element;
             generator.writeStartObject();
             generator.write("id", resource.getId());
@@ -58,5 +61,19 @@ public enum JSONTest implements JSONWriter {
             generator.write("lastName", resource.getLastName());
             generator.writeEnd();
         }
+    };
+    private static final JsonGeneratorFactory JSON_FACTORY = Json
+            .createGeneratorFactory(Collections.<String, Object>singletonMap(
+            JsonGenerator.PRETTY_PRINTING, "true"));
+
+    protected abstract void process(Object element, JsonGenerator generator);
+
+    @Override
+    public void processElement(Object element, Writer writer, MediaType mimetype)
+            throws IOException {
+        JsonGenerator jg = JSON_FACTORY.createGenerator(writer);
+        process(element, jg);
+        jg.flush();
+        jg.close();
     }
 }

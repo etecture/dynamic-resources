@@ -37,27 +37,41 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.api;
+package de.etecture.opensource.dynamicresources.spi;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import javax.inject.Qualifier;
+import de.etecture.opensource.dynamicresources.api.Version;
+import de.etecture.opensource.dynamicresources.api.VersionNumberRange;
+import java.util.Map;
 
 /**
+ * resolves a list of versions with an expression.
  *
  * @author rhk
+ * @see
+ * de.etecture.opensource.dynamicresources.extension.DefaultVersionNumberResolver
  */
-@Qualifier
-@Inherited
-@Target({ElementType.METHOD,
-    ElementType.FIELD,
-    ElementType.PARAMETER,
-    ElementType.TYPE})
-@Retention(RetentionPolicy.RUNTIME)
-public @interface ForEntity {
+public interface VersionNumberResolver {
 
-    Class<? extends Object> value();
+    /**
+     * implementors of this method must provide the correct instance of T by
+     * resolving the given objects by the given expression.
+     *
+     * @param <T>
+     * @param objects
+     * @param versionExpression
+     * @return
+     */
+    <T> T resolve(Map<Version, T> objects, String versionExpression);
+
+    /**
+     * implementors of this method must provide the correct instance of T by
+     * resolving the given objects by the given expression.
+     *
+     * @param <T>
+     * @param objects
+     * @param versionNumberRange
+     * @return
+     */
+    <T> T resolve(Map<Version, T> objects,
+            VersionNumberRange versionNumberRange);
 }

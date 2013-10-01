@@ -39,30 +39,25 @@
  */
 package de.etecture.opensource.dynamicresources.api;
 
-import javax.json.stream.JsonParser;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import javax.inject.Qualifier;
 
 /**
  *
  * @author rhk
  */
-public interface JSONReader {
+@Qualifier
+@Inherited
+@Target({ElementType.METHOD,
+    ElementType.FIELD,
+    ElementType.PARAMETER,
+    ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Entity {
 
-    /**
-     * parses the JSON by using the parser and returns the parsed object.
-     * <p>
-     * if the given element is null, the implementation of this method must
-     * create a new object and return this object.
-     * <p>
-     * if the given element is not null, the implementation may decide if it
-     * patches the given element or if it creates another element. Anyway the
-     * implementation must return an element.
-     *
-     * @param <T>
-     * @param parser
-     * @param type
-     * @param element
-     * @return
-     * @throws Exception
-     */
-    <T> T process(JsonParser parser, Class<T> type, T element) throws Exception;
+    Class<? extends Object> value();
 }

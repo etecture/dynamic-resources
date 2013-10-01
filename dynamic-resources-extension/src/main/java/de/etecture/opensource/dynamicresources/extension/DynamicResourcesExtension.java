@@ -39,15 +39,11 @@
  */
 package de.etecture.opensource.dynamicresources.extension;
 
-import de.etecture.opensource.dynamicresources.api.ForEntity;
-import de.etecture.opensource.dynamicresources.api.JSONReader;
-import de.etecture.opensource.dynamicresources.api.JSONWriter;
+import de.etecture.opensource.dynamicresources.api.Entity;
+import de.etecture.opensource.dynamicresources.api.Produces;
 import de.etecture.opensource.dynamicresources.api.Resource;
-import de.etecture.opensource.dynamicresources.api.XMLReader;
-import de.etecture.opensource.dynamicresources.api.XMLWriter;
-import java.util.HashMap;
+import de.etecture.opensource.dynamicresources.api.ResponseWriter;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 import javax.enterprise.event.Observes;
@@ -63,14 +59,7 @@ import javax.enterprise.inject.spi.ProcessAnnotatedType;
  */
 public class DynamicResourcesExtension implements Extension {
 
-    private Map<Class<? extends Object>, JSONWriter> jsonWriters =
-            new HashMap<>();
-    private Map<Class<? extends Object>, XMLWriter> xmlWriters =
-            new HashMap<>();
-    private Map<Class<? extends Object>, JSONReader> jsonReaders =
-            new HashMap<>();
-    private Map<Class<? extends Object>, XMLReader> xmlReaders =
-            new HashMap<>();
+    private Set<ResponseWriterBean> responseWriters = new HashSet<>();
     public Set<Class<?>> resourcesInterfaces = new HashSet<>();
     private final Logger log = Logger.getLogger("RepositoryExtension");
 
@@ -90,67 +79,39 @@ public class DynamicResourcesExtension implements Extension {
                     Resource.class);
             resourcesInterfaces.add(pat.getAnnotatedType().getJavaClass());
         }
-        if (pat.getAnnotatedType().getJavaClass().isEnum() && JSONWriter.class
+        if (pat.getAnnotatedType().getJavaClass().isEnum()
+                && ResponseWriter.class
                 .isAssignableFrom(pat.getAnnotatedType().getJavaClass())) {
             log.info(String.format("processing enum: %s",
                     pat.getAnnotatedType().getJavaClass().getName()));
             for (AnnotatedField af : pat.getAnnotatedType().getFields()) {
-                if (af.isAnnotationPresent(ForEntity.class)) {
+                if (af.isAnnotationPresent(Entity.class)) {
                     log.info(String.format(
                             "... found Writer for Entity: %s in class: %s",
-                            af.getAnnotation(ForEntity.class).value().getName(),
+                            af.getAnnotation(Entity.class).value().getName(),
                             af.getJavaMember().getName()));
-                    jsonWriters.put(af.getAnnotation(ForEntity.class).value(),
-                            (JSONWriter) af.getJavaMember().get(pat
-                            .getAnnotatedType().getJavaClass()));
-                }
-            }
-        }
-        if (pat.getAnnotatedType().getJavaClass().isEnum() && XMLWriter.class
-                .isAssignableFrom(pat.getAnnotatedType().getJavaClass())) {
-            log.info(String.format("processing enum: %s",
-                    pat.getAnnotatedType().getJavaClass().getName()));
-            for (AnnotatedField af : pat.getAnnotatedType().getFields()) {
-                if (af.isAnnotationPresent(ForEntity.class)) {
-                    log.info(String.format(
-                            "... found Writer for Entity: %s in class: %s",
-                            af.getAnnotation(ForEntity.class).value().getName(),
-                            af.getJavaMember().getName()));
-                    xmlWriters.put(af.getAnnotation(ForEntity.class).value(),
-                            (XMLWriter) af.getJavaMember().get(pat
-                            .getAnnotatedType().getJavaClass()));
-                }
-            }
-        }
-        if (pat.getAnnotatedType().getJavaClass().isEnum() && JSONReader.class
-                .isAssignableFrom(pat.getAnnotatedType().getJavaClass())) {
-            log.info(String.format("processing enum: %s",
-                    pat.getAnnotatedType().getJavaClass().getName()));
-            for (AnnotatedField af : pat.getAnnotatedType().getFields()) {
-                if (af.isAnnotationPresent(ForEntity.class)) {
-                    log.info(String.format(
-                            "... found Reader for Entity: %s in class: %s",
-                            af.getAnnotation(ForEntity.class).value().getName(),
-                            af.getJavaMember().getName()));
-                    jsonReaders.put(af.getAnnotation(ForEntity.class).value(),
-                            (JSONReader) af.getJavaMember().get(pat
-                            .getAnnotatedType().getJavaClass()));
-                }
-            }
-        }
-        if (pat.getAnnotatedType().getJavaClass().isEnum() && XMLReader.class
-                .isAssignableFrom(pat.getAnnotatedType().getJavaClass())) {
-            log.info(String.format("processing enum: %s",
-                    pat.getAnnotatedType().getJavaClass().getName()));
-            for (AnnotatedField af : pat.getAnnotatedType().getFields()) {
-                if (af.isAnnotationPresent(ForEntity.class)) {
-                    log.info(String.format(
-                            "... found Reader for Entity: %s in class: %s",
-                            af.getAnnotation(ForEntity.class).value().getName(),
-                            af.getJavaMember().getName()));
-                    xmlReaders.put(af.getAnnotation(ForEntity.class).value(),
-                            (XMLReader) af.getJavaMember().get(pat
-                            .getAnnotatedType().getJavaClass()));
+                    final ResponseWriter responseWriter =
+                            (ResponseWriter) af.getJavaMember().get(pat
+                            .getAnnotatedType().getJavaClass());
+                    if (af.isAnnotationPresent(Produces.class)) {
+                        responseWriters.add(new ResponseWriterBean(
+                                new EntityLiteral(af.getAnnotation(Entity.class)),
+                                new ProducesLiteral(af.getAnnotation(
+                                Produces.class)), responseWriter));
+                    } else if (pat.getAnnotatedType().getJavaClass()
+                            .isAnnotationPresent(Produces.class)) {
+                        responseWriters.add(new ResponseWriterBean(
+                                new EntityLiteral(af.getAnnotation(Entity.class)),
+                                new ProducesLiteral(pat.getAnnotatedType()
+                                .getJavaClass().getAnnotation(
+                                Produces.class)), responseWriter));
+
+                    } else {
+                        responseWriters.add(new ResponseWriterBean(
+                                new EntityLiteral(af.getAnnotation(Entity.class)),
+                                new ProducesLiteral(responseWriter),
+                                responseWriter));
+                    }
                 }
             }
         }
@@ -158,21 +119,8 @@ public class DynamicResourcesExtension implements Extension {
 
     void afterBeanDiscovery(@Observes AfterBeanDiscovery abd) {
         log.info("finished the scanning process");
-        for (Map.Entry<Class<? extends Object>, JSONWriter> e : jsonWriters
-                .entrySet()) {
-            abd.addBean(new JSONWriterBean(e.getKey(), e.getValue()));
-        }
-        for (Map.Entry<Class<? extends Object>, XMLWriter> e : xmlWriters
-                .entrySet()) {
-            abd.addBean(new XMLWriterBean(e.getKey(), e.getValue()));
-        }
-        for (Map.Entry<Class<? extends Object>, JSONReader> e : jsonReaders
-                .entrySet()) {
-            abd.addBean(new JSONReaderBean(e.getKey(), e.getValue()));
-        }
-        for (Map.Entry<Class<? extends Object>, XMLReader> e : xmlReaders
-                .entrySet()) {
-            abd.addBean(new XMLReaderBean(e.getKey(), e.getValue()));
+        for (ResponseWriterBean b : responseWriters) {
+            abd.addBean(b);
         }
     }
 }

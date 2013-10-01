@@ -39,9 +39,13 @@
  */
 package de.etecture.opensource.dynamicresources.extension;
 
-import de.etecture.opensource.dynamicresources.api.ForEntity;
-import de.etecture.opensource.dynamicresources.api.XMLWriter;
-import javax.ws.rs.core.UriInfo;
+import de.etecture.opensource.dynamicresources.api.Entity;
+import de.etecture.opensource.dynamicresources.api.MediaType;
+import de.etecture.opensource.dynamicresources.api.Produces;
+import de.etecture.opensource.dynamicresources.api.ResponseWriter;
+import java.io.IOException;
+import java.io.Writer;
+import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
@@ -49,15 +53,12 @@ import javax.xml.stream.XMLStreamWriter;
  *
  * @author rhk
  */
-@ForEntity(Exception.class)
-public class ExceptionXMLWriter implements XMLWriter {
+@Entity(Exception.class)
+@Produces(mimeType = "application/xml")
+public class ExceptionXMLWriter implements ResponseWriter<Throwable> {
 
-    @Override
-    public void process(Object element, XMLStreamWriter writer, UriInfo uriInfo)
-            throws XMLStreamException {
-        Throwable ex = (Throwable) element;
-        internalProcess(writer, ex);
-    }
+    private static final XMLOutputFactory XML_FACTORY = XMLOutputFactory
+            .newFactory();
 
     private void internalProcess(XMLStreamWriter writer, Throwable ex) throws
             XMLStreamException {
@@ -89,6 +90,22 @@ public class ExceptionXMLWriter implements XMLWriter {
             writer.writeStartElement("cause");
             internalProcess(writer, ex.getCause());
             writer.writeEndElement();
+        }
+    }
+
+    @Override
+    public void processElement(Throwable element, Writer writer,
+            MediaType mimetype) throws
+            IOException {
+        try {
+            final XMLStreamWriter xmlwriter =
+                    XML_FACTORY.createXMLStreamWriter(writer);
+            internalProcess(xmlwriter, element);
+            xmlwriter.flush();
+            xmlwriter.close();
+        } catch (XMLStreamException ex) {
+            throw new IOException("cannot write the exception to xml response.",
+                    ex);
         }
     }
 }

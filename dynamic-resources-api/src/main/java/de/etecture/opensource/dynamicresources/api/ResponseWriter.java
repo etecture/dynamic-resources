@@ -39,31 +39,26 @@
  */
 package de.etecture.opensource.dynamicresources.api;
 
-import javax.xml.stream.XMLStreamReader;
+import java.io.IOException;
+import java.io.Writer;
 
 /**
+ * this interface is used to write an object to a response writer
  *
  * @author rhk
+ * @version ${project.version}
+ * @since 1.0.1
  */
-public interface XMLReader {
+public interface ResponseWriter<T> {
 
     /**
-     * parses the XML by using the reader and returns the parsed object.
-     * <p>
-     * if the given element is null, the implementation of this method must
-     * create a new object and return this object.
-     * <p>
-     * if the given element is not null, the implementation may decide if it
-     * patches the given element or if it creates another element. Anyway the
-     * implementation must return an element.
+     * write the element to the response writer
      *
-     * @param <T>
-     * @param reader
-     * @param type
-     * @param element
-     * @return
-     * @throws Exception
+     * @param element the element to be written
+     * @param writer the writer to be used.
+     * @param mimetype the value of mimetype
+     * @throws IOException
      */
-    <T> T process(XMLStreamReader reader, Class<T> type, T element) throws
-            Exception;
+    void processElement(T element, Writer writer, MediaType mimetype) throws
+            IOException;
 }

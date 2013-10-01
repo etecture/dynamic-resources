@@ -39,7 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.extension;
 
-import de.etecture.opensource.dynamicresources.api.JSONWriter;
+import de.etecture.opensource.dynamicresources.api.ResponseWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -56,22 +56,25 @@ import javax.enterprise.util.AnnotationLiteral;
  *
  * @author rhk
  */
-public class JSONWriterBean implements Bean<JSONWriter> {
+public class ResponseWriterBean<T> implements Bean<ResponseWriter<T>> {
 
-    private final JSONWriter instance;
-    private final Class<? extends Object> entityClass;
+    private final ResponseWriter<T> instance;
+    private final EntityLiteral entityLiteral;
+    private final ProducesLiteral producesLiteral;
 
-    public JSONWriterBean(
-            Class<? extends Object> entityClass,
-            JSONWriter instance) {
-        this.entityClass = entityClass;
+    public ResponseWriterBean(
+            EntityLiteral entityLiteral,
+            ProducesLiteral producesLiteral,
+            ResponseWriter<T> instance) {
+        this.entityLiteral = entityLiteral;
         this.instance = instance;
+        this.producesLiteral = producesLiteral;
     }
 
     @Override
     public Set<Type> getTypes() {
         Set<Type> types = new HashSet<>();
-        types.add(JSONWriter.class);
+        types.add(ResponseWriter.class);
         types.add(Object.class);
         return types;
     }
@@ -81,7 +84,10 @@ public class JSONWriterBean implements Bean<JSONWriter> {
         Set<Annotation> qualifiers = new HashSet<>();
         qualifiers.add(new AnnotationLiteral<Any>() {
         });
-        qualifiers.add(new ForEntityLiteral(entityClass));
+        if (producesLiteral != null) {
+            qualifiers.add(producesLiteral);
+        }
+        qualifiers.add(entityLiteral);
         return qualifiers;
     }
 
@@ -102,7 +108,7 @@ public class JSONWriterBean implements Bean<JSONWriter> {
 
     @Override
     public Class<?> getBeanClass() {
-        return JSONWriter.class;
+        return ResponseWriter.class;
     }
 
     @Override
@@ -121,13 +127,14 @@ public class JSONWriterBean implements Bean<JSONWriter> {
     }
 
     @Override
-    public JSONWriter create(CreationalContext ctx) {
+    public ResponseWriter<T> create(CreationalContext ctx) {
         return instance;
     }
 
     @Override
-    public void destroy(JSONWriter instance,
-            CreationalContext ctx) {
+    public void destroy(
+            ResponseWriter<T> instance,
+            CreationalContext<ResponseWriter<T>> ctx) {
         ctx.release();
     }
 }

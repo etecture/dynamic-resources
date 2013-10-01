@@ -39,24 +39,30 @@
  */
 package de.etecture.opensource.dynamicresources.api;
 
-import javax.json.stream.JsonGenerator;
-import javax.ws.rs.core.UriInfo;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import javax.enterprise.util.Nonbinding;
+import javax.inject.Qualifier;
 
 /**
- * this interface is used to write an object to a JsonGenerator
  *
  * @author rhk
- * @version ${project.version}
- * @since 1.0.1
  */
-public interface JSONWriter {
+@Qualifier
+@Inherited
+@Target({ElementType.METHOD,
+    ElementType.FIELD,
+    ElementType.PARAMETER,
+    ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Consumes {
 
-    /**
-     * write the element to the stream
-     *
-     * @param element the element to be written
-     * @param generator the generator to be used
-     * @param uriInfo the uriInfo to be used to build href's
-     */
-    void process(Object element, JsonGenerator generator, UriInfo uriInfo);
+    @Nonbinding
+    String[] mimeType() default "text/plain";
+
+    @Nonbinding
+    String version() default "";
 }
