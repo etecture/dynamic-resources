@@ -51,6 +51,8 @@ import javax.enterprise.inject.Any;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.util.AnnotationLiteral;
+import javax.inject.Named;
+import org.apache.commons.lang.StringUtils;
 
 /**
  *
@@ -58,6 +60,7 @@ import javax.enterprise.util.AnnotationLiteral;
  */
 public class ResponseWriterBean<T> implements Bean<ResponseWriter<T>> {
 
+    private final String name;
     private final ResponseWriter<T> instance;
     private final EntityLiteral entityLiteral;
     private final ProducesLiteral producesLiteral;
@@ -66,9 +69,18 @@ public class ResponseWriterBean<T> implements Bean<ResponseWriter<T>> {
             EntityLiteral entityLiteral,
             ProducesLiteral producesLiteral,
             ResponseWriter<T> instance) {
+        this(entityLiteral, producesLiteral, instance, getNameOfBean(instance));
+    }
+
+    public ResponseWriterBean(
+            EntityLiteral entityLiteral,
+            ProducesLiteral producesLiteral,
+            ResponseWriter<T> instance,
+            String name) {
         this.entityLiteral = entityLiteral;
         this.instance = instance;
         this.producesLiteral = producesLiteral;
+        this.name = name;
     }
 
     @Override
@@ -83,6 +95,7 @@ public class ResponseWriterBean<T> implements Bean<ResponseWriter<T>> {
     public Set<Annotation> getQualifiers() {
         Set<Annotation> qualifiers = new HashSet<>();
         qualifiers.add(new AnnotationLiteral<Any>() {
+            private static final long serialVersionUID = 1L;
         });
         if (producesLiteral != null) {
             qualifiers.add(producesLiteral);
@@ -103,7 +116,7 @@ public class ResponseWriterBean<T> implements Bean<ResponseWriter<T>> {
 
     @Override
     public String getName() {
-        return null;
+        return name;
     }
 
     @Override
@@ -136,5 +149,33 @@ public class ResponseWriterBean<T> implements Bean<ResponseWriter<T>> {
             ResponseWriter<T> instance,
             CreationalContext<ResponseWriter<T>> ctx) {
         ctx.release();
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("ResponseWriterBean '").
+                append(name).
+                append("' for entities with type ").
+                append(entityLiteral.value().getSimpleName()).
+                append(" that produces ");
+        for (int i = 0; i < producesLiteral.mimeType().length; i++) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+            sb.append(producesLiteral.mimeType()[i]);
+        }
+        if (StringUtils.isNotBlank(producesLiteral.version())) {
+            sb.append(" in version: ").append(producesLiteral.version());
+        }
+        return sb.toString();
+    }
+
+    private static String getNameOfBean(ResponseWriter<?> instance) {
+        if (instance.getClass().isAnnotationPresent(Named.class)) {
+            return instance.getClass().getAnnotation(Named.class).value();
+        } else {
+            return instance.getClass().getName();
+        }
     }
 }

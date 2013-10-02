@@ -42,16 +42,26 @@ package de.etecture.opensource.dynamicresources.extension;
 import de.etecture.opensource.dynamicresources.api.Entity;
 import de.etecture.opensource.dynamicresources.api.Produces;
 import de.etecture.opensource.dynamicresources.api.Resource;
+import de.etecture.opensource.dynamicresources.api.Resources;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 import javax.enterprise.event.Observes;
+import javax.enterprise.inject.InjectionException;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
 import javax.enterprise.inject.spi.AnnotatedField;
+import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.BeforeBeanDiscovery;
 import javax.enterprise.inject.spi.Extension;
+import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
+import javax.enterprise.inject.spi.ProcessInjectionTarget;
+import javax.enterprise.inject.spi.Producer;
 
 /**
  *
@@ -61,35 +71,73 @@ public class DynamicResourcesExtension implements Extension {
 
     private Set<ResponseWriterBean> responseWriters = new HashSet<>();
     public Set<Class<?>> resourcesInterfaces = new HashSet<>();
-    private final Logger log = Logger.getLogger("RepositoryExtension");
+    private Map<Class<?>, ResourcesBean> resourcesInjectionTargets =
+            new HashMap<>();
+    private final Logger log = Logger.getLogger("DynamicResourcesExtension");
 
     void beforeBeanDiscovery(@Observes BeforeBeanDiscovery bbd) {
         log.info("beginning the scanning process");
     }
 
+    void processInjectionTargets(@Observes ProcessInjectionTarget pit,
+            BeanManager bm) {
+        for (InjectionPoint ip : ((Producer<InjectionPoint>) pit
+                .getInjectionTarget()).getInjectionPoints()) {
+            if (ip.getType() instanceof ParameterizedType) {
+                ParameterizedType pt = (ParameterizedType) ip.getType();
+                if (pt.getRawType() == Resources.class) {
+                    Class<?> resourceClass =
+                            (Class<?>) pt.getActualTypeArguments()[0];
+                    if (!resourceClass.isInterface()
+                            || !this.resourcesInterfaces.contains(resourceClass)) {
+                        throw new InjectionException(String.format(
+                                "the injection point for resources in bean: %s for class: %s is not correct. The Resource-Class is not an interface or is not annotated with @Resource.",
+                                ip.getMember().getDeclaringClass().
+                                getSimpleName(), resourceClass.getSimpleName()));
+                    }
+                    log.info(
+                            String.format(
+                            "found injection point for resources of type: %s in bean: %s (field: %s)",
+                            resourceClass.getName(),
+                            ip.getMember().getDeclaringClass().getSimpleName(),
+                            ip.getMember().getName()));
+                    if (!resourcesInjectionTargets.containsKey(resourceClass)) {
+                        resourcesInjectionTargets.put(resourceClass,
+                                createResourcesBean(bm, resourceClass, ip
+                                .getType()));
+                    }
+                }
+            }
+        }
+    }
+
     <T> void processAnnotatedType(@Observes ProcessAnnotatedType<T> pat) throws
             Exception {
-        log.info(String.format("processing: %s",
-                pat.getAnnotatedType().getJavaClass().getName()));
+
         if (pat.getAnnotatedType().isAnnotationPresent(Resource.class)) {
-            log.info(String
-                    .format("... found resource interface type: %s%n",
+            log.info(String.format("found resource interface type: %s%n",
                     pat.getAnnotatedType().getJavaClass().getName()));
             Resource resource = pat.getAnnotatedType().getAnnotation(
                     Resource.class);
+
             resourcesInterfaces.add(pat.getAnnotatedType().getJavaClass());
         }
+
+
         if (pat.getAnnotatedType().getJavaClass().isEnum()
                 && ResponseWriter.class
                 .isAssignableFrom(pat.getAnnotatedType().getJavaClass())) {
-            log.info(String.format("processing enum: %s",
-                    pat.getAnnotatedType().getJavaClass().getName()));
-            for (AnnotatedField af : pat.getAnnotatedType().getFields()) {
+            for (AnnotatedField af
+                    : pat.getAnnotatedType()
+                    .getFields()) {
                 if (af.isAnnotationPresent(Entity.class)) {
+                    final String name = String.format("%s_%s",
+                            pat.getAnnotatedType().getJavaClass().
+                            getSimpleName(), af.getJavaMember().getName());
                     log.info(String.format(
-                            "... found Writer for Entity: %s in class: %s",
+                            "found ResponseWriter for Entity: %s with name: %s",
                             af.getAnnotation(Entity.class).value().getName(),
-                            af.getJavaMember().getName()));
+                            name));
                     final ResponseWriter responseWriter =
                             (ResponseWriter) af.getJavaMember().get(pat
                             .getAnnotatedType().getJavaClass());
@@ -97,29 +145,44 @@ public class DynamicResourcesExtension implements Extension {
                         responseWriters.add(new ResponseWriterBean(
                                 new EntityLiteral(af.getAnnotation(Entity.class)),
                                 new ProducesLiteral(af.getAnnotation(
-                                Produces.class)), responseWriter));
+                                Produces.class)), responseWriter, name));
                     } else if (pat.getAnnotatedType().getJavaClass()
                             .isAnnotationPresent(Produces.class)) {
                         responseWriters.add(new ResponseWriterBean(
                                 new EntityLiteral(af.getAnnotation(Entity.class)),
                                 new ProducesLiteral(pat.getAnnotatedType()
                                 .getJavaClass().getAnnotation(
-                                Produces.class)), responseWriter));
+                                Produces.class)), responseWriter, name));
 
                     } else {
                         responseWriters.add(new ResponseWriterBean(
                                 new EntityLiteral(af.getAnnotation(Entity.class)),
                                 new ProducesLiteral(responseWriter),
-                                responseWriter));
+                                responseWriter, name));
                     }
                 }
             }
         }
     }
 
+    <T> Resources<T> createResourcesImpl(BeanManager bm, Class<T> clazz) {
+        return new ResourcesImpl<>(bm, clazz);
+    }
+
+    <T> ResourcesBean<T> createResourcesBean(BeanManager bm,
+            Class<T> resourcesClazz, Type t) {
+        return new ResourcesBean<>(t,
+                createResourcesImpl(bm, resourcesClazz));
+    }
+
     void afterBeanDiscovery(@Observes AfterBeanDiscovery abd) {
         log.info("finished the scanning process");
         for (ResponseWriterBean b : responseWriters) {
+            log.info(String.format("add a %s", b.toString()));
+            abd.addBean(b);
+        }
+        for (ResourcesBean b : resourcesInjectionTargets.values()) {
+            log.info(String.format("add a %s", b.toString()));
             abd.addBean(b);
         }
     }

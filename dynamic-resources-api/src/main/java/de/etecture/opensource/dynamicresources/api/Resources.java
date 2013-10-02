@@ -126,6 +126,7 @@ public interface Resources<T> {
      * deletes a representation of this resource by using the <b>DELETE</b>
      * method.
      *
+     * @return
      */
-    void DELETE();
+    boolean DELETE();
 }
