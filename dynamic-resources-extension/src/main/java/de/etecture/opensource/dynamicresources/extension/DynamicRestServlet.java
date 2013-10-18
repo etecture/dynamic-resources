@@ -45,6 +45,7 @@ import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.api.Produces;
 import de.etecture.opensource.dynamicresources.api.Resource;
 import de.etecture.opensource.dynamicresources.api.ResourceInterceptor;
+import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
 import de.etecture.opensource.dynamicresources.api.Version;
 import de.etecture.opensource.dynamicresources.api.VersionNumberRange;
@@ -69,7 +70,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.Response;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -156,8 +156,7 @@ public class DynamicRestServlet extends HttpServlet {
                                 response = executor.PUT(resource, clazz,
                                         parameter, readContent(req));
                             } catch (Exception ex) {
-                                response = Response.status(415).entity(ex)
-                                        .build();
+                                response = new Response(ex, 415);
                             }
                             break;
                         case "POST":
@@ -165,8 +164,7 @@ public class DynamicRestServlet extends HttpServlet {
                                 response = executor.POST(resource, clazz,
                                         parameter, readContent(req));
                             } catch (Exception ex) {
-                                response = Response.status(415).entity(ex)
-                                        .build();
+                                response = new Response(ex, 415);
                             }
                             break;
                     }
@@ -204,11 +202,11 @@ public class DynamicRestServlet extends HttpServlet {
                     private static final long serialVersionUID = 1L;
         });
         System.out.printf(
-                "selected mimetype: %s, selected version: %s , beans: %s%n",
+                "selected mimetype: %s, selected version: %s, beans: %s, entity: %s%n",
                 mimeType,
                 versionMatcher == null ? "not specified" : versionMatcher
                 .toString(),
-                beans.size());
+                beans.size(), clazz.getName());
         // (1) Build the map of versioned beans.
         TreeMap<Version, Bean<ResponseWriter<T>>> versionedBeans =
                 new TreeMap<>(new VersionComparator(false));
@@ -270,7 +268,7 @@ public class DynamicRestServlet extends HttpServlet {
         return null;
     }
 
-    private void writeResponse(HttpServletResponse resp, Response response,
+    private void writeResponse(HttpServletResponse resp, Response<?> response,
             final HttpServletRequest req) throws IOException {
         String versionString = req.getHeader("Accept-Version");
         String contentType = req.getHeader("Accept");
@@ -285,8 +283,7 @@ public class DynamicRestServlet extends HttpServlet {
             version = new VersionNumberRangeExpression(versionString);
         }
 
-        for (Map.Entry<String, List<Object>> e : response.getMetadata()
-                .entrySet()) {
+        for (Map.Entry<String, List<Object>> e : response.getHeaders()) {
             for (Object o : e.getValue()) {
                 if (o == null) {
                     // do nothing here

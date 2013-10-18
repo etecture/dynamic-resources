@@ -39,23 +39,23 @@
  */
 package de.etecture.opensource.dynamicresources.extension;
 
-import de.etecture.opensource.dynamicrepositories.api.EntityNotFoundException;
 import de.etecture.opensource.dynamicrepositories.api.Param;
 import de.etecture.opensource.dynamicrepositories.api.Params;
 import de.etecture.opensource.dynamicrepositories.extension.TechnologyLiteral;
 import de.etecture.opensource.dynamicrepositories.spi.QueryExecutor;
 import de.etecture.opensource.dynamicrepositories.spi.QueryMetaData;
 import de.etecture.opensource.dynamicresources.api.DELETE;
+import de.etecture.opensource.dynamicresources.api.ExceptionHandler;
 import de.etecture.opensource.dynamicresources.api.GET;
 import de.etecture.opensource.dynamicresources.api.POST;
 import de.etecture.opensource.dynamicresources.api.PUT;
 import de.etecture.opensource.dynamicresources.api.Resource;
+import de.etecture.opensource.dynamicresources.api.Response;
 import java.util.Map;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import javax.ws.rs.core.Response;
 
 /**
  *
@@ -67,6 +67,9 @@ public class DynamicResourceExecutor {
     @Inject
     @Any
     Instance<QueryExecutor> queryExecutors;
+    @Inject
+    @Any
+    Instance<ExceptionHandler> exceptionHandlers;
 
     private QueryExecutor getExecutorByTechnology(String technology) {
         return queryExecutors.select(new TechnologyLiteral(technology)).get();
@@ -80,22 +83,22 @@ public class DynamicResourceExecutor {
         return resourceClazz.getSimpleName();
     }
 
-    public <T> Response GET(Resource resource, Class<T> resourceClazz,
+    public <T> Response<?> GET(Resource resource, Class<T> resourceClazz,
             Map<String, Object> values) {
         if (resourceClazz.isAnnotationPresent(GET.class)) {
             GET get = resourceClazz.getAnnotation(GET.class);
             DefaultQueryMetaData<T> queryMetaData = new DefaultQueryMetaData(
                     resourceClazz, QueryMetaData.Kind.RETRIEVE, get.query(),
                     null, values);
-            return execute(resourceClazz, queryMetaData, get.technology(), get
+            return execute(resourceClazz, queryMetaData, "GET", get.technology(),
+                    get
                     .status());
         } else {
-            return Response.status(Response.Status.fromStatusCode(405)).entity(
-                    "cannot find GET method for this resource.").build();
+            return new Response("cannot find GET method for this resource.", 405);
         }
     }
 
-    public <T> Response PUT(Resource resource, Class<T> resourceClazz,
+    public <T> Response<?> PUT(Resource resource, Class<T> resourceClazz,
             Map<String, Object> values, Object content) {
         if (resourceClazz.isAnnotationPresent(PUT.class)) {
             PUT put = resourceClazz.getAnnotation(PUT.class);
@@ -103,49 +106,50 @@ public class DynamicResourceExecutor {
                     resourceClazz, QueryMetaData.Kind.UPDATE, put.query(),
                     null, values);
 
-            return execute(resourceClazz, queryMetaData, put.technology(), put
+            return execute(resourceClazz, queryMetaData, "PUT", put.technology(),
+                    put
                     .status());
         } else {
-            return Response.status(Response.Status.fromStatusCode(405)).entity(
-                    "cannot find PUT method for this resource.").build();
+            return new Response("cannot find PUT method for this resource.", 405);
         }
     }
 
-    public <T> Response POST(Resource resource, Class<T> resourceClazz,
+    public <T> Response<?> POST(Resource resource, Class<T> resourceClazz,
             Map<String, Object> values, Object content) {
         if (resourceClazz.isAnnotationPresent(POST.class)) {
             POST post = resourceClazz.getAnnotation(POST.class);
             DefaultQueryMetaData<T> queryMetaData = new DefaultQueryMetaData(
                     resourceClazz, QueryMetaData.Kind.CREATE, post.query(),
                     null, values);
-            return execute(resourceClazz, queryMetaData, post.technology(), post
+            return execute(resourceClazz, queryMetaData, "POST", post
+                    .technology(), post
                     .status());
         } else {
-            return Response.status(Response.Status.fromStatusCode(405)).entity(
-                    "cannot find POST method for this resource.").build();
+            return new Response("cannot find POST method for this resource.",
+                    405);
         }
     }
 
-    public <T> Response DELETE(Resource resource, Class<T> resourceClazz,
+    public <T> Response<?> DELETE(Resource resource, Class<T> resourceClazz,
             Map<String, Object> values) {
         if (resourceClazz.isAnnotationPresent(DELETE.class)) {
             DELETE delete = resourceClazz.getAnnotation(DELETE.class);
             DefaultQueryMetaData<T> queryMetaData = new DefaultQueryMetaData(
                     resourceClazz, QueryMetaData.Kind.DELETE, delete.query(),
                     null, values);
-            execute(resourceClazz, queryMetaData, delete.technology(), delete
+            execute(resourceClazz, queryMetaData, "DELETE", delete.technology(),
+                    delete
                     .status());
-            return Response.status(Response.Status.fromStatusCode(delete
-                    .status())).build();
+            return new Response(null, delete.status());
         } else {
-            return Response.status(Response.Status.fromStatusCode(405)).entity(
-                    "cannot find DELETE method for this resource.").build();
+            return new Response("cannot find DELETE method for this resource.",
+                    405);
         }
     }
 
-    private <T> Response execute(
+    private <T> Response<?> execute(
             Class<T> resourceClazz, DefaultQueryMetaData<T> queryMetaData,
-            String technology, int status) {
+            String method, String technology, int status) {
         if (resourceClazz.isAnnotationPresent(Param.class)) {
             Param param = resourceClazz.getAnnotation(Param.class);
             queryMetaData.addParameter(param);
@@ -156,14 +160,30 @@ public class DynamicResourceExecutor {
             }
         }
         try {
-            return Response
-                    .status(Response.Status.fromStatusCode(status))
-                    .entity(getExecutorByTechnology(technology)
-                    .execute(queryMetaData)).build();
-        } catch (EntityNotFoundException ex) {
-            return Response.status(404).entity(ex).build();
-        } catch (Exception ex) {
-            return Response.serverError().entity(ex).build();
+            return new Response(getExecutorByTechnology(technology).execute(
+                    queryMetaData), status);
+        } catch (Throwable ex) {
+            return handleException(ex, resourceClazz, method);
         }
+    }
+
+    private <T> Response<?> handleException(Throwable exception,
+            Class<T> resourceClazz, String method) {
+        System.out.printf("handle Exception: %s, resource: %s, method: %s%n",
+                exception.getClass().getSimpleName(),
+                resourceClazz.getSimpleName(),
+                method);
+        for (ExceptionHandler exh : exceptionHandlers) {
+            System.out.printf("check handler: %s%n", exh.getClass()
+                    .getSimpleName());
+            if (exh
+                    .isResponsibleFor(resourceClazz, method, exception
+                    .getClass())) {
+                System.out.printf("call exception handler: %s%n", exh.getClass()
+                        .getSimpleName());
+                return exh.handleException(resourceClazz, method, exception);
+            }
+        }
+        return new Response(exception, 500);
     }
 }

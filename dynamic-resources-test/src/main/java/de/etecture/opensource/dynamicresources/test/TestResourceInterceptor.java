@@ -2,8 +2,8 @@ package de.etecture.opensource.dynamicresources.test;
 
 import de.etecture.opensource.dynamicresources.api.Resource;
 import de.etecture.opensource.dynamicresources.api.ResourceInterceptor;
+import de.etecture.opensource.dynamicresources.api.Response;
 import java.util.Map;
-import javax.ws.rs.core.Response;
 
 /**
  *

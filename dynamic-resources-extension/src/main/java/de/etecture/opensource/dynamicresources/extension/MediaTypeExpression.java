@@ -14,7 +14,7 @@ import org.apache.commons.lang.StringUtils;
 public class MediaTypeExpression implements MediaType {
 
     private static final Pattern MIME_TYPE_EXPRESSION = Pattern.compile(
-            "^(?<category>text|application|image|message|audio|model|multipart|video)/(?<subtype>(?:(?<space>vnd|prs|x)(?:-|\\.))?.+?)(?:\\.v(?<version>[0-9.]+))?(?:\\+(?<alttype>.+?))?(?:;\\s*charset\\s*=\\s*(?<encoding>.+))?$");
+            "^(?<category>\\*|text|application|image|message|audio|model|multipart|video)/(?<subtype>(?:(?<space>vnd|prs|x)(?:-|\\.))?.+?)(?:\\.v(?<version>[0-9.]+))?(?:\\+(?<alttype>.+?))?(?:;\\s*charset\\s*=\\s*(?<encoding>.+))?$");
     private final String category, subtype, space, alttype;
     private final Charset encoding;
     private final VersionExpression version;
@@ -121,7 +121,8 @@ public class MediaTypeExpression implements MediaType {
     }
 
     private boolean isCompatible(MediaType mediaType) {
-        if (this.subtype.equalsIgnoreCase(mediaType.subType())) {
+        if ("*".equals(this.subtype) || this.subtype.equalsIgnoreCase(mediaType
+                .subType())) {
             return true;
         } else if (StringUtils.isNotBlank(this.alttype) && this.alttype
                 .equalsIgnoreCase(mediaType.subType())) {

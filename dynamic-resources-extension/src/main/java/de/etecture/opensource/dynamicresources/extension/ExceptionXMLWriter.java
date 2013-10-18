@@ -54,7 +54,8 @@ import javax.xml.stream.XMLStreamWriter;
  * @author rhk
  */
 @Entity(Exception.class)
-@Produces(mimeType = "application/xml")
+@Produces(mimeType = {"application/xml",
+    "text/xml"})
 public class ExceptionXMLWriter implements ResponseWriter<Throwable> {
 
     private static final XMLOutputFactory XML_FACTORY = XMLOutputFactory

@@ -40,7 +40,6 @@
 package de.etecture.opensource.dynamicresources.api;
 
 import java.util.Map;
-import javax.ws.rs.core.Response;
 
 /**
  *
