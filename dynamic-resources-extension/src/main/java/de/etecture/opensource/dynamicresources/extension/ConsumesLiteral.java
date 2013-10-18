@@ -1,6 +1,6 @@
 package de.etecture.opensource.dynamicresources.extension;
 
-import de.etecture.opensource.dynamicresources.api.Produces;
+import de.etecture.opensource.dynamicresources.api.Consumes;
 import javax.enterprise.util.AnnotationLiteral;
 
 /**
@@ -8,35 +8,35 @@ import javax.enterprise.util.AnnotationLiteral;
  * @author rhk
  */
 @SuppressWarnings("AnnotationAsSuperInterface")
-public class ProducesLiteral extends AnnotationLiteral<Produces> implements
-        Produces {
+public class ConsumesLiteral extends AnnotationLiteral<Consumes> implements
+        Consumes {
 
     private static final long serialVersionUID = 1L;
     private final String version;
     private final String[] mimeTypes;
-    private final Class contentType;
+    private final Class requestType;
 
-    public ProducesLiteral(Class contentType) {
-        this.contentType = contentType;
+    public ConsumesLiteral(Class requestType) {
+        this.requestType = requestType;
         this.mimeTypes = new String[]{"text/plain"};
         this.version = String.format("%d.%d.%d", Integer.MAX_VALUE,
                 Integer.MAX_VALUE, Integer.MAX_VALUE);
     }
 
-    public ProducesLiteral(Object object) {
-        this.contentType = object.getClass();
+    public ConsumesLiteral(Object object) {
+        this.requestType = object.getClass();
         this.mimeTypes = new String[]{"text/plain"};
         this.version = String.format("%d.%d.%d", Integer.MAX_VALUE,
                 Integer.MAX_VALUE, System.identityHashCode(object));
     }
 
-    public ProducesLiteral(Produces produces) {
-        this(produces.contentType(), produces.mimeType(), produces.version());
+    public ConsumesLiteral(Consumes consumes) {
+        this(consumes.requestType(), consumes.mimeType(), consumes.version());
     }
 
-    public ProducesLiteral(Class contentType, String[] mimeTypes,
+    public ConsumesLiteral(Class requestType, String[] mimeTypes,
             String versionString) {
-        this.contentType = contentType;
+        this.requestType = requestType;
         this.mimeTypes = mimeTypes;
         this.version = versionString;
     }
@@ -52,7 +52,7 @@ public class ProducesLiteral extends AnnotationLiteral<Produces> implements
     }
 
     @Override
-    public Class contentType() {
-        return contentType;
+    public Class requestType() {
+        return requestType;
     }
 }

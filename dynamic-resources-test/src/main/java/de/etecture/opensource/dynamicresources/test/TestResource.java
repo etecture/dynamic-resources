@@ -12,8 +12,8 @@ import de.etecture.opensource.dynamicresources.api.Resource;
 @Resource("/data/test/{id}")
 @GET(
         description = "retrieves a TestResource with the given id",
-        technology = "Neo4j",
-        query = ""
+        technology = "Neo4j"/*,
+         query = ""
         + "MATCH "
         + "  (this:Test) "
         + "WHERE "
@@ -21,7 +21,7 @@ import de.etecture.opensource.dynamicresources.api.Resource;
         + "RETURN "
         + "  this.id AS `id`, "
         + "  this.firstName AS `firstName`, "
-        + "  this.lastName AS `lastName`")
+        + "  this.lastName AS `lastName`"*/)
 @PUT(
         description = "updates a TestResource with the given id",
         technology = "Neo4j",

@@ -93,8 +93,9 @@ public interface Resources<T> {
      * method.
      *
      * @return
+     * @throws Exception
      */
-    T GET();
+    T GET() throws Exception;
 
     /**
      * updates or creates a representation of this resource by using the
@@ -102,8 +103,9 @@ public interface Resources<T> {
      *
      * @param content
      * @return
+     * @throws Exception
      */
-    T PUT(T content);
+    T PUT(Object content) throws Exception;
 
     /**
      * creates a representation of this resource by using the <b>POST</b>
@@ -111,22 +113,25 @@ public interface Resources<T> {
      *
      * @param content
      * @return
+     * @throws Exception
      */
-    T POST(T content);
+    T POST(Object content) throws Exception;
 
     /**
      * creates a representation of this resource by using the <b>POST</b>
      * method.
      *
      * @return
+     * @throws Exception
      */
-    T POST();
+    T POST() throws Exception;
 
     /**
      * deletes a representation of this resource by using the <b>DELETE</b>
      * method.
      *
      * @return
+     * @throws Exception
      */
-    boolean DELETE();
+    boolean DELETE() throws Exception;
 }

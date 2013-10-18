@@ -39,7 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.extension;
 
-import de.etecture.opensource.dynamicresources.api.ResponseWriter;
+import de.etecture.opensource.dynamicresources.api.RequestReader;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -58,31 +58,31 @@ import org.apache.commons.lang.StringUtils;
  *
  * @author rhk
  */
-public class ResponseWriterBean<T> implements Bean<ResponseWriter<T>> {
+public class RequestReaderBean implements Bean<RequestReader> {
 
     private final String name;
-    private final ResponseWriter<T> instance;
-    private final ProducesLiteral producesLiteral;
+    private final RequestReader instance;
+    private final ConsumesLiteral consumesLiteral;
 
-    public ResponseWriterBean(
-            ProducesLiteral producesLiteral,
-            ResponseWriter<T> instance) {
-        this(producesLiteral, instance, getNameOfBean(instance));
+    public RequestReaderBean(
+            ConsumesLiteral consumesLiteral,
+            RequestReader instance) {
+        this(consumesLiteral, instance, getNameOfBean(instance));
     }
 
-    public ResponseWriterBean(
-            ProducesLiteral producesLiteral,
-            ResponseWriter<T> instance,
+    public RequestReaderBean(
+            ConsumesLiteral consumesLiteral,
+            RequestReader instance,
             String name) {
         this.instance = instance;
-        this.producesLiteral = producesLiteral;
+        this.consumesLiteral = consumesLiteral;
         this.name = name;
     }
 
     @Override
     public Set<Type> getTypes() {
         Set<Type> types = new HashSet<>();
-        types.add(ResponseWriter.class);
+        types.add(RequestReader.class);
         types.add(Object.class);
         return types;
     }
@@ -93,7 +93,7 @@ public class ResponseWriterBean<T> implements Bean<ResponseWriter<T>> {
         qualifiers.add(new AnnotationLiteral<Any>() {
             private static final long serialVersionUID = 1L;
         });
-        qualifiers.add(producesLiteral);
+        qualifiers.add(consumesLiteral);
         return qualifiers;
     }
 
@@ -114,7 +114,7 @@ public class ResponseWriterBean<T> implements Bean<ResponseWriter<T>> {
 
     @Override
     public Class<?> getBeanClass() {
-        return ResponseWriter.class;
+        return RequestReader.class;
     }
 
     @Override
@@ -133,38 +133,38 @@ public class ResponseWriterBean<T> implements Bean<ResponseWriter<T>> {
     }
 
     @Override
-    public ResponseWriter<T> create(CreationalContext ctx) {
+    public RequestReader create(CreationalContext ctx) {
         return instance;
     }
 
     @Override
     public void destroy(
-            ResponseWriter<T> instance,
-            CreationalContext<ResponseWriter<T>> ctx) {
+            RequestReader instance,
+            CreationalContext<RequestReader> ctx) {
         ctx.release();
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("ResponseWriterBean '").
+        sb.append("RequestReaderBean '").
                 append(name).
                 append("' for entities with type ").
-                append(producesLiteral.contentType().getSimpleName()).
-                append(" that produces ");
-        for (int i = 0; i < producesLiteral.mimeType().length; i++) {
+                append(consumesLiteral.requestType().getSimpleName()).
+                append(" that consumes ");
+        for (int i = 0; i < consumesLiteral.mimeType().length; i++) {
             if (i > 0) {
                 sb.append(", ");
             }
-            sb.append(producesLiteral.mimeType()[i]);
+            sb.append(consumesLiteral.mimeType()[i]);
         }
-        if (StringUtils.isNotBlank(producesLiteral.version())) {
-            sb.append(" in version: ").append(producesLiteral.version());
+        if (StringUtils.isNotBlank(consumesLiteral.version())) {
+            sb.append(" in version: ").append(consumesLiteral.version());
         }
         return sb.toString();
     }
 
-    private static String getNameOfBean(ResponseWriter<?> instance) {
+    private static String getNameOfBean(RequestReader instance) {
         if (instance.getClass().isAnnotationPresent(Named.class)) {
             return instance.getClass().getAnnotation(Named.class).value();
         } else {

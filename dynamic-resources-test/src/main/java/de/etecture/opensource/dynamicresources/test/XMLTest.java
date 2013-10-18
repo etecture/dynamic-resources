@@ -1,7 +1,6 @@
 package de.etecture.opensource.dynamicresources.test;
 
 import de.etecture.opensource.dynamicrepositories.api.EntityNotFoundException;
-import de.etecture.opensource.dynamicresources.api.Entity;
 import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.api.Produces;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
@@ -18,8 +17,7 @@ import javax.xml.stream.XMLStreamWriter;
  */
 public enum XMLTest implements ResponseWriter {
 
-    @Entity(String.class)
-    @Produces(mimeType = {"application/xml",
+    @Produces(contentType = String.class, mimeType = {"application/xml",
         "text/xml"})
     BLABLA {
         @Override
@@ -30,8 +28,8 @@ public enum XMLTest implements ResponseWriter {
             writer.writeEndElement();
         }
     },
-    @Entity(EntityNotFoundException.class)
-    @Produces(mimeType = {"application/xml",
+    @Produces(contentType = EntityNotFoundException.class, mimeType = {
+        "application/xml",
         "text/xml"})
     NOT_FOUND {
         @Override
@@ -48,8 +46,7 @@ public enum XMLTest implements ResponseWriter {
             writer.writeEndElement();
         }
     },
-    @Entity(TestResource.class)
-    @Produces(mimeType = {"application/xml",
+    @Produces(contentType = TestResource.class, mimeType = {"application/xml",
         "text/xml"})
     TEST_NEWEST {
         @Override
@@ -67,8 +64,7 @@ public enum XMLTest implements ResponseWriter {
             writer.writeEndElement();
         }
     },
-    @Entity(TestResource.class)
-    @Produces(mimeType = {"application/xml",
+    @Produces(contentType = TestResource.class, mimeType = {"application/xml",
         "text/xml"}, version = "1.0")
     TEST1_0 {
         @Override
@@ -87,8 +83,7 @@ public enum XMLTest implements ResponseWriter {
             writer.writeEndElement();
         }
     },
-    @Entity(TestResource.class)
-    @Produces(mimeType = {"application/xml",
+    @Produces(contentType = TestResource.class, mimeType = {"application/xml",
         "text/xml"}, version = "2.0")
     TEST2_0 {
         @Override
@@ -107,8 +102,7 @@ public enum XMLTest implements ResponseWriter {
             writer.writeEndElement();
         }
     },
-    @Entity(TestResource.class)
-    @Produces(mimeType = {"application/xml",
+    @Produces(contentType = TestResource.class, mimeType = {"application/xml",
         "text/xml"}, version = "2.0.1")
     TEST2_0_1 {
         @Override
@@ -127,8 +121,7 @@ public enum XMLTest implements ResponseWriter {
             writer.writeEndElement();
         }
     },
-    @Entity(TestResources.class)
-    @Produces(mimeType = {"application/xml",
+    @Produces(contentType = TestResources.class, mimeType = {"application/xml",
         "text/xml"})
     TESTS {
         @Override

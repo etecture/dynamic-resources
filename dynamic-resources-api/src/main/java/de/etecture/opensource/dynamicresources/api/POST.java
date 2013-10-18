@@ -71,11 +71,18 @@ public @interface POST {
     String technology() default "";
 
     /**
-     * either the query itself or the name of the query.
+     * the query
      *
      * @return
      */
     String query() default "";
+
+    /**
+     * the name of the query
+     *
+     * @return
+     */
+    String queryName() default "";
 
     /**
      * the path where this resource are located.
@@ -94,4 +101,11 @@ public @interface POST {
      * @return
      */
     int status() default 201;
+
+    /**
+     * the type of the request if other then the resource type
+     *
+     * @return
+     */
+    Class requestType() default Class.class;
 }

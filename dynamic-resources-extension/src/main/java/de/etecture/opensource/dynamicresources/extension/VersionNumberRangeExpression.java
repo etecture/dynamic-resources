@@ -52,7 +52,7 @@ import org.apache.commons.lang.math.NumberUtils;
  *
  * @author rhk
  */
-class VersionNumberRangeExpression implements VersionNumberRange {
+public class VersionNumberRangeExpression implements VersionNumberRange {
 
     public final static Pattern versionRangePattern = Pattern.compile(
             ""
@@ -67,7 +67,7 @@ class VersionNumberRangeExpression implements VersionNumberRange {
     final int lowerMajor, lowerMinor, lowerRelease;
     final boolean upperInclusive, lowerInclusive;
 
-    VersionNumberRangeExpression(Version version) {
+    public VersionNumberRangeExpression(Version version) {
         if (version == null) {
             this.lowerInclusive = false;
             this.lowerMajor = 0;
@@ -89,7 +89,7 @@ class VersionNumberRangeExpression implements VersionNumberRange {
         }
     }
 
-    VersionNumberRangeExpression(Version lower, boolean lowerInclusive,
+    public VersionNumberRangeExpression(Version lower, boolean lowerInclusive,
             Version upper, boolean upperInclusive) {
         this(lower.major(), lower.minor(), lower.release(), lowerInclusive,
                 upper.major(), upper.minor(), upper.release(), upperInclusive);
@@ -107,7 +107,7 @@ class VersionNumberRangeExpression implements VersionNumberRange {
      * @param upperRelease
      * @param upperInclusive
      */
-    VersionNumberRangeExpression(int lowerMajor, int lowerMinor,
+    public VersionNumberRangeExpression(int lowerMajor, int lowerMinor,
             int lowerRelease, boolean lowerInclusive, int upperMajor,
             int upperMinor, int upperRelease, boolean upperInclusive) {
         this.upperMajor = upperMajor;
@@ -120,7 +120,7 @@ class VersionNumberRangeExpression implements VersionNumberRange {
         this.lowerInclusive = lowerInclusive;
     }
 
-    VersionNumberRangeExpression(int lowerMajor, int lowerMinor,
+    public VersionNumberRangeExpression(int lowerMajor, int lowerMinor,
             int lowerRelease, boolean lowerInclusive) {
         this.upperMajor = Integer.MAX_VALUE;
         this.upperMinor = Integer.MAX_VALUE;
@@ -132,7 +132,7 @@ class VersionNumberRangeExpression implements VersionNumberRange {
         this.lowerInclusive = lowerInclusive;
     }
 
-    VersionNumberRangeExpression(String lowerBound,
+    public VersionNumberRangeExpression(String lowerBound,
             boolean lowerInclusive, String upperBound, boolean upperInclusive) {
         Matcher matcher = VersionExpression.versionPattern.matcher(lowerBound);
         if (!matcher.matches()) {
@@ -162,7 +162,7 @@ class VersionNumberRangeExpression implements VersionNumberRange {
 
     }
 
-    VersionNumberRangeExpression(String versionRangeExpression) {
+    public VersionNumberRangeExpression(String versionRangeExpression) {
         Matcher matcher = versionRangePattern.matcher(versionRangeExpression);
         if (!matcher.matches()) {
             throw new IllegalArgumentException(

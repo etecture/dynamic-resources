@@ -60,6 +60,8 @@ import javax.inject.Qualifier;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Produces {
 
+    Class contentType();
+
     @Nonbinding
     String[] mimeType() default "text/plain";
 

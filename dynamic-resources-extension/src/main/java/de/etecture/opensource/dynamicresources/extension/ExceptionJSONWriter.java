@@ -1,6 +1,5 @@
 package de.etecture.opensource.dynamicresources.extension;
 
-import de.etecture.opensource.dynamicresources.api.Entity;
 import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.api.Produces;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
@@ -15,8 +14,7 @@ import javax.json.stream.JsonGeneratorFactory;
  *
  * @author rhk
  */
-@Entity(Exception.class)
-@Produces(mimeType = "application/json")
+@Produces(contentType = Exception.class, mimeType = "application/json")
 public class ExceptionJSONWriter implements ResponseWriter<Throwable> {
 
     private static final JsonGeneratorFactory JSON_FACTORY = Json

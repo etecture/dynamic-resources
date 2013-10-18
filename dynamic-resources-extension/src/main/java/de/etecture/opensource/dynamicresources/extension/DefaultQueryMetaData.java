@@ -24,6 +24,11 @@ public class DefaultQueryMetaData<T> implements QueryMetaData<T> {
     private final Class<T> queryType;
     private final Kind queryKind;
 
+    public DefaultQueryMetaData(QueryMetaData<T> metaData) {
+        this(metaData.getQueryType(), metaData.getQueryKind(), metaData
+                .getQuery(), metaData.getQueryName(), metaData.getParameterMap());
+    }
+
     public DefaultQueryMetaData(Class<T> queryType, Kind queryKind, String query,
             String queryName, Map<String, Object> parameters) {
         this.queryType = queryType;
@@ -102,7 +107,7 @@ public class DefaultQueryMetaData<T> implements QueryMetaData<T> {
 
     @Override
     public Class<?> getRepositoryClass() {
-        return null;
+        return queryType;
     }
 
     public void addParameter(Param param) {

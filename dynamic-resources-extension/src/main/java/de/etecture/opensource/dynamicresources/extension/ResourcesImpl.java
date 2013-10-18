@@ -1,13 +1,12 @@
 package de.etecture.opensource.dynamicresources.extension;
 
-import de.etecture.opensource.dynamicresources.api.Resource;
 import de.etecture.opensource.dynamicresources.api.Resources;
+import de.etecture.opensource.dynamicresources.spi.ResourceMethodHandler;
 import java.util.HashMap;
 import java.util.Map;
-import javax.enterprise.inject.Default;
+import java.util.Set;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.util.AnnotationLiteral;
 
 /**
  *
@@ -48,44 +47,42 @@ public class ResourcesImpl<T> implements Resources<T> {
     }
 
     @Override
-    public T GET() {
-        return resourceClass.cast(lookupExecutor(bm).GET(resourceClass
-                .getAnnotation(
-                Resource.class), resourceClass, params).getEntity());
+    public T GET() throws Exception {
+        return lookupExecutor(bm, "GET").execute(resourceClass, params, null);
     }
 
     @Override
-    public T PUT(T content) {
-        return resourceClass.cast(lookupExecutor(bm).PUT(resourceClass
-                .getAnnotation(
-                Resource.class), resourceClass, params, content).getEntity());
+    public T PUT(Object content) throws Exception {
+        return lookupExecutor(bm, "PUT").execute(resourceClass, params, content);
     }
 
     @Override
-    public T POST(T content) {
-        return resourceClass.cast(lookupExecutor(bm).POST(resourceClass
-                .getAnnotation(
-                Resource.class), resourceClass, params, content).getEntity());
+    public T POST(Object content) throws Exception {
+        return lookupExecutor(bm, "POST")
+                .execute(resourceClass, params, content);
     }
 
     @Override
-    public T POST() {
+    public T POST() throws Exception {
         return POST(null);
     }
 
     @Override
-    public boolean DELETE() {
-        return lookupExecutor(bm).DELETE(resourceClass.getAnnotation(
-                Resource.class), resourceClass, params).getStatus() == 200;
+    public boolean DELETE() throws Exception {
+        lookupExecutor(bm, "POST").execute(resourceClass, params, null);
+        return true;
     }
 
-    private static DynamicResourceExecutor lookupExecutor(BeanManager bm) {
-        Bean<DynamicResourceExecutor> b = (Bean<DynamicResourceExecutor>) bm
+    private static ResourceMethodHandler lookupExecutor(BeanManager bm,
+            String method) {
+        final Set<Bean<?>> beans =
+                bm.getBeans(ResourceMethodHandler.class,
+                new VerbLiteral(method));
+        System.out.println(method + " " + beans.size());
+        Bean<ResourceMethodHandler> b = (Bean<ResourceMethodHandler>) bm
                 .resolve(
-                bm.getBeans(DynamicResourceExecutor.class,
-                new AnnotationLiteral<Default>() {
-            private static final long serialVersionUID = 1L;
-        }));
+                beans);
+        System.out.println(b);
         return b.create(bm
                 .createCreationalContext(b));
     }

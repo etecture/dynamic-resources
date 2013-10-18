@@ -21,21 +21,26 @@ public class TestBean {
 
     @PostConstruct
     public void init() {
-        System.out.println("####################");
-        System.out.println("lookup TestResources");
-        TestResources trs = testResourcesList.GET();
-        System.out.println("result is: " + trs.getCount());
-        System.out.println("lookup TestResource with id 1234567890");
-        TestResource tr = testResources.select("id", "1234567890").GET();
-        System.out.println("result is: " + tr.getFirstName() + " " + tr
-                .getLastName());
-        System.out.println("####################");
+        try {
+            System.out.println("####################");
+            System.out.println("lookup TestResources");
+            TestResources trs = testResourcesList.GET();
+            System.out.println("result is: " + trs.getCount());
+            System.out.println("lookup TestResource with id 1234567890");
+            TestResource tr = testResources.select("id", "1234567890").GET();
+            System.out.println("result is: " + tr.getFirstName() + " " + tr
+                    .getLastName());
+            System.out.println("####################");
+        } catch (Exception ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
     }
 
     public TestResource createTestResource(
             final String id,
             final String firstName,
-            final String lastName) {
+            final String lastName) throws Exception {
 
         TestResource testResource = new TestResource() {
             @Override
@@ -57,7 +62,7 @@ public class TestBean {
         return testResources.select("id", id).PUT(testResource);
     }
 
-    public TestResource findTestResource(String id) {
+    public TestResource findTestResource(String id) throws Exception {
         return testResources.select("id", id).GET();
     }
 }

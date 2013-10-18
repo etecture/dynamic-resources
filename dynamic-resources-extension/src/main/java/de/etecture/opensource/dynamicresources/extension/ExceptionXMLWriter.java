@@ -39,7 +39,6 @@
  */
 package de.etecture.opensource.dynamicresources.extension;
 
-import de.etecture.opensource.dynamicresources.api.Entity;
 import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.api.Produces;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
@@ -53,8 +52,7 @@ import javax.xml.stream.XMLStreamWriter;
  *
  * @author rhk
  */
-@Entity(Exception.class)
-@Produces(mimeType = {"application/xml",
+@Produces(contentType = Exception.class, mimeType = {"application/xml",
     "text/xml"})
 public class ExceptionXMLWriter implements ResponseWriter<Throwable> {
 

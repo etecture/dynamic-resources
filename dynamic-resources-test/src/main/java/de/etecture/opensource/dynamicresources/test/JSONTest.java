@@ -1,7 +1,6 @@
 package de.etecture.opensource.dynamicresources.test;
 
 import de.etecture.opensource.dynamicrepositories.api.EntityNotFoundException;
-import de.etecture.opensource.dynamicresources.api.Entity;
 import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.api.Produces;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
@@ -17,10 +16,9 @@ import javax.json.stream.JsonGeneratorFactory;
  *
  * @author rhk
  */
-@Produces(mimeType = "application/json")
 public enum JSONTest implements ResponseWriter {
 
-    @Entity(String.class)
+    @Produces(contentType = String.class, mimeType = "application/json")
     BLABLA {
         @Override
         protected void process(Object element, JsonGenerator generator) {
@@ -28,7 +26,8 @@ public enum JSONTest implements ResponseWriter {
                     .writeEnd();
         }
     },
-    @Entity(EntityNotFoundException.class)
+    @Produces(contentType = EntityNotFoundException.class, mimeType =
+            "application/json")
     NOT_FOUND {
         @Override
         protected void process(Object element, JsonGenerator generator) {
@@ -42,7 +41,7 @@ public enum JSONTest implements ResponseWriter {
                     .writeEnd();
         }
     },
-    @Entity(TestResources.class)
+    @Produces(contentType = TestResources.class, mimeType = "application/json")
     TESTS {
         @Override
         protected void process(Object element, JsonGenerator generator) {
@@ -50,7 +49,7 @@ public enum JSONTest implements ResponseWriter {
                     ((TestResources) element).getCount()).writeEnd();
         }
     },
-    @Entity(TestResource.class)
+    @Produces(contentType = TestResource.class, mimeType = "application/json")
     TEST {
         @Override
         protected void process(Object element, JsonGenerator generator) {

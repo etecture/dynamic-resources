@@ -39,8 +39,9 @@
  */
 package de.etecture.opensource.dynamicresources.extension;
 
-import de.etecture.opensource.dynamicresources.api.Entity;
+import de.etecture.opensource.dynamicresources.api.Consumes;
 import de.etecture.opensource.dynamicresources.api.Produces;
+import de.etecture.opensource.dynamicresources.api.RequestReader;
 import de.etecture.opensource.dynamicresources.api.Resource;
 import de.etecture.opensource.dynamicresources.api.Resources;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
@@ -70,6 +71,7 @@ import javax.enterprise.inject.spi.Producer;
 public class DynamicResourcesExtension implements Extension {
 
     private Set<ResponseWriterBean> responseWriters = new HashSet<>();
+    private Set<RequestReaderBean> requestReaders = new HashSet<>();
     public Set<Class<?>> resourcesInterfaces = new HashSet<>();
     private Map<Class<?>, ResourcesBean> resourcesInjectionTargets =
             new HashMap<>();
@@ -130,35 +132,71 @@ public class DynamicResourcesExtension implements Extension {
             for (AnnotatedField af
                     : pat.getAnnotatedType()
                     .getFields()) {
-                if (af.isAnnotationPresent(Entity.class)) {
+                if (af.isAnnotationPresent(Produces.class)) {
                     final String name = String.format("%s_%s",
                             pat.getAnnotatedType().getJavaClass().
                             getSimpleName(), af.getJavaMember().getName());
                     log.info(String.format(
                             "found ResponseWriter for Entity: %s with name: %s",
-                            af.getAnnotation(Entity.class).value().getName(),
+                            af.getAnnotation(Produces.class).contentType()
+                            .getName(),
                             name));
                     final ResponseWriter responseWriter =
                             (ResponseWriter) af.getJavaMember().get(pat
                             .getAnnotatedType().getJavaClass());
                     if (af.isAnnotationPresent(Produces.class)) {
                         responseWriters.add(new ResponseWriterBean(
-                                new EntityLiteral(af.getAnnotation(Entity.class)),
                                 new ProducesLiteral(af.getAnnotation(
                                 Produces.class)), responseWriter, name));
                     } else if (pat.getAnnotatedType().getJavaClass()
                             .isAnnotationPresent(Produces.class)) {
                         responseWriters.add(new ResponseWriterBean(
-                                new EntityLiteral(af.getAnnotation(Entity.class)),
                                 new ProducesLiteral(pat.getAnnotatedType()
                                 .getJavaClass().getAnnotation(
                                 Produces.class)), responseWriter, name));
 
                     } else {
                         responseWriters.add(new ResponseWriterBean(
-                                new EntityLiteral(af.getAnnotation(Entity.class)),
                                 new ProducesLiteral(responseWriter),
                                 responseWriter, name));
+                    }
+                }
+            }
+        }
+
+        if (pat.getAnnotatedType().getJavaClass().isEnum()
+                && RequestReader.class
+                .isAssignableFrom(pat.getAnnotatedType().getJavaClass())) {
+            for (AnnotatedField af
+                    : pat.getAnnotatedType()
+                    .getFields()) {
+                if (af.isAnnotationPresent(Consumes.class)) {
+                    final String name = String.format("%s_%s",
+                            pat.getAnnotatedType().getJavaClass().
+                            getSimpleName(), af.getJavaMember().getName());
+                    log.info(String.format(
+                            "found RequestReader for Entity: %s with name: %s",
+                            af.getAnnotation(Consumes.class).requestType()
+                            .getName(),
+                            name));
+                    final RequestReader requestReader =
+                            (RequestReader) af.getJavaMember().get(pat
+                            .getAnnotatedType().getJavaClass());
+                    if (af.isAnnotationPresent(Consumes.class)) {
+                        requestReaders.add(new RequestReaderBean(
+                                new ConsumesLiteral(af.getAnnotation(
+                                Consumes.class)), requestReader, name));
+                    } else if (pat.getAnnotatedType().getJavaClass()
+                            .isAnnotationPresent(Consumes.class)) {
+                        requestReaders.add(new RequestReaderBean(
+                                new ConsumesLiteral(pat.getAnnotatedType()
+                                .getJavaClass().getAnnotation(
+                                Consumes.class)), requestReader, name));
+
+                    } else {
+                        requestReaders.add(new RequestReaderBean(
+                                new ConsumesLiteral(requestReader),
+                                requestReader, name));
                     }
                 }
             }
@@ -178,6 +216,10 @@ public class DynamicResourcesExtension implements Extension {
     void afterBeanDiscovery(@Observes AfterBeanDiscovery abd) {
         log.info("finished the scanning process");
         for (ResponseWriterBean b : responseWriters) {
+            log.info(String.format("add a %s", b.toString()));
+            abd.addBean(b);
+        }
+        for (RequestReaderBean b : requestReaders) {
             log.info(String.format("add a %s", b.toString()));
             abd.addBean(b);
         }
