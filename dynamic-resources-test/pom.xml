@@ -5,7 +5,7 @@
     <parent>
         <groupId>de.etecture.opensource</groupId>
         <artifactId>dynamic-resources</artifactId>
-        <version>1.0.1-SNAPSHOT</version>
+        <version>1.0.1</version>
     </parent>
 
     <artifactId>dynamic-resources-test</artifactId>
@@ -22,13 +22,13 @@
         <dependency>
             <groupId>de.etecture.opensource</groupId>
             <artifactId>dynamic-resources-api</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
+            <version>1.0.1</version>
             <type>jar</type>
         </dependency>
         <dependency>
             <groupId>de.etecture.opensource</groupId>
             <artifactId>dynamic-resources-extension</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
+            <version>1.0.1</version>
             <type>jar</type>
         </dependency>
         <dependency>
