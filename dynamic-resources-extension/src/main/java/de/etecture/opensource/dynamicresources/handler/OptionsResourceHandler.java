@@ -63,7 +63,7 @@ public class OptionsResourceHandler implements ResourceMethodHandler {
     @Override
     public boolean isAvailable(
             Class<?> resourceClazz) {
-        return true;
+        return true; // the OPTIONS method is available for any resources
     }
 
     @Override

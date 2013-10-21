@@ -37,66 +37,34 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.extension;
+package de.etecture.opensource.dynamicresources.mapping;
 
 import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.api.Produces;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Collections;
-import javax.json.Json;
-import javax.json.stream.JsonGenerator;
-import javax.json.stream.JsonGeneratorFactory;
 
 /**
+ * writes strings into any mediatype
  *
  * @author rhk
+ * @version
+ * @since
  */
-@Produces(contentType = Exception.class, mimeType = "application/json")
-public class ExceptionJSONWriter implements ResponseWriter<Throwable> {
+public enum StringWriter implements ResponseWriter<String> {
 
-    private static final JsonGeneratorFactory JSON_FACTORY = Json
-            .createGeneratorFactory(Collections.<String, Object>singletonMap(
-            JsonGenerator.PRETTY_PRINTING, "true"));
-
-    private void internalProcess(JsonGenerator jg, Throwable ex) {
-        jg.write("exception", ex.getClass().getSimpleName());
-        if (ex.getMessage() == null) {
-            jg.writeNull("message");
-        } else {
-            jg.write("message", ex.getMessage());
+    @Produces(contentType = String.class, mimeType = {"application/xml",
+        "text/xml",
+        "text/plain"})
+    DEFAULT {
+        @Override
+        public void processElement(String element, Writer writer,
+                MediaType mimetype)
+                throws IOException {
+            System.out.println("write: " + element);
+            writer.append(element);
+            writer.flush();
         }
-        jg.writeStartArray("trace");
-        for (StackTraceElement ste : ex.getStackTrace()) {
-            jg.writeStartObject();
-            jg.write("class", ste.getClassName());
-            if (ste.getFileName() != null) {
-                jg.write("file", ste.getFileName());
-            }
-            if (ste.getMethodName() != null) {
-                jg.write("method", ste.getMethodName());
-            }
-            jg.write("line", ste.getLineNumber());
-            jg.writeEnd();
-        }
-        jg.writeEnd();
-        if (ex.getCause() != null) {
-            jg.writeStartObject("cause");
-            internalProcess(jg, ex.getCause());
-            jg.writeEnd();
-        }
-    }
-
-    @Override
-    public void processElement(Throwable element, Writer writer,
-            MediaType mimetype) throws
-            IOException {
-        JsonGenerator jg = JSON_FACTORY.createGenerator(writer);
-        jg.writeStartObject();
-        internalProcess(jg, element);
-        jg.writeEnd();
-        jg.flush();
-        jg.close();
     }
 }

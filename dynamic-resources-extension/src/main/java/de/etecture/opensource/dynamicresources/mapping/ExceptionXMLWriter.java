@@ -37,7 +37,7 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.extension;
+package de.etecture.opensource.dynamicresources.mapping;
 
 import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.api.Produces;
@@ -52,59 +52,62 @@ import javax.xml.stream.XMLStreamWriter;
  *
  * @author rhk
  */
-@Produces(contentType = Exception.class, mimeType = {"application/xml",
-    "text/xml"})
-public class ExceptionXMLWriter implements ResponseWriter<Throwable> {
+public enum ExceptionXMLWriter implements ResponseWriter<Throwable> {
 
+    @Produces(contentType = Exception.class, mimeType = {"application/xml",
+        "text/xml"})
+    DEFAULT {
+        private void internalProcess(XMLStreamWriter writer, Throwable ex)
+                throws
+                XMLStreamException {
+            writer.writeStartElement("exception");
+            writer.writeAttribute("type", ex.getClass().getSimpleName());
+
+            writer.writeStartElement("message");
+            if (ex.getMessage() != null) {
+                writer.writeCharacters(ex.getMessage());
+            }
+            writer.writeEndElement();
+
+            writer.writeStartElement("trace");
+            for (StackTraceElement ste : ex.getStackTrace()) {
+                writer.writeStartElement("traceElement");
+                writer.writeAttribute("class", ste.getClassName());
+                if (ste.getFileName() != null) {
+                    writer.writeAttribute("file", ste.getFileName());
+                }
+                if (ste.getMethodName() != null) {
+                    writer.writeAttribute("method", ste.getMethodName());
+                }
+                writer.writeAttribute("line", "" + ste.getLineNumber());
+                writer.writeEndElement();
+            }
+            writer.writeEndElement();
+
+            if (ex.getCause() != null) {
+                writer.writeStartElement("cause");
+                internalProcess(writer, ex.getCause());
+                writer.writeEndElement();
+            }
+        }
+
+        @Override
+        public void processElement(Throwable element, Writer writer,
+                MediaType mimetype) throws
+                IOException {
+            try {
+                final XMLStreamWriter xmlwriter =
+                        XML_FACTORY.createXMLStreamWriter(writer);
+                internalProcess(xmlwriter, element);
+                xmlwriter.flush();
+                xmlwriter.close();
+            } catch (XMLStreamException ex) {
+                throw new IOException(
+                        "cannot write the exception to xml response.",
+                        ex);
+            }
+        }
+    };
     private static final XMLOutputFactory XML_FACTORY = XMLOutputFactory
             .newFactory();
-
-    private void internalProcess(XMLStreamWriter writer, Throwable ex) throws
-            XMLStreamException {
-        writer.writeStartElement("exception");
-        writer.writeAttribute("type", ex.getClass().getSimpleName());
-
-        writer.writeStartElement("message");
-        if (ex.getMessage() != null) {
-            writer.writeCharacters(ex.getMessage());
-        }
-        writer.writeEndElement();
-
-        writer.writeStartElement("trace");
-        for (StackTraceElement ste : ex.getStackTrace()) {
-            writer.writeStartElement("traceElement");
-            writer.writeAttribute("class", ste.getClassName());
-            if (ste.getFileName() != null) {
-                writer.writeAttribute("file", ste.getFileName());
-            }
-            if (ste.getMethodName() != null) {
-                writer.writeAttribute("method", ste.getMethodName());
-            }
-            writer.writeAttribute("line", "" + ste.getLineNumber());
-            writer.writeEndElement();
-        }
-        writer.writeEndElement();
-
-        if (ex.getCause() != null) {
-            writer.writeStartElement("cause");
-            internalProcess(writer, ex.getCause());
-            writer.writeEndElement();
-        }
-    }
-
-    @Override
-    public void processElement(Throwable element, Writer writer,
-            MediaType mimetype) throws
-            IOException {
-        try {
-            final XMLStreamWriter xmlwriter =
-                    XML_FACTORY.createXMLStreamWriter(writer);
-            internalProcess(xmlwriter, element);
-            xmlwriter.flush();
-            xmlwriter.close();
-        } catch (XMLStreamException ex) {
-            throw new IOException("cannot write the exception to xml response.",
-                    ex);
-        }
-    }
 }
