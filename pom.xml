@@ -6,6 +6,10 @@
     <artifactId>dynamic-resources</artifactId>
     <version>1.0.3-SNAPSHOT</version>
     <packaging>pom</packaging>
+
+    <properties>
+        <netbeans.hint.license>etecture-community</netbeans.hint.license>
+    </properties>
 	
     <name>Dynamic CDI Resources</name>
     <description>A CDI extension to use a dynamically implemented interface to provide ReST Resources automatically</description>
@@ -20,7 +24,7 @@
     <licenses>
         <license>
             <name>ETECTURE Community License</name>
-            <url>https://github.com/etecture/dynamic-resources/blob/master/license.txt</url>
+            <url>https://github.com/etecture/dynamic-resources/blob/master/LICENSE</url>
         </license>
     </licenses>
 
