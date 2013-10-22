@@ -43,9 +43,12 @@ import de.etecture.opensource.dynamicrepositories.api.EntityNotFoundException;
 import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.api.Produces;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
+import de.etecture.opensource.dynamicresources.api.UriBuilder;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.Writer;
+import java.util.Collections;
+import javax.inject.Inject;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -99,6 +102,11 @@ public enum XMLTest implements ResponseWriter {
             writer.writeEndElement();
             writer.writeStartElement("lastName");
             writer.writeCharacters(resource.getLastName());
+            writer.writeEndElement();
+            writer.writeStartElement("uri");
+            writer.writeCharacters(uriBuilder.build(TestResource.class,
+                    Collections.singletonMap("id", resource
+                    .getId())));
             writer.writeEndElement();
             writer.writeEndElement();
         }
@@ -174,6 +182,8 @@ public enum XMLTest implements ResponseWriter {
     };
     private static final XMLOutputFactory XML_FACTORY = XMLOutputFactory
             .newFactory();
+    @Inject
+    UriBuilder uriBuilder;
 
     protected abstract void process(Object element, XMLStreamWriter writer)
             throws XMLStreamException;

@@ -113,7 +113,8 @@ public class DynamicResourcesExtension implements Extension {
         }
     }
 
-    <T> void processAnnotatedType(@Observes ProcessAnnotatedType<T> pat) throws
+    <T> void processAnnotatedType(@Observes ProcessAnnotatedType<T> pat,
+            BeanManager beanManager) throws
             Exception {
 
         if (pat.getAnnotatedType().isAnnotationPresent(Resource.class)) {
@@ -146,17 +147,20 @@ public class DynamicResourcesExtension implements Extension {
                             .getAnnotatedType().getJavaClass());
                     if (af.isAnnotationPresent(Produces.class)) {
                         responseWriters.add(new ResponseWriterBean(
+                                beanManager,
                                 new ProducesLiteral(af.getAnnotation(
                                 Produces.class)), responseWriter, name));
                     } else if (pat.getAnnotatedType().getJavaClass()
                             .isAnnotationPresent(Produces.class)) {
                         responseWriters.add(new ResponseWriterBean(
+                                beanManager,
                                 new ProducesLiteral(pat.getAnnotatedType()
                                 .getJavaClass().getAnnotation(
                                 Produces.class)), responseWriter, name));
 
                     } else {
                         responseWriters.add(new ResponseWriterBean(
+                                beanManager,
                                 new ProducesLiteral(responseWriter),
                                 responseWriter, name));
                     }

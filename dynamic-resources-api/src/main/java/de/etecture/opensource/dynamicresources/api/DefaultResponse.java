@@ -39,43 +39,64 @@
  */
 package de.etecture.opensource.dynamicresources.api;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 /**
- * handles exceptions.
+ * represents the response object for a ReST request.
  *
+ * @param <T>
  * @author rhk
  */
-public interface ExceptionHandler {
+public class DefaultResponse<T> implements Response<T> {
 
-    /**
-     * called by the dynamic resource service to check, if this exception
-     * handler is responsible for a specific type of exceptions.
-     * <p>
-     * implementors must return true, if the dynamic resource service should use
-     * this exception handler by calling it's
-     * {@link ExceptionHandler#handleException(java.lang.Class, java.lang.String, java.lang.Throwable)}
-     * method.
-     *
-     * @param resourceClass
-     * @param method
-     * @param exceptionClass
-     * @return
-     */
-    boolean isResponsibleFor(Class<?> resourceClass, String method,
-            Class<? extends Throwable> exceptionClass);
+    private final T entity;
+    private int status;
+    private final Map<String, List<Object>> header = new HashMap<>();
 
-    /**
-     * called by the dynamic resource service when an exception was thrown while
-     * requesting a resource.
-     * <p>
-     * implementors must return an instance of {@link ResponseImpl} that is
-     * later     * writen to the desired media type with the corresponding
-     * {@link ResponseWriter}
-     *
-     * @param resourceClass the class of the resource that was requested.
-     * @param method the method of the request
-     * @param exception the exception that was raised
-     * @return
-     */
-    Response<?> handleException(Class<?> resourceClass, String method,
-            Throwable exception);
+    public DefaultResponse(T entity, int status) {
+        this.entity = entity;
+        this.status = status;
+    }
+
+    @Override
+    public T getEntity() {
+        return entity;
+    }
+
+    @Override
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    public void addHeader(String headerName, Object value) {
+        List<Object> values = header.get(headerName);
+        if (values == null) {
+            values = new ArrayList<>();
+            header.put(headerName, values);
+        }
+        values.add(value);
+    }
+
+    @Override
+    public List<Object> getHeader(String headerName) {
+        if (header.containsKey(headerName)) {
+            return Collections.unmodifiableList(header.get(headerName));
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public Set<Map.Entry<String, List<Object>>> getHeaders() {
+        return header.entrySet();
+    }
 }

@@ -51,7 +51,7 @@ public interface ResourceInterceptor {
      * called by the dynamicresources handler before the resource is invoked.
      * <p>
      * Implementors must return null to proceed or an instance of
-     * {@link Response} to return with this response immediately (without
+     * {@link ResponseImpl} to return with this response immediately (without
      * calling the resource).
      *
      * @param method

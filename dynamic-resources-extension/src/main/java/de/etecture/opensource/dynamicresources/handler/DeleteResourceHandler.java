@@ -41,7 +41,7 @@ package de.etecture.opensource.dynamicresources.handler;
 
 import de.etecture.opensource.dynamicrepositories.spi.QueryMetaData;
 import de.etecture.opensource.dynamicresources.api.DELETE;
-import de.etecture.opensource.dynamicresources.api.Response;
+import de.etecture.opensource.dynamicresources.api.DefaultResponse;
 import de.etecture.opensource.dynamicresources.spi.AbstractReflectiveResourceMethodHandler;
 import de.etecture.opensource.dynamicresources.spi.Verb;
 import java.io.IOException;
@@ -65,9 +65,10 @@ public class DeleteResourceHandler extends AbstractReflectiveResourceMethodHandl
             Class<T> resourceClazz,
             Map<String, String> pathValues, HttpServletRequest request,
             HttpServletResponse response) throws IOException {
-        executeQuery(resourceClazz, buildMetaData(resourceClazz, pathValues,
-                request));
-        writeResponse(request, response, new Response(null, getDefaultStatus(
+        executeQuery(resourceClazz, buildMetaData(resourceClazz,
+                buildParameterMap(pathValues, request, resourceClazz)));
+        writeResponse(request, response, new DefaultResponse(null,
+                getDefaultStatus(
                 resourceClazz)));
     }
 }

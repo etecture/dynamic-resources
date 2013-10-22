@@ -44,8 +44,11 @@ import de.etecture.opensource.dynamicrepositories.api.Params;
 import de.etecture.opensource.dynamicrepositories.extension.TechnologyLiteral;
 import de.etecture.opensource.dynamicrepositories.spi.QueryExecutor;
 import de.etecture.opensource.dynamicrepositories.spi.QueryMetaData;
+import de.etecture.opensource.dynamicresources.api.DefaultResponse;
 import de.etecture.opensource.dynamicresources.api.ExceptionHandler;
 import de.etecture.opensource.dynamicresources.api.RequestReader;
+import de.etecture.opensource.dynamicresources.api.Resource;
+import de.etecture.opensource.dynamicresources.api.ResourceInterceptor;
 import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
 import de.etecture.opensource.dynamicresources.extension.DefaultQueryMetaData;
@@ -101,35 +104,55 @@ public abstract class AbstractResourceMethodHandler implements
     protected abstract String getTechnology(Class<?> resourceClazz);
 
     protected abstract int getDefaultStatus(Class<?> resourceClazz);
+    @Inject
+    @Any
+    Instance<ResourceInterceptor> resourceInterceptors;
+
+    private Response before(String method, Resource resource,
+            Class<?> resourceClass,
+            Map<String, Object> parameter) {
+        Response response = null;
+        for (ResourceInterceptor ri : resourceInterceptors) {
+            response = ri.before(method, resource, resourceClass, parameter);
+            if (response != null) {
+                break;
+            }
+        }
+        return response;
+    }
+
+    private Response after(String method, Resource resource,
+            Class<?> resourceClass,
+            Map<String, Object> parameter, Response response) {
+        for (ResourceInterceptor ri : resourceInterceptors) {
+            response = ri.after(method, resource, resourceClass, parameter,
+                    response);
+        }
+        return response;
+    }
 
     @Override
     public <T> void handleRequest(
             Class<T> resourceClazz,
-            Map<String, String> pathValues, HttpServletRequest request,
-            HttpServletResponse response) throws IOException {
-        writeResponse(request, response, executeQuery(resourceClazz,
-                buildMetaData(resourceClazz,
-                pathValues,
-                request)));
+            Map<String, String> pathValues, HttpServletRequest req,
+            HttpServletResponse resp) throws IOException {
+        Map<String, Object> parameter =
+                buildParameterMap(pathValues, req, resourceClazz);
+        Response response = before(req.getMethod(), resourceClazz.getAnnotation(
+                Resource.class),
+                resourceClazz, parameter);
+        if (response == null) {
+            QueryMetaData<T> qmd = buildMetaData(resourceClazz, parameter);
+            response = executeQuery(resourceClazz, qmd);
+            response = after(req.getMethod(), resourceClazz.getAnnotation(
+                    Resource.class), resourceClazz, qmd.getParameterMap(),
+                    response);
+        }
+        writeResponse(req, resp, response);
     }
 
     protected <T> QueryMetaData<T> buildMetaData(Class<T> resourceClazz,
-            Map<String, String> pathValues,
-            HttpServletRequest req) throws IOException {
-
-        Map<String, Object> parameter = new HashMap<>();
-        parameter.putAll(pathValues);
-        for (String parameterName : Collections.list(req
-                .getParameterNames())) {
-            parameter
-                    .put(parameterName, req.getParameter(parameterName));
-        }
-
-        Object requestObject = readRequest(resourceClazz, req);
-
-        if (requestObject != null) {
-            parameter.put("request", requestObject);
-        }
+            Map<String, Object> parameter) throws IOException {
 
         DefaultQueryMetaData<T> queryMetaData = new DefaultQueryMetaData(
                 resourceClazz,
@@ -166,14 +189,14 @@ public abstract class AbstractResourceMethodHandler implements
                 return exh.handleException(resourceClazz, method, exception);
             }
         }
-        return new Response(exception, 500);
+        return new DefaultResponse(exception, 500);
     }
 
     protected <T> Response<?> executeQuery(
             Class<T> resourceClazz,
             QueryMetaData<T> queryMetaData) {
         try {
-            return new Response(
+            return new DefaultResponse(
                     queryExecutors.select(new TechnologyLiteral(getTechnology(
                     resourceClazz))).get().execute(queryMetaData),
                     getDefaultStatus(resourceClazz));
@@ -269,5 +292,22 @@ public abstract class AbstractResourceMethodHandler implements
                         mediaType.toString(), version.toString()));
             }
         }
+    }
+
+    protected <R> Map<String, Object> buildParameterMap(
+            Map<String, String> pathValues, HttpServletRequest req,
+            Class<R> resourceClazz) throws IOException {
+        Map<String, Object> parameter = new HashMap<>();
+        parameter.putAll(pathValues);
+        for (String parameterName : Collections.list(req
+                .getParameterNames())) {
+            parameter
+                    .put(parameterName, req.getParameter(parameterName));
+        }
+        Object requestObject = readRequest(resourceClazz, req);
+        if (requestObject != null) {
+            parameter.put("request", requestObject);
+        }
+        return parameter;
     }
 }

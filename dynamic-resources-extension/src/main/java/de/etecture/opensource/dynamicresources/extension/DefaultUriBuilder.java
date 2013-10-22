@@ -37,27 +37,39 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.api;
+package de.etecture.opensource.dynamicresources.extension;
 
-import java.util.List;
+import com.sun.jersey.server.impl.uri.PathTemplate;
+import de.etecture.opensource.dynamicresources.api.Resource;
+import de.etecture.opensource.dynamicresources.api.UriBuilder;
 import java.util.Map;
-import java.util.Set;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Default;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 
 /**
- * represents the response object for a ReST request.
+ * this is the default {@link UriBuilder} implementation.
  *
  * @author rhk
  * @version ${project.version}
  * @since 1.0.5
  */
-public interface Response<T> {
+@Default
+@ApplicationScoped
+public class DefaultUriBuilder implements UriBuilder {
 
-    T getEntity();
+    @Inject
+    private HttpServletRequest request;
 
-    List<Object> getHeader(String headerName);
-
-    Set<Map.Entry<String, List<Object>>> getHeaders();
-
-    int getStatus();
-
+    @Override
+    public String build(
+            Class<?> resourceClazz,
+            Map<String, String> pathValues) {
+        Resource resource = resourceClazz.getAnnotation(Resource.class);
+        PathTemplate pt = new PathTemplate(resource.value());
+        String path = pt.createURI(pathValues);
+        return request.getScheme() + "://" + request.getServerName() + ":"
+                + request.getServerPort() + request.getContextPath() + path;
+    }
 }

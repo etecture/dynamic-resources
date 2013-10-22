@@ -40,18 +40,26 @@
 package de.etecture.opensource.dynamicresources.extension;
 
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
+import de.etecture.opensource.dynamicresources.api.UriBuilder;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.Any;
+import javax.enterprise.inject.CreationException;
 import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.util.AnnotationLiteral;
+import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Qualifier;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -63,17 +71,21 @@ public class ResponseWriterBean<T> implements Bean<ResponseWriter<T>> {
     private final String name;
     private final ResponseWriter<T> instance;
     private final ProducesLiteral producesLiteral;
+    private final BeanManager beanManager;
 
     public ResponseWriterBean(
+            BeanManager beanManager,
             ProducesLiteral producesLiteral,
             ResponseWriter<T> instance) {
-        this(producesLiteral, instance, getNameOfBean(instance));
+        this(beanManager, producesLiteral, instance, getNameOfBean(instance));
     }
 
     public ResponseWriterBean(
+            BeanManager beanManager,
             ProducesLiteral producesLiteral,
             ResponseWriter<T> instance,
             String name) {
+        this.beanManager = beanManager;
         this.instance = instance;
         this.producesLiteral = producesLiteral;
         this.name = name;
@@ -134,6 +146,7 @@ public class ResponseWriterBean<T> implements Bean<ResponseWriter<T>> {
 
     @Override
     public ResponseWriter<T> create(CreationalContext ctx) {
+        inject(instance.getClass(), instance);
         return instance;
     }
 
@@ -169,6 +182,40 @@ public class ResponseWriterBean<T> implements Bean<ResponseWriter<T>> {
             return instance.getClass().getAnnotation(Named.class).value();
         } else {
             return instance.getClass().getName();
+        }
+    }
+
+    protected void inject(Class<?> clazz, ResponseWriter<?> instance) throws
+            CreationException, SecurityException {
+        if (clazz.getSuperclass() != null && clazz.getSuperclass()
+                != Object.class) {
+            inject(clazz.getSuperclass(), instance);
+        }
+        for (Field field : clazz.getDeclaredFields()) {
+            if (field.isAnnotationPresent(Inject.class) && UriBuilder.class
+                    .isAssignableFrom(field.getType())) {
+                List<Annotation> qualifiers = new ArrayList<>();
+                for (Annotation annotation : field.getAnnotations()) {
+                    if (annotation.annotationType().isAnnotationPresent(
+                            Qualifier.class)) {
+                        qualifiers.add(annotation);
+                    }
+                }
+                Set<Bean<?>> beans =
+                        beanManager.getBeans(UriBuilder.class, qualifiers
+                        .toArray(
+                        new Annotation[qualifiers.size()]));
+                Bean bean = beanManager.resolve(beans);
+                if (!field.isAccessible()) {
+                    field.setAccessible(true);
+                }
+                try {
+                    field.set(instance, bean.create(beanManager
+                            .createCreationalContext(bean)));
+                } catch (IllegalArgumentException | IllegalAccessException ex) {
+                    throw new CreationException(ex);
+                }
+            }
         }
     }
 }

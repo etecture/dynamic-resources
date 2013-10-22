@@ -39,25 +39,23 @@
  */
 package de.etecture.opensource.dynamicresources.api;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
- * represents the response object for a ReST request.
+ * builds uri's for a specific resource class
  *
  * @author rhk
  * @version ${project.version}
  * @since 1.0.5
  */
-public interface Response<T> {
+public interface UriBuilder {
 
-    T getEntity();
-
-    List<Object> getHeader(String headerName);
-
-    Set<Map.Entry<String, List<Object>>> getHeaders();
-
-    int getStatus();
-
+    /**
+     * builds the URI of the given resourceClazz and the specifiv pathValues.
+     *
+     * @param resourceClazz
+     * @param pathValues
+     * @return
+     */
+    String build(Class<?> resourceClazz, Map<String, String> pathValues);
 }

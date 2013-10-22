@@ -41,8 +41,6 @@ package de.etecture.opensource.dynamicresources.extension;
 
 import com.sun.jersey.server.impl.uri.PathTemplate;
 import de.etecture.opensource.dynamicresources.api.Resource;
-import de.etecture.opensource.dynamicresources.api.ResourceInterceptor;
-import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.spi.ResourceMethodHandler;
 import java.io.IOException;
 import java.util.HashMap;
@@ -69,30 +67,6 @@ public class DynamicRestServlet extends HttpServlet {
     @Inject
     @Any
     Instance<ResourceMethodHandler> resourceMethodHandlers;
-    @Inject
-    @Any
-    Instance<ResourceInterceptor> resourceInterceptors;
-
-    Response before(String method, Resource resource, Class<?> resourceClass,
-            Map<String, Object> parameter) {
-        Response response = null;
-        for (ResourceInterceptor ri : resourceInterceptors) {
-            response = ri.before(method, resource, resourceClass, parameter);
-            if (response != null) {
-                break;
-            }
-        }
-        return response;
-    }
-
-    Response after(String method, Resource resource, Class<?> resourceClass,
-            Map<String, Object> parameter, Response response) {
-        for (ResourceInterceptor ri : resourceInterceptors) {
-            response = ri.after(method, resource, resourceClass, parameter,
-                    response);
-        }
-        return response;
-    }
 
     private void executeResource(final HttpServletRequest req,
             HttpServletResponse resp) throws
@@ -130,4 +104,5 @@ public class DynamicRestServlet extends HttpServlet {
         executeResource(req, resp);
         resp.getWriter().flush();
     }
+
 }
