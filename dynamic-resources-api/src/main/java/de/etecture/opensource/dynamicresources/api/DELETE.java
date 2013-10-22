@@ -100,7 +100,7 @@ public @interface DELETE {
      *
      * @return
      */
-    int status() default 204;
+    int status() default StatusCodes.NO_CONTENT;
 
     /**
      * the type of the request if other then the resource type

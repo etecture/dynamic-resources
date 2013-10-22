@@ -100,7 +100,7 @@ public @interface GET {
      *
      * @return
      */
-    int status() default 200;
+    int status() default StatusCodes.OK;
 
     /**
      * the type of the request if other then the resource type

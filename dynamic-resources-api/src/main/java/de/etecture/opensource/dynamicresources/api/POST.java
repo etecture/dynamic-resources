@@ -100,7 +100,7 @@ public @interface POST {
      *
      * @return
      */
-    int status() default 201;
+    int status() default StatusCodes.CREATED;
 
     /**
      * the type of the request if other then the resource type
