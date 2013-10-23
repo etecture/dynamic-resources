@@ -37,47 +37,47 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
 package de.etecture.opensource.dynamicresources.extension;
 
-import com.sun.jersey.server.impl.uri.PathTemplate;
-import de.etecture.opensource.dynamicresources.api.Resource;
-import de.etecture.opensource.dynamicresources.api.UriBuilder;
-import java.util.Map;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Default;
-import javax.inject.Inject;
+import javax.enterprise.context.RequestScoped;
+import javax.enterprise.event.Observes;
+import javax.enterprise.inject.Produces;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
- * this is the default {@link UriBuilder} implementation.
  *
  * @author rhk
- * @version ${project.version}
- * @since 1.0.5
+ * @version
+ * @since
  */
-@Default
-@ApplicationScoped
-public class DefaultUriBuilder implements UriBuilder {
+public class HttpContextProducer {
 
-    @Inject
-    private HttpServletRequest request;
+    private static ThreadLocal<HttpServletRequest> requestObject =
+            new ThreadLocal<>();
+    private static ThreadLocal<HttpServletResponse> responseObject =
+            new ThreadLocal<>();
 
-    @Override
-    public String build(
-            Class<?> resourceClazz,
-            Map<String, String> pathValues) {
-        Resource resource = resourceClazz.getAnnotation(Resource.class);
-        String path;
-        if (pathValues != null) {
-            PathTemplate pt = new PathTemplate(resource.value());
-            path = pt.createURI(pathValues);
-        } else {
-            path = resource.value();
-            if (!path.startsWith("/")) {
-                path = "/" + path;
-            }
-        }
-        return request.getScheme() + "://" + request.getServerName() + ":"
-                + request.getServerPort() + request.getContextPath() + path;
+    @Produces
+    @Current
+    @RequestScoped
+    public HttpServletRequest getRequest() {
+        return requestObject.get();
+    }
+
+    @Produces
+    @Current
+    @RequestScoped
+    public HttpServletResponse getResponse() {
+        return responseObject.get();
+    }
+
+    void onRequestInitialized(@Observes HttpServletRequest request) {
+        requestObject.set(request);
+    }
+
+    void onResponseInitialized(@Observes HttpServletResponse response) {
+        responseObject.set(response);
     }
 }

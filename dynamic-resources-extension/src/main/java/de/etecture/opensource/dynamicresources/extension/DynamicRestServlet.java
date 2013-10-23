@@ -41,11 +41,16 @@ package de.etecture.opensource.dynamicresources.extension;
 
 import com.sun.jersey.server.impl.uri.PathTemplate;
 import de.etecture.opensource.dynamicresources.api.Resource;
+import de.etecture.opensource.dynamicresources.api.StatusCodes;
+import de.etecture.opensource.dynamicresources.api.UriBuilder;
 import de.etecture.opensource.dynamicresources.spi.ResourceMethodHandler;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
+import javax.enterprise.event.Event;
 import javax.enterprise.inject.Any;
+import javax.enterprise.inject.Default;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.servlet.ServletException;
@@ -53,6 +58,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.lang.StringUtils;
 
 /**
  *
@@ -67,6 +73,13 @@ public class DynamicRestServlet extends HttpServlet {
     @Inject
     @Any
     Instance<ResourceMethodHandler> resourceMethodHandlers;
+    @Inject
+    @Default
+    UriBuilder uriBuilder;
+    @Inject
+    Event<HttpServletResponse> responseEvents;
+    @Inject
+    Event<HttpServletRequest> requestEvents;
 
     private void executeResource(final HttpServletRequest req,
             HttpServletResponse resp) throws
@@ -83,26 +96,46 @@ public class DynamicRestServlet extends HttpServlet {
                 for (ResourceMethodHandler handler
                         : selectedResourceMethodHandlers) {
                     if (handler.isAvailable(clazz)) {
-                        handler.handleRequest(clazz, groups, req, resp);
+                        handler.handleRequest(clazz, groups);
                         return;
                     }
                 }
-                resp.sendError(405, "no such method: " + req.getMethod()
+                resp.sendError(StatusCodes.METHOD_NOT_ALLOWED,
+                        "no such method: " + req.getMethod()
                         + " for resource: " + clazz.getSimpleName());
                 return;
             }
         }
-        resp.sendError(404, String.format(
-                "There is no resource matching the path %s",
-                req.getPathInfo()));
+        if ("OPTIONS".equalsIgnoreCase(req.getMethod()) && ("/".equals(req
+                .getPathInfo()) || StringUtils.isEmpty(req.getPathInfo()))) {
+            resp.setStatus(StatusCodes.NOT_FOUND);
+            resp.setContentType("text/plain");
+            final PrintWriter writer = resp.getWriter();
+
+            writer.println("Available Resources");
+            writer.println(StringUtils.repeat("-", 19));
+            writer.println();
+
+            for (Class<?> clazz : resext.resourcesInterfaces) {
+                writer.printf("\t%s --> %s%n", clazz.getSimpleName(), uriBuilder
+                        .build(clazz, null));
+            }
+            writer.println();
+
+        } else {
+            resp.sendError(StatusCodes.NOT_FOUND, String.format(
+                    "There is no resource matching the path %s",
+                    req.getPathInfo()));
+        }
     }
 
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+        requestEvents.fire(req);
+        responseEvents.fire(resp);
         resp.setCharacterEncoding("UTF-8");
         executeResource(req, resp);
         resp.getWriter().flush();
     }
-
 }

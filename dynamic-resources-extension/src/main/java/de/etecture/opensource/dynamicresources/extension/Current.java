@@ -37,82 +37,25 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.api;
+package de.etecture.opensource.dynamicresources.extension;
 
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import javax.inject.Qualifier;
 
 /**
- * represents a Query that is executed when the resource is called by method
- * <b>PUT</b>.
  *
  * @author rhk
- * @since 1.0.0
- * @version ${project.version}
  */
+@Qualifier
+@Inherited
+@Target({ElementType.METHOD,
+    ElementType.FIELD,
+    ElementType.PARAMETER,
+    ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface PUT {
-
-    /**
-     * the description of this method.
-     *
-     * @return
-     */
-    String description() default "";
-
-    /**
-     * the technology to be used to execute this query.
-     *
-     * @return
-     */
-    String technology() default "";
-
-    /**
-     * the query
-     *
-     * @return
-     */
-    String query() default "";
-
-    /**
-     * the name of the query
-     *
-     * @return
-     */
-    String queryName() default "";
-
-    /**
-     * the path where this resource are located.
-     * <p>
-     * defaults to the path specified in &#64;{@link Resource} annotation.
-     *
-     * @return
-     */
-    String path() default "";
-
-    /**
-     * the status code to be provided by the response in case of no exception.
-     * <p>
-     * defaults to 200
-     *
-     * @return
-     */
-    int status() default StatusCodes.OK;
-
-    /**
-     * the type of the request if other then the resource type
-     *
-     * @return
-     */
-    Class requestType() default Class.class;
-
-    /**
-     * the roles that are allowed to request this resource.
-     *
-     * @return
-     */
-    String[] rolesAllowed() default {};
+public @interface Current {
 }

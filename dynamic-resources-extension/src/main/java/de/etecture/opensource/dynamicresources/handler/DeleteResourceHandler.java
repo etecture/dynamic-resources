@@ -42,12 +42,11 @@ package de.etecture.opensource.dynamicresources.handler;
 import de.etecture.opensource.dynamicrepositories.spi.QueryMetaData;
 import de.etecture.opensource.dynamicresources.api.DELETE;
 import de.etecture.opensource.dynamicresources.api.DefaultResponse;
+import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.spi.AbstractReflectiveResourceMethodHandler;
 import de.etecture.opensource.dynamicresources.spi.Verb;
 import java.io.IOException;
 import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  *
@@ -62,13 +61,18 @@ public class DeleteResourceHandler extends AbstractReflectiveResourceMethodHandl
 
     @Override
     public <T> void handleRequest(
-            Class<T> resourceClazz,
-            Map<String, String> pathValues, HttpServletRequest request,
-            HttpServletResponse response) throws IOException {
-        executeQuery(resourceClazz, buildMetaData(resourceClazz,
-                buildParameterMap(pathValues, request, resourceClazz)));
-        writeResponse(request, response, new DefaultResponse(null,
-                getDefaultStatus(
-                resourceClazz)));
+            Class<T> resourceClazz, Map<String, String> pathValues) throws
+            IOException {
+
+        Response response = checkSecurityConstraints(resourceClazz);
+        if (response == null) {
+
+            executeQuery(resourceClazz, buildMetaData(resourceClazz,
+                    buildParameterMap(pathValues, resourceClazz)));
+            response = new DefaultResponse(null,
+                    getDefaultStatus(
+                    resourceClazz));
+        }
+        writeResponse(response);
     }
 }

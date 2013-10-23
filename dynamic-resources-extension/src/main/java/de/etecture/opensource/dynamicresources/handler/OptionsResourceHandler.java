@@ -39,15 +39,21 @@
  */
 package de.etecture.opensource.dynamicresources.handler;
 
+import de.etecture.opensource.dynamicresources.api.MediaType;
+import de.etecture.opensource.dynamicresources.api.Version;
+import de.etecture.opensource.dynamicresources.extension.Current;
+import de.etecture.opensource.dynamicresources.extension.ResponseWriterResolver;
 import de.etecture.opensource.dynamicresources.spi.ResourceMethodHandler;
 import de.etecture.opensource.dynamicresources.spi.Verb;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.List;
 import java.util.Map;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.lang.StringUtils;
 
 /**
  *
@@ -59,6 +65,11 @@ public class OptionsResourceHandler implements ResourceMethodHandler {
     @Inject
     @Any
     Instance<ResourceMethodHandler> resourceMethodHandlers;
+    @Inject
+    ResponseWriterResolver responseWriters;
+    @Inject
+    @Current
+    HttpServletResponse response;
 
     @Override
     public boolean isAvailable(
@@ -68,20 +79,51 @@ public class OptionsResourceHandler implements ResourceMethodHandler {
 
     @Override
     public <T> void handleRequest(
-            Class<T> resourceClazz,
-            Map<String, String> pathValues, HttpServletRequest request,
-            HttpServletResponse response) throws IOException {
+            Class<T> resourceClazz, Map<String, String> pathValues) throws
+            IOException {
         response.setStatus(200);
         response.setContentType("text/plain");
+        final PrintWriter writer = response.getWriter();
+
+        writer.printf("Available Methods for Resource: %s\n", resourceClazz
+                .getSimpleName());
+        writer.println(StringUtils.repeat("-", resourceClazz.getSimpleName()
+                .length() + 32));
+        writer.println();
 
         for (ResourceMethodHandler handler : resourceMethodHandlers) {
             if (handler.isAvailable(resourceClazz)) {
-                response.getWriter().printf("%s%n\t- %s%n", handler.getClass()
-                        .getAnnotation(Verb.class).value(), handler
+                String verb = "";
+                if (handler.getClass().isAnnotationPresent(Verb.class)) {
+                    verb = handler.getClass().getAnnotation(Verb.class).value();
+                }
+                writer.printf("\t%s%n\t\t- %s%n", verb, handler
                         .getDescription(resourceClazz));
             }
         }
-        response.getWriter().flush();
+        writer.println();
+        writer.printf("Available MediaTypes for Resource: %s\n", resourceClazz
+                .getSimpleName());
+        writer.println(StringUtils.repeat("-", resourceClazz.getSimpleName()
+                .length() + 35));
+        writer.println();
+
+        for (Map.Entry<MediaType, List<Version>> e : responseWriters
+                .getAvailableFormats(resourceClazz).entrySet()) {
+            writer.printf("\t%s%n", e.getKey().toString());
+            writer.print("\t\tVersions: ");
+            boolean first = true;
+            for (Version version : e.getValue()) {
+                if (!first) {
+                    writer.print(", ");
+                }
+                writer.print(version.toString());
+                first = false;
+            }
+            writer.println();
+        }
+
+        writer.flush();
     }
 
     @Override
@@ -91,7 +133,6 @@ public class OptionsResourceHandler implements ResourceMethodHandler {
                 "Returns the HTTP methods that the server supports for the resource: %s",
                 resourceClazz.getSimpleName());
     }
-
 
     @Override
     public <T> T execute(

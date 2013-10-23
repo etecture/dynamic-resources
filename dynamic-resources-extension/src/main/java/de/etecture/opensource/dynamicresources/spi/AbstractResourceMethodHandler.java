@@ -51,6 +51,8 @@ import de.etecture.opensource.dynamicresources.api.Resource;
 import de.etecture.opensource.dynamicresources.api.ResourceInterceptor;
 import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
+import de.etecture.opensource.dynamicresources.api.StatusCodes;
+import de.etecture.opensource.dynamicresources.extension.Current;
 import de.etecture.opensource.dynamicresources.extension.DefaultQueryMetaData;
 import de.etecture.opensource.dynamicresources.extension.MediaTypeExpression;
 import de.etecture.opensource.dynamicresources.extension.RequestReaderResolver;
@@ -86,6 +88,12 @@ public abstract class AbstractResourceMethodHandler implements
     ResponseWriterResolver responseWriterResolver;
     @Inject
     RequestReaderResolver requestReaderResolver;
+    @Inject
+    @Current
+    HttpServletRequest req;
+    @Inject
+    @Current
+    HttpServletResponse resp;
     private final String method;
     private final QueryMetaData.Kind kind;
 
@@ -94,6 +102,8 @@ public abstract class AbstractResourceMethodHandler implements
         this.method = method;
         this.kind = kind;
     }
+
+    protected abstract String[] getAllowedRoles(Class<?> resourceClazz);
 
     protected abstract Class<?> getRequestType(Class<?> resourceClazz);
 
@@ -108,7 +118,8 @@ public abstract class AbstractResourceMethodHandler implements
     @Any
     Instance<ResourceInterceptor> resourceInterceptors;
 
-    private Response before(String method, Resource resource,
+    private Response before(String method,
+            Resource resource,
             Class<?> resourceClass,
             Map<String, Object> parameter) {
         Response response = null;
@@ -133,22 +144,25 @@ public abstract class AbstractResourceMethodHandler implements
 
     @Override
     public <T> void handleRequest(
-            Class<T> resourceClazz,
-            Map<String, String> pathValues, HttpServletRequest req,
-            HttpServletResponse resp) throws IOException {
+            Class<T> resourceClazz, Map<String, String> pathValues) throws
+            IOException {
         Map<String, Object> parameter =
-                buildParameterMap(pathValues, req, resourceClazz);
-        Response response = before(req.getMethod(), resourceClazz.getAnnotation(
-                Resource.class),
-                resourceClazz, parameter);
+                buildParameterMap(pathValues, resourceClazz);
+        Response response = checkSecurityConstraints(resourceClazz);
         if (response == null) {
-            QueryMetaData<T> qmd = buildMetaData(resourceClazz, parameter);
-            response = executeQuery(resourceClazz, qmd);
-            response = after(req.getMethod(), resourceClazz.getAnnotation(
-                    Resource.class), resourceClazz, qmd.getParameterMap(),
-                    response);
+            response = before(req.getMethod(), resourceClazz
+                    .getAnnotation(
+                    Resource.class),
+                    resourceClazz, parameter);
+            if (response == null) {
+                QueryMetaData<T> qmd = buildMetaData(resourceClazz, parameter);
+                response = executeQuery(resourceClazz, qmd);
+                response = after(req.getMethod(), resourceClazz.getAnnotation(
+                        Resource.class), resourceClazz, qmd.getParameterMap(),
+                        response);
+            }
         }
-        writeResponse(req, resp, response);
+        writeResponse(response);
     }
 
     protected <T> QueryMetaData<T> buildMetaData(Class<T> resourceClazz,
@@ -223,8 +237,7 @@ public abstract class AbstractResourceMethodHandler implements
                 parameter));
     }
 
-    protected <T, R> R readRequest(Class<T> resourceClazz,
-            HttpServletRequest req) throws IOException {
+    protected <T, R> R readRequest(Class<T> resourceClazz) throws IOException {
         String versionString = req.getHeader("Content-Version");
         String contentType = req.getHeader("Content-Type");
         if (StringUtils.isBlank(contentType)) {
@@ -249,8 +262,7 @@ public abstract class AbstractResourceMethodHandler implements
         }
     }
 
-    protected void writeResponse(HttpServletRequest req,
-            HttpServletResponse resp, Response<?> response) throws IOException {
+    protected void writeResponse(Response<?> response) throws IOException {
         String versionString = req.getHeader("Accept-Version");
         String contentType = req.getHeader("Accept");
         if (StringUtils.isBlank(contentType)) {
@@ -295,7 +307,7 @@ public abstract class AbstractResourceMethodHandler implements
     }
 
     protected <R> Map<String, Object> buildParameterMap(
-            Map<String, String> pathValues, HttpServletRequest req,
+            Map<String, String> pathValues,
             Class<R> resourceClazz) throws IOException {
         Map<String, Object> parameter = new HashMap<>();
         parameter.putAll(pathValues);
@@ -304,10 +316,27 @@ public abstract class AbstractResourceMethodHandler implements
             parameter
                     .put(parameterName, req.getParameter(parameterName));
         }
-        Object requestObject = readRequest(resourceClazz, req);
+        Object requestObject = readRequest(resourceClazz);
         if (requestObject != null) {
             parameter.put("request", requestObject);
         }
         return parameter;
+    }
+
+    protected Response checkSecurityConstraints(
+            Class<?> resourceClass) {
+        String[] allowedRoles = getAllowedRoles(resourceClass);
+        if (allowedRoles != null && allowedRoles.length > 0) {
+            boolean trust = false;
+            for (String role : allowedRoles) {
+                trust = trust || req.isUserInRole(role);
+            }
+            if (!trust) {
+                return new DefaultResponse("User " + req.getUserPrincipal()
+                        + " is not allowed to perform this request.\n",
+                        StatusCodes.FORBIDDEN);
+            }
+        }
+        return null;
     }
 }

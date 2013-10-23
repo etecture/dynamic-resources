@@ -41,8 +41,6 @@ package de.etecture.opensource.dynamicresources.spi;
 
 import java.io.IOException;
 import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * handles the execution of queries for a given method.
@@ -70,18 +68,13 @@ public interface ResourceMethodHandler {
     /**
      * handles a request for the given method.
      *
-     * @param <T> resource type
+     * @param <T>
      * @param resourceClazz the class of the (content-)resource
      * @param pathValues the path values extracted from the request path
-     * @param request the servlet reques
-     * @param response the servlet response
      * @throws IOException
      */
     <T> void handleRequest(
-            Class<T> resourceClazz,
-            Map<String, String> pathValues,
-            HttpServletRequest request,
-            HttpServletResponse response)
+            Class<T> resourceClazz, Map<String, String> pathValues)
             throws IOException;
 
     /**

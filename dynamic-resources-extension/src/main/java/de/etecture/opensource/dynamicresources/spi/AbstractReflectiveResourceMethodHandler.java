@@ -89,6 +89,12 @@ public abstract class AbstractReflectiveResourceMethodHandler<A extends Annotati
     }
 
     @Override
+    protected String[] getAllowedRoles(
+            Class<?> resourceClazz) {
+        return getAnnotationValue("rolesAllowed", resourceClazz);
+    }
+
+    @Override
     public String getDescription(
             Class<?> resourceClass) {
         return getAnnotationValue("description", resourceClass);

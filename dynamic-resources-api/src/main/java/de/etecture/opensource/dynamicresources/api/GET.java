@@ -108,4 +108,11 @@ public @interface GET {
      * @return
      */
     Class requestType() default Class.class;
+
+    /**
+     * the roles that are allowed to request this resource.
+     *
+     * @return
+     */
+    String[] rolesAllowed() default {};
 }

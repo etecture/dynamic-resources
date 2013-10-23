@@ -44,6 +44,10 @@ import de.etecture.opensource.dynamicresources.api.Version;
 import de.etecture.opensource.dynamicresources.api.VersionNumberRange;
 import de.etecture.opensource.dynamicresources.spi.VersionNumberResolver;
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import javax.enterprise.inject.Any;
@@ -79,6 +83,44 @@ public abstract class AbstractMimeAndVersionResolver<T, A extends Annotation> {
     protected abstract String[] getMimeType(A annotation);
 
     protected abstract String getVersion(A annotation);
+
+    public Map<MediaType, List<Version>> getAvailableFormats(
+            Class<?> resourceClass) {
+        Map<MediaType, List<Version>> formats = new HashMap<>();
+        final Set<Bean<?>> beans = beanManager.getBeans(beanClass,
+                new AnnotationLiteral<Any>() {
+            private static final long serialVersionUID = 1L;
+        });
+        outer:
+        for (Bean<?> bean : beans) {
+            for (Annotation qualifier : bean.getQualifiers()) {
+                if (qualifier.annotationType() == annotationClass) {
+                    A annotation = annotationClass.cast(qualifier);
+                    if (!getTypeDefinition(annotation).isAssignableFrom(
+                            resourceClass)) {
+                        continue outer;
+                    } else {
+                        final String[] mimeTypes = getMimeType(annotation);
+                        for (String mimeType : mimeTypes) {
+                            MediaType mediaType = new MediaTypeExpression(
+                                    mimeType);
+                            List<Version> versions;
+                            if (formats.containsKey(mediaType)) {
+                                versions = formats.get(mediaType);
+                            } else {
+                                versions = new ArrayList<>();
+                                formats.put(mediaType, versions);
+                            }
+                            versions.add(new VersionExpression(getVersion(
+                                    annotation)));
+                        }
+                        continue outer;
+                    }
+                }
+            }
+        }
+        return formats;
+    }
 
     public T resolve(Class<?> resourceClass,
             MediaType mimeType,
