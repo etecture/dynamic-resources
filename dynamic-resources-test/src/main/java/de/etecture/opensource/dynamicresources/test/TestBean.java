@@ -39,6 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.test;
 
+import de.etecture.opensource.dynamicresources.api.HttpMethods;
 import de.etecture.opensource.dynamicresources.api.Resources;
 import javax.annotation.PostConstruct;
 import javax.ejb.Singleton;
@@ -63,10 +64,11 @@ public class TestBean {
         try {
             System.out.println("####################");
             System.out.println("lookup TestResources");
-            TestResources trs = testResourcesList.GET();
+            TestResources trs = testResourcesList.invoke(HttpMethods.GET);
             System.out.println("result is: " + trs.getCount());
             System.out.println("lookup TestResource with id 1234567890");
-            TestResource tr = testResources.select("id", "1234567890").GET();
+            TestResource tr = testResources.select("id", "1234567890").invoke(
+                    HttpMethods.GET);
             System.out.println("result is: " + tr.getFirstName() + " " + tr
                     .getLastName());
             System.out.println("####################");
@@ -98,10 +100,11 @@ public class TestBean {
             }
         };
 
-        return testResources.select("id", id).PUT(testResource);
+        return testResources.select("id", id).invoke(HttpMethods.PUT,
+                testResource);
     }
 
     public TestResource findTestResource(String id) throws Exception {
-        return testResources.select("id", id).GET();
+        return testResources.select("id", id).invoke(HttpMethods.GET);
     }
 }

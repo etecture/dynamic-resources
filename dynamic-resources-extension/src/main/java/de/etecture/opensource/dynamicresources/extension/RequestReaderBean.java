@@ -39,6 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.extension;
 
+import de.etecture.opensource.dynamicresources.api.Consumes;
 import de.etecture.opensource.dynamicresources.api.RequestReader;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -62,16 +63,16 @@ public class RequestReaderBean implements Bean<RequestReader> {
 
     private final String name;
     private final RequestReader instance;
-    private final ConsumesLiteral consumesLiteral;
+    private final Consumes consumesLiteral;
 
     public RequestReaderBean(
-            ConsumesLiteral consumesLiteral,
+            Consumes consumesLiteral,
             RequestReader instance) {
         this(consumesLiteral, instance, getNameOfBean(instance));
     }
 
     public RequestReaderBean(
-            ConsumesLiteral consumesLiteral,
+            Consumes consumesLiteral,
             RequestReader instance,
             String name) {
         this.instance = instance;

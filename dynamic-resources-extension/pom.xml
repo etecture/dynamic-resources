@@ -60,7 +60,7 @@
         <dependency>
             <groupId>de.etecture.opensource</groupId>
             <artifactId>dynamic-repositories-extension</artifactId>
-            <version>1.2.11</version>
+            <version>[1.2.11,)</version>
             <type>jar</type>
         </dependency>
         <dependency>

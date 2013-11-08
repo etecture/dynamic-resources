@@ -39,6 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.extension;
 
+import de.etecture.opensource.dynamicresources.api.Produces;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
 import de.etecture.opensource.dynamicresources.api.UriBuilder;
 import java.lang.annotation.Annotation;
@@ -60,6 +61,8 @@ import javax.enterprise.util.AnnotationLiteral;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Qualifier;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -70,19 +73,19 @@ public class ResponseWriterBean<T> implements Bean<ResponseWriter<T>> {
 
     private final String name;
     private final ResponseWriter<T> instance;
-    private final ProducesLiteral producesLiteral;
+    private final Produces producesLiteral;
     private final BeanManager beanManager;
 
     public ResponseWriterBean(
             BeanManager beanManager,
-            ProducesLiteral producesLiteral,
+            Produces producesLiteral,
             ResponseWriter<T> instance) {
         this(beanManager, producesLiteral, instance, getNameOfBean(instance));
     }
 
     public ResponseWriterBean(
             BeanManager beanManager,
-            ProducesLiteral producesLiteral,
+            Produces producesLiteral,
             ResponseWriter<T> instance,
             String name) {
         this.beanManager = beanManager;
@@ -192,29 +195,38 @@ public class ResponseWriterBean<T> implements Bean<ResponseWriter<T>> {
             inject(clazz.getSuperclass(), instance);
         }
         for (Field field : clazz.getDeclaredFields()) {
-            if (field.isAnnotationPresent(Inject.class) && UriBuilder.class
-                    .isAssignableFrom(field.getType())) {
-                List<Annotation> qualifiers = new ArrayList<>();
-                for (Annotation annotation : field.getAnnotations()) {
-                    if (annotation.annotationType().isAnnotationPresent(
-                            Qualifier.class)) {
-                        qualifiers.add(annotation);
-                    }
+            checkFieldWithType(field, UriBuilder.class, instance);
+            checkFieldWithType(field, HttpServletRequest.class, instance);
+            checkFieldWithType(field, HttpServletResponse.class, instance);
+        }
+    }
+
+    protected void checkFieldWithType(Field field,
+            final Class<?> beanType,
+            ResponseWriter<?> instance) throws CreationException,
+            SecurityException {
+        if (field.isAnnotationPresent(Inject.class) && beanType
+                .isAssignableFrom(field.getType())) {
+            List<Annotation> qualifiers = new ArrayList<>();
+            for (Annotation annotation : field.getAnnotations()) {
+                if (annotation.annotationType().isAnnotationPresent(
+                        Qualifier.class)) {
+                    qualifiers.add(annotation);
                 }
-                Set<Bean<?>> beans =
-                        beanManager.getBeans(UriBuilder.class, qualifiers
-                        .toArray(
-                        new Annotation[qualifiers.size()]));
-                Bean bean = beanManager.resolve(beans);
-                if (!field.isAccessible()) {
-                    field.setAccessible(true);
-                }
-                try {
-                    field.set(instance, bean.create(beanManager
-                            .createCreationalContext(bean)));
-                } catch (IllegalArgumentException | IllegalAccessException ex) {
-                    throw new CreationException(ex);
-                }
+            }
+            Set<Bean<?>> beans =
+                    beanManager.getBeans(beanType, qualifiers
+                    .toArray(
+                    new Annotation[qualifiers.size()]));
+            Bean bean = beanManager.resolve(beans);
+            if (!field.isAccessible()) {
+                field.setAccessible(true);
+            }
+            try {
+                field.set(instance, bean.create(beanManager
+                        .createCreationalContext(bean)));
+            } catch (IllegalArgumentException | IllegalAccessException ex) {
+                throw new CreationException(ex);
             }
         }
     }

@@ -41,11 +41,15 @@ package de.etecture.opensource.dynamicresources.extension;
 
 import de.etecture.opensource.dynamicresources.api.Resources;
 import de.etecture.opensource.dynamicresources.spi.ResourceMethodHandler;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  *
@@ -86,38 +90,55 @@ public class ResourcesImpl<T> implements Resources<T> {
     }
 
     @Override
-    public T GET() throws Exception {
-        return lookupExecutor(bm, "GET").execute(resourceClass, params, null);
+    public T invoke(final String methodName) throws Exception {
+        HttpContextProducer.setRequest((HttpServletRequest) Proxy
+                .newProxyInstance(ResourcesImpl.class
+                .getClassLoader(), new Class[]{HttpServletRequest.class},
+                new InvocationHandler() {
+            @Override
+            public Object invoke(Object proxy, Method method, Object[] args)
+                    throws Throwable {
+                if ("getMethod".equals(method.getName())) {
+                    return methodName;
+                }
+                throw new UnsupportedOperationException(String.format(
+                        "method %s is not supported",
+                        method.getName()));
+            }
+        }));
+
+        return lookupExecutor(bm, methodName).execute(resourceClass, params,
+                null);
     }
 
     @Override
-    public T PUT(Object content) throws Exception {
-        return lookupExecutor(bm, "PUT").execute(resourceClass, params, content);
-    }
+    public T invoke(final String methodName, Object content) throws Exception {
+        HttpContextProducer.setRequest((HttpServletRequest) Proxy
+                .newProxyInstance(ResourcesImpl.class
+                .getClassLoader(), new Class[]{HttpServletRequest.class},
+                new InvocationHandler() {
+            @Override
+            public Object invoke(Object proxy, Method method, Object[] args)
+                    throws Throwable {
+                if ("getMethod".equals(method.getName())) {
+                    return methodName;
+                }
+                throw new UnsupportedOperationException(String.format(
+                        "method %s is not supported",
+                        method.getName()));
+            }
+        }));
 
-    @Override
-    public T POST(Object content) throws Exception {
-        return lookupExecutor(bm, "POST")
+        return lookupExecutor(bm, methodName)
                 .execute(resourceClass, params, content);
     }
 
-    @Override
-    public T POST() throws Exception {
-        return POST(null);
-    }
-
-    @Override
-    public boolean DELETE() throws Exception {
-        lookupExecutor(bm, "POST").execute(resourceClass, params, null);
-        return true;
-    }
-
     private static ResourceMethodHandler lookupExecutor(BeanManager bm,
-            String method) {
-        final Set<Bean<?>> beans =
+            final String methodName) {
+      final Set<Bean<?>> beans =
                 bm.getBeans(ResourceMethodHandler.class,
-                new VerbLiteral(method));
-        System.out.println(method + " " + beans.size());
+                new VerbLiteral(methodName));
+        System.out.println(methodName + " " + beans.size());
         Bean<ResourceMethodHandler> b = (Bean<ResourceMethodHandler>) bm
                 .resolve(
                 beans);

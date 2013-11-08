@@ -89,49 +89,22 @@ public interface Resources<T> {
     Resources<T> select(String paramName, Object paramValue);
 
     /**
-     * retrieves a representation of this resource by using the <b>GET</b>
-     * method.
+     * invokes the method.
      *
+     * @param method
      * @return
      * @throws Exception
      */
-    T GET() throws Exception;
+    T invoke(String method) throws Exception;
 
     /**
-     * updates or creates a representation of this resource by using the
-     * <b>PUT</b> method.
+     * invokes the method.
      *
-     * @param content
+     * @param method
+     * @param request
      * @return
      * @throws Exception
      */
-    T PUT(Object content) throws Exception;
+    T invoke(String method, Object request) throws Exception;
 
-    /**
-     * creates a representation of this resource by using the <b>POST</b>
-     * method.
-     *
-     * @param content
-     * @return
-     * @throws Exception
-     */
-    T POST(Object content) throws Exception;
-
-    /**
-     * creates a representation of this resource by using the <b>POST</b>
-     * method.
-     *
-     * @return
-     * @throws Exception
-     */
-    T POST() throws Exception;
-
-    /**
-     * deletes a representation of this resource by using the <b>DELETE</b>
-     * method.
-     *
-     * @return
-     * @throws Exception
-     */
-    boolean DELETE() throws Exception;
 }

@@ -81,14 +81,22 @@ public class DynamicRestServlet extends HttpServlet {
     @Inject
     Event<HttpServletRequest> requestEvents;
 
+    private static String stripLastSlashIfExist(String whatever) {
+        while (whatever.endsWith("/")) {
+            whatever = whatever.substring(0, whatever.length() - 1);
+        }
+        return whatever;
+    }
+
     private void executeResource(final HttpServletRequest req,
             HttpServletResponse resp) throws
             IOException {
         for (Class<?> clazz : resext.resourcesInterfaces) {
             Resource resource = clazz.getAnnotation(Resource.class);
-            PathTemplate pt = new PathTemplate(resource.value());
+            PathTemplate pt = new PathTemplate(stripLastSlashIfExist(resource
+                    .uri()));
             Map<String, String> groups = new HashMap<>();
-            if (pt.match(req.getPathInfo(), groups)) {
+            if (pt.match(stripLastSlashIfExist(req.getPathInfo()), groups)) {
                 // find the ResourceMethodHandler for the method
                 Instance<ResourceMethodHandler> selectedResourceMethodHandlers =
                         resourceMethodHandlers.select(new VerbLiteral(req

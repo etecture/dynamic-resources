@@ -84,9 +84,16 @@ import java.lang.annotation.Target;
 public @interface Resource {
 
     /**
-     * the path where the resource is located.
+     * defines the uri-pattern where this resource is located at.
      *
      * @return
      */
-    String value();
+    String uri();
+
+    /**
+     * defines the methods for this resource.
+     *
+     * @return
+     */
+    Method[] methods();
 }

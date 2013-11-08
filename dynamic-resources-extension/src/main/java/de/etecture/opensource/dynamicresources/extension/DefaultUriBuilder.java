@@ -69,10 +69,10 @@ public class DefaultUriBuilder implements UriBuilder {
         Resource resource = resourceClazz.getAnnotation(Resource.class);
         String path;
         if (pathValues != null) {
-            PathTemplate pt = new PathTemplate(resource.value());
+            PathTemplate pt = new PathTemplate(resource.uri());
             path = pt.createURI(pathValues);
         } else {
-            path = resource.value();
+            path = resource.uri();
             if (!path.startsWith("/")) {
                 path = "/" + path;
             }

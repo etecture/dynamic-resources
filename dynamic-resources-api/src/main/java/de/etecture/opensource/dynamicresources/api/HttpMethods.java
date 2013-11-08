@@ -37,55 +37,25 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
-package de.etecture.opensource.dynamicresources.extension;
-
-import javax.enterprise.context.RequestScoped;
-import javax.enterprise.event.Observes;
-import javax.enterprise.inject.Produces;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+package de.etecture.opensource.dynamicresources.api;
 
 /**
+ * a holder for standard http-methods.
  *
  * @author rhk
  * @version
  * @since
  */
-public class HttpContextProducer {
+public interface HttpMethods {
 
-    private static ThreadLocal<HttpServletRequest> requestObject =
-            new ThreadLocal<>();
-    private static ThreadLocal<HttpServletResponse> responseObject =
-            new ThreadLocal<>();
-
-    @Produces
-    @Current
-    @RequestScoped
-    public HttpServletRequest getRequest() {
-        return requestObject.get();
-    }
-
-    @Produces
-    @Current
-    @RequestScoped
-    public HttpServletResponse getResponse() {
-        return responseObject.get();
-    }
-
-    void onRequestInitialized(@Observes HttpServletRequest request) {
-        requestObject.set(request);
-    }
-
-    void onResponseInitialized(@Observes HttpServletResponse response) {
-        responseObject.set(response);
-    }
-
-    static void setRequest(HttpServletRequest request) {
-        requestObject.set(request);
-    }
-
-    static void setResponse(HttpServletResponse response) {
-        responseObject.set(response);
-    }
+    String GET = "GET";
+    String PUT = "PUT";
+    String POST = "POST";
+    String DELETE = "DELETE";
+    String OPTIONS = "OPTIONS";
+    String HEAD = "HEAD";
+    String TRACE = "TRACE";
+    String READ = GET;
+    String ADD_NEW = POST;
+    String MERGE_OR_UPDATE = PUT;
 }

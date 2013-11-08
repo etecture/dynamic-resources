@@ -39,14 +39,15 @@
  */
 package de.etecture.opensource.dynamicresources.api;
 
+import de.etecture.opensource.dynamicrepositories.api.Query;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * represents a Query that is executed when the resource is called by method
- * <b>GET</b>.
+ * represents the query, that is invoked, if the given http-request is called
+ * for this resource.
  *
  * @author rhk
  * @since 1.0.0
@@ -54,7 +55,14 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface GET {
+public @interface Method {
+
+    /**
+     * defines the name of the request method, when this query has to be used.
+     *
+     * @return
+     */
+    String name();
 
     /**
      * the description of this method.
@@ -64,43 +72,20 @@ public @interface GET {
     String description() default "";
 
     /**
-     * the technology to be used to execute this query.
-     *
-     * @return
-     */
-    String technology() default "";
-
-    /**
      * the query
      *
      * @return
      */
-    String query() default "";
-
-    /**
-     * the name of the query
-     *
-     * @return
-     */
-    String queryName() default "";
-
-    /**
-     * the path where this resource are located.
-     * <p>
-     * defaults to the path specified in &#64;{@link Resource} annotation.
-     *
-     * @return
-     */
-    String path() default "";
+    Query query() default @Query;
 
     /**
      * the status code to be provided by the response in case of no exception.
      * <p>
-     * defaults to 200
+     * defaults to 201 - CREATED
      *
      * @return
      */
-    int status() default StatusCodes.OK;
+    int status() default StatusCodes.CREATED;
 
     /**
      * the type of the request if other then the resource type
@@ -115,4 +100,12 @@ public @interface GET {
      * @return
      */
     String[] rolesAllowed() default {};
+
+    /**
+     * these are the interceptors, the framework has to be noted if this method
+     * is invoked.
+     *
+     * @return
+     */
+    Class[] interceptors() default {};
 }

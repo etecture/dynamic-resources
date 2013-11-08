@@ -39,7 +39,9 @@
  */
 package de.etecture.opensource.dynamicresources.handler;
 
+import com.sun.jersey.server.impl.uri.PathTemplate;
 import de.etecture.opensource.dynamicresources.api.MediaType;
+import de.etecture.opensource.dynamicresources.api.Resource;
 import de.etecture.opensource.dynamicresources.api.Version;
 import de.etecture.opensource.dynamicresources.extension.Current;
 import de.etecture.opensource.dynamicresources.extension.ResponseWriterResolver;
@@ -52,6 +54,7 @@ import java.util.Map;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
 
@@ -67,6 +70,9 @@ public class OptionsResourceHandler implements ResourceMethodHandler {
     Instance<ResourceMethodHandler> resourceMethodHandlers;
     @Inject
     ResponseWriterResolver responseWriters;
+    @Inject
+    @Current
+    HttpServletRequest request;
     @Inject
     @Current
     HttpServletResponse response;
@@ -102,12 +108,13 @@ public class OptionsResourceHandler implements ResourceMethodHandler {
             }
         }
         writer.println();
-        writer.printf("Available MediaTypes for Resource: %s\n", resourceClazz
+        writer.printf("Available MediaTypes of Resource: %s\n", resourceClazz
                 .getSimpleName());
         writer.println(StringUtils.repeat("-", resourceClazz.getSimpleName()
-                .length() + 35));
+                .length() + 34));
         writer.println();
 
+        String exampleMediaType = null;
         for (Map.Entry<MediaType, List<Version>> e : responseWriters
                 .getAvailableFormats(resourceClazz).entrySet()) {
             writer.printf("\t%s%n", e.getKey().toString());
@@ -119,10 +126,52 @@ public class OptionsResourceHandler implements ResourceMethodHandler {
                 }
                 writer.print(version.toString());
                 first = false;
+                if (exampleMediaType == null) {
+                    exampleMediaType = String.format("%s/%s.v%s; charset=%s", e
+                            .getKey()
+                            .category(), e.getKey().subType(), version
+                            .toString(), e.getKey().encoding());
+                }
+            }
+            if (exampleMediaType == null) {
+                exampleMediaType = e.getKey().toString();
             }
             writer.println();
         }
 
+        writer.println();
+        writer.printf("Example Request for Resource: %s\n", resourceClazz
+                .getSimpleName());
+        writer.println(StringUtils.repeat("-", resourceClazz.getSimpleName()
+                .length() + 30));
+        writer.println();
+
+        Resource resource = resourceClazz.getAnnotation(Resource.class);
+        String path;
+        if (pathValues != null) {
+            PathTemplate pt = new PathTemplate(resource.uri());
+            path = pt.createURI(pathValues);
+        } else {
+            path = resource.uri();
+            if (!path.startsWith("/")) {
+                path = "/" + path;
+            }
+        }
+
+        writer.printf("> GET %s%s HTTP/1.1%n", request.getContextPath(), path);
+        writer.printf("> Host: %s:%s%n", request.getServerName(), request
+                .getServerPort());
+        if (exampleMediaType != null) {
+            writer.printf("> Accept: %s%n", exampleMediaType);
+        }
+        writer.printf("> ...%n");
+        writer.println();
+        writer.printf("< HTTP/1.1 200 OK%n");
+        if (exampleMediaType != null) {
+            writer.printf("< Content-Type : %s%n", exampleMediaType);
+        }
+        writer.printf("< ...%n");
+        writer.println();
         writer.flush();
     }
 

@@ -60,7 +60,7 @@ public interface ResourceInterceptor {
      * @param parameter
      * @return
      */
-    Response before(String method, Resource resource, Class<?> resourceClass,
+    Response before(Resource resource, Method method, Class<?> resourceClass,
             Map<String, Object> parameter);
 
     /**
@@ -73,6 +73,6 @@ public interface ResourceInterceptor {
      * @param response
      * @return
      */
-    Response after(String method, Resource resource, Class<?> resourceClass,
+    Response after(Resource resource, Method method, Class<?> resourceClass,
             Map<String, Object> parameter, Response response);
 }

@@ -96,6 +96,12 @@
             <type>jar</type>
         </dependency>
         <dependency>
+            <groupId>de.etecture.opensource</groupId>
+            <artifactId>dynamic-repositories-api</artifactId>
+            <version>1.2.11</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
             <groupId>javax</groupId>
             <artifactId>javaee-api</artifactId>
             <version>6.0</version>

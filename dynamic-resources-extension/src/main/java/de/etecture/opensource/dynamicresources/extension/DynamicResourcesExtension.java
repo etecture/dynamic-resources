@@ -120,89 +120,104 @@ public class DynamicResourcesExtension implements Extension {
         if (pat.getAnnotatedType().isAnnotationPresent(Resource.class)) {
             log.info(String.format("found resource interface type: %s%n",
                     pat.getAnnotatedType().getJavaClass().getName()));
-            Resource resource = pat.getAnnotatedType().getAnnotation(
-                    Resource.class);
-
             resourcesInterfaces.add(pat.getAnnotatedType().getJavaClass());
         }
 
 
-        if (pat.getAnnotatedType().getJavaClass().isEnum()
-                && ResponseWriter.class
+        if (ResponseWriter.class
                 .isAssignableFrom(pat.getAnnotatedType().getJavaClass())) {
-            for (AnnotatedField af
-                    : pat.getAnnotatedType()
-                    .getFields()) {
-                if (af.isAnnotationPresent(Produces.class)) {
-                    final String name = String.format("%s_%s",
-                            pat.getAnnotatedType().getJavaClass().
-                            getSimpleName(), af.getJavaMember().getName());
-                    log.info(String.format(
-                            "found ResponseWriter for Entity: %s with name: %s",
-                            af.getAnnotation(Produces.class).contentType()
-                            .getName(),
-                            name));
-                    final ResponseWriter responseWriter =
-                            (ResponseWriter) af.getJavaMember().get(pat
-                            .getAnnotatedType().getJavaClass());
-                    if (af.isAnnotationPresent(Produces.class)) {
-                        responseWriters.add(new ResponseWriterBean(
-                                beanManager,
-                                new ProducesLiteral(af.getAnnotation(
-                                Produces.class)), responseWriter, name));
-                    } else if (pat.getAnnotatedType().getJavaClass()
-                            .isAnnotationPresent(Produces.class)) {
-                        responseWriters.add(new ResponseWriterBean(
-                                beanManager,
-                                new ProducesLiteral(pat.getAnnotatedType()
-                                .getJavaClass().getAnnotation(
-                                Produces.class)), responseWriter, name));
+            if (pat.getAnnotatedType().getJavaClass().isEnum()) {
 
-                    } else {
-                        responseWriters.add(new ResponseWriterBean(
-                                beanManager,
-                                new ProducesLiteral(responseWriter),
-                                responseWriter, name));
+                for (AnnotatedField af
+                        : pat.getAnnotatedType()
+                        .getFields()) {
+                    if (af.isAnnotationPresent(Produces.class)) {
+                        final String name = String.format("%s_%s",
+                                pat.getAnnotatedType().getJavaClass().
+                                getSimpleName(), af.getJavaMember().getName());
+                        log.info(String.format(
+                                "found ResponseWriter for Entity: %s with name: %s",
+                                af.getAnnotation(Produces.class).contentType()
+                                .getName(),
+                                name));
+                        final ResponseWriter responseWriter =
+                                (ResponseWriter) af.getJavaMember().get(pat
+                                .getAnnotatedType().getJavaClass());
+                        if (af.isAnnotationPresent(Produces.class)) {
+                            responseWriters.add(new ResponseWriterBean(
+                                    beanManager,
+                                    new ProducesLiteral(af.getAnnotation(
+                                    Produces.class)), responseWriter, name));
+                        } else if (pat.getAnnotatedType().getJavaClass()
+                                .isAnnotationPresent(Produces.class)) {
+                            responseWriters.add(new ResponseWriterBean(
+                                    beanManager,
+                                    new ProducesLiteral(pat.getAnnotatedType()
+                                    .getJavaClass().getAnnotation(
+                                    Produces.class)), responseWriter, name));
+
+                        } else {
+                            responseWriters.add(new ResponseWriterBean(
+                                    beanManager,
+                                    new ProducesLiteral(responseWriter),
+                                    responseWriter, name));
+                        }
                     }
                 }
+            } else if (pat.getAnnotatedType()
+                    .isAnnotationPresent(Produces.class)) {
+                responseWriters.add(new ResponseWriterBean(beanManager, pat
+                        .getAnnotatedType().getAnnotation(Produces.class),
+                        (ResponseWriter) pat
+                        .getAnnotatedType().getJavaClass().newInstance(), pat
+                        .getAnnotatedType().getJavaClass().getSimpleName()));
             }
         }
 
-        if (pat.getAnnotatedType().getJavaClass().isEnum()
-                && RequestReader.class
+        if (RequestReader.class
                 .isAssignableFrom(pat.getAnnotatedType().getJavaClass())) {
-            for (AnnotatedField af
-                    : pat.getAnnotatedType()
-                    .getFields()) {
-                if (af.isAnnotationPresent(Consumes.class)) {
-                    final String name = String.format("%s_%s",
-                            pat.getAnnotatedType().getJavaClass().
-                            getSimpleName(), af.getJavaMember().getName());
-                    log.info(String.format(
-                            "found RequestReader for Entity: %s with name: %s",
-                            af.getAnnotation(Consumes.class).requestType()
-                            .getName(),
-                            name));
-                    final RequestReader requestReader =
-                            (RequestReader) af.getJavaMember().get(pat
-                            .getAnnotatedType().getJavaClass());
-                    if (af.isAnnotationPresent(Consumes.class)) {
-                        requestReaders.add(new RequestReaderBean(
-                                new ConsumesLiteral(af.getAnnotation(
-                                Consumes.class)), requestReader, name));
-                    } else if (pat.getAnnotatedType().getJavaClass()
-                            .isAnnotationPresent(Consumes.class)) {
-                        requestReaders.add(new RequestReaderBean(
-                                new ConsumesLiteral(pat.getAnnotatedType()
-                                .getJavaClass().getAnnotation(
-                                Consumes.class)), requestReader, name));
+            if (pat.getAnnotatedType().getJavaClass().isEnum()) {
 
-                    } else {
-                        requestReaders.add(new RequestReaderBean(
-                                new ConsumesLiteral(requestReader),
-                                requestReader, name));
+                for (AnnotatedField af
+                        : pat.getAnnotatedType()
+                        .getFields()) {
+                    if (af.isAnnotationPresent(Consumes.class)) {
+                        final String name = String.format("%s_%s",
+                                pat.getAnnotatedType().getJavaClass().
+                                getSimpleName(), af.getJavaMember().getName());
+                        log.info(String.format(
+                                "found RequestReader for Entity: %s with name: %s",
+                                af.getAnnotation(Consumes.class).requestType()
+                                .getName(),
+                                name));
+                        final RequestReader requestReader =
+                                (RequestReader) af.getJavaMember().get(pat
+                                .getAnnotatedType().getJavaClass());
+                        if (af.isAnnotationPresent(Consumes.class)) {
+                            requestReaders.add(new RequestReaderBean(
+                                    new ConsumesLiteral(af.getAnnotation(
+                                    Consumes.class)), requestReader, name));
+                        } else if (pat.getAnnotatedType().getJavaClass()
+                                .isAnnotationPresent(Consumes.class)) {
+                            requestReaders.add(new RequestReaderBean(
+                                    new ConsumesLiteral(pat.getAnnotatedType()
+                                    .getJavaClass().getAnnotation(
+                                    Consumes.class)), requestReader, name));
+
+                        } else {
+                            requestReaders.add(new RequestReaderBean(
+                                    new ConsumesLiteral(requestReader),
+                                    requestReader, name));
+                        }
                     }
                 }
+            } else if (pat.getAnnotatedType()
+                    .isAnnotationPresent(Consumes.class)) {
+                requestReaders.add(new RequestReaderBean(pat
+                        .getAnnotatedType().getAnnotation(Consumes.class),
+                        (RequestReader) pat
+                        .getAnnotatedType().getJavaClass().newInstance(), pat
+                        .getAnnotatedType().getJavaClass().getSimpleName()));
             }
         }
     }

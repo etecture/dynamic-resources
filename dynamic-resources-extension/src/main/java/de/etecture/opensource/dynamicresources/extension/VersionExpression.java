@@ -42,6 +42,7 @@ package de.etecture.opensource.dynamicresources.extension;
 import de.etecture.opensource.dynamicresources.api.Version;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 
 /**
@@ -76,6 +77,9 @@ public class VersionExpression implements Comparable<VersionExpression>, Version
     }
 
     public VersionExpression(String versionString) {
+        if (StringUtils.isEmpty(versionString)) {
+            versionString = "0.0.0";
+        }
         Matcher matcher = versionPattern.matcher(versionString);
         if (!matcher.matches()) {
             throw new IllegalArgumentException(

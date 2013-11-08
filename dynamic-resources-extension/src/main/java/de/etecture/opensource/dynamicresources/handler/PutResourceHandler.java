@@ -40,20 +40,18 @@
 package de.etecture.opensource.dynamicresources.handler;
 
 import de.etecture.opensource.dynamicrepositories.spi.QueryMetaData;
-import de.etecture.opensource.dynamicresources.api.PUT;
-import de.etecture.opensource.dynamicresources.spi.AbstractReflectiveResourceMethodHandler;
-import de.etecture.opensource.dynamicresources.spi.ResourceMethodHandler;
+import de.etecture.opensource.dynamicresources.api.HttpMethods;
+import de.etecture.opensource.dynamicresources.spi.AbstractResourceMethodHandler;
 import de.etecture.opensource.dynamicresources.spi.Verb;
 
 /**
  *
  * @author rhk
  */
-@Verb("PUT")
-public class PutResourceHandler extends AbstractReflectiveResourceMethodHandler<PUT>
-        implements ResourceMethodHandler {
+@Verb(HttpMethods.PUT)
+public class PutResourceHandler extends AbstractResourceMethodHandler {
 
     public PutResourceHandler() {
-        super(PUT.class, QueryMetaData.Kind.UPDATE);
+        super(QueryMetaData.Kind.UPDATE);
     }
 }

@@ -41,6 +41,7 @@ package de.etecture.opensource.dynamicresources.extension;
 
 import de.etecture.opensource.dynamicrepositories.api.Generator;
 import de.etecture.opensource.dynamicrepositories.api.Param;
+import de.etecture.opensource.dynamicrepositories.api.Query;
 import de.etecture.opensource.dynamicrepositories.api.ResultConverter;
 import de.etecture.opensource.dynamicrepositories.spi.QueryMetaData;
 import java.lang.annotation.Annotation;
@@ -50,6 +51,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import org.apache.commons.beanutils.ConvertUtils;
+import org.apache.commons.lang.StringUtils;
 
 /**
  *
@@ -62,18 +64,38 @@ public class DefaultQueryMetaData<T> implements QueryMetaData<T> {
     private final String query;
     private final Class<T> queryType;
     private final Kind queryKind;
+    private final String technology;
 
     public DefaultQueryMetaData(QueryMetaData<T> metaData) {
         this(metaData.getQueryType(), metaData.getQueryKind(), metaData
-                .getQuery(), metaData.getQueryName(), metaData.getParameterMap());
+                .getQuery(), metaData.getQueryName(), metaData
+                .getQueryTechnology(), metaData.getParameterMap());
     }
 
     public DefaultQueryMetaData(Class<T> queryType, Kind queryKind, String query,
-            String queryName, Map<String, Object> parameters) {
+            String queryName, String technology, Map<String, Object> parameters) {
         this.queryType = queryType;
         this.queryKind = queryKind;
         this.query = query;
         this.queryName = queryName;
+        this.parameters.putAll(parameters);
+        this.technology = technology;
+    }
+
+    public DefaultQueryMetaData(Query query, String methodName,
+            Class<T> queryType, Kind queryKind,
+            Map<String, Object> parameters) {
+        this.queryType = queryType;
+        this.queryKind = queryKind;
+        this.technology = query.technology();
+        if (StringUtils.isEmpty(query.name()) && StringUtils.isEmpty(query
+                .value())) {
+            this.queryName = methodName;
+            this.query = "";
+        } else {
+            this.query = query.value();
+            this.queryName = query.name();
+        }
         this.parameters.putAll(parameters);
     }
 
@@ -169,5 +191,9 @@ public class DefaultQueryMetaData<T> implements QueryMetaData<T> {
                         "The generator cannot be instantiated. ", ex);
             }
         }
+    }
+
+    public String getQueryTechnology() {
+        return this.technology;
     }
 }

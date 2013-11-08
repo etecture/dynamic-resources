@@ -37,55 +37,31 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+package de.etecture.opensource.dynamicresources.api;
 
-package de.etecture.opensource.dynamicresources.extension;
-
-import javax.enterprise.context.RequestScoped;
-import javax.enterprise.event.Observes;
-import javax.enterprise.inject.Produces;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import javax.inject.Qualifier;
 
 /**
+ * specifies that the {@link ResourceInterceptor} tagged with this interface is
+ * a global interceptor that is always invoked.
+ * <p>
+ * use this annotation for interceptors, that are not specified in the
+ * {@link Method#interceptors()} definition but has to be invoked for each
+ * resource request.
  *
  * @author rhk
  * @version
  * @since
  */
-public class HttpContextProducer {
-
-    private static ThreadLocal<HttpServletRequest> requestObject =
-            new ThreadLocal<>();
-    private static ThreadLocal<HttpServletResponse> responseObject =
-            new ThreadLocal<>();
-
-    @Produces
-    @Current
-    @RequestScoped
-    public HttpServletRequest getRequest() {
-        return requestObject.get();
-    }
-
-    @Produces
-    @Current
-    @RequestScoped
-    public HttpServletResponse getResponse() {
-        return responseObject.get();
-    }
-
-    void onRequestInitialized(@Observes HttpServletRequest request) {
-        requestObject.set(request);
-    }
-
-    void onResponseInitialized(@Observes HttpServletResponse response) {
-        responseObject.set(response);
-    }
-
-    static void setRequest(HttpServletRequest request) {
-        requestObject.set(request);
-    }
-
-    static void setResponse(HttpServletResponse response) {
-        responseObject.set(response);
-    }
+@Qualifier
+@Target({ElementType.METHOD,
+    ElementType.FIELD,
+    ElementType.PARAMETER,
+    ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Global {
 }
