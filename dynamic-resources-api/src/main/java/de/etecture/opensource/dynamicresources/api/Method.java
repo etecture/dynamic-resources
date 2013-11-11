@@ -80,12 +80,10 @@ public @interface Method {
 
     /**
      * the status code to be provided by the response in case of no exception.
-     * <p>
-     * defaults to 201 - CREATED
      *
      * @return
      */
-    int status() default StatusCodes.CREATED;
+    int status() default StatusCodes.OK;
 
     /**
      * the type of the request if other then the resource type
