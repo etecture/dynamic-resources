@@ -5,7 +5,7 @@
     <parent>
         <groupId>de.etecture.opensource</groupId>
         <artifactId>dynamic-resources</artifactId>
-        <version>1.0.9-SNAPSHOT</version>
+        <version>1.0.9</version>
     </parent>
 
     <artifactId>dynamic-resources-extension</artifactId>
@@ -72,7 +72,7 @@
         <dependency>
             <groupId>de.herschke</groupId>
             <artifactId>neo4j-uplink-api</artifactId>
-            <version>1.1.15-SNAPSHOT</version>
+            <version>1.1.15</version>
             <type>jar</type>
         </dependency>
         <dependency>
