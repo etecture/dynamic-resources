@@ -55,12 +55,11 @@ public interface ExceptionHandler {
      * {@link ExceptionHandler#handleException(java.lang.Class, java.lang.String, java.lang.Throwable)}
      * method.
      *
-     * @param resourceClass
-     * @param method
+     * @param request
      * @param exceptionClass
      * @return
      */
-    boolean isResponsibleFor(Class<?> resourceClass, String method,
+    boolean isResponsibleFor(Request request,
             Class<? extends Throwable> exceptionClass);
 
     /**
@@ -71,11 +70,10 @@ public interface ExceptionHandler {
      * later     * writen to the desired media type with the corresponding
      * {@link ResponseWriter}
      *
-     * @param resourceClass the class of the resource that was requested.
-     * @param method the method of the request
+     * @param request
      * @param exception the exception that was raised
      * @return
      */
-    Response<?> handleException(Class<?> resourceClass, String method,
+    Response<?> handleException(Request request,
             Throwable exception);
 }

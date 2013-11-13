@@ -39,6 +39,8 @@
  */
 package de.etecture.opensource.dynamicresources.spi;
 
+import de.etecture.opensource.dynamicresources.api.Response;
+import de.etecture.opensource.dynamicresources.api.Request;
 import java.io.IOException;
 import java.util.Map;
 
@@ -68,14 +70,11 @@ public interface ResourceMethodHandler {
     /**
      * handles a request for the given method.
      *
-     * @param <T>
-     * @param resourceClazz the class of the (content-)resource
-     * @param pathValues the path values extracted from the request path
+     * @param request
+     * @return the response for this request
      * @throws IOException
      */
-    <T> void handleRequest(
-            Class<T> resourceClazz, Map<String, String> pathValues)
-            throws IOException;
+    Response handleRequest(Request request) throws IOException;
 
     /**
      * executes the query in the resource class for the given method.

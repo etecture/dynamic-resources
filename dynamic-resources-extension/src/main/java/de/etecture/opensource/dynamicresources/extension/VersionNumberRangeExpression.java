@@ -166,7 +166,8 @@ public class VersionNumberRangeExpression implements VersionNumberRange {
         Matcher matcher = versionRangePattern.matcher(versionRangeExpression);
         if (!matcher.matches()) {
             throw new IllegalArgumentException(
-                    "versionRangeExpression must follow the versionRangePattern!");
+                    "versionRangeExpression '" + versionRangeExpression
+                    + "' must follow the versionRangePattern!");
         }
         String lowerIncEx = matcher.group("lowerIncEx");
         if (StringUtils.isBlank(lowerIncEx)) {
@@ -210,6 +211,9 @@ public class VersionNumberRangeExpression implements VersionNumberRange {
 
     @Override
     public boolean includes(Version version) {
+        if (version == null) {
+            return true;
+        }
         return matches(version.major(), version.minor(), version
                 .release());
     }

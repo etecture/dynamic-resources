@@ -2,8 +2,7 @@ package de.etecture.opensource.dynamicresources.spi;
 
 import de.etecture.opensource.dynamicresources.api.DefaultResponse;
 import de.etecture.opensource.dynamicresources.api.HttpMethods;
-import de.etecture.opensource.dynamicresources.api.Method;
-import de.etecture.opensource.dynamicresources.api.Resource;
+import de.etecture.opensource.dynamicresources.api.Request;
 import de.etecture.opensource.dynamicresources.api.ResourceInterceptor;
 import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.api.StatusCodes;
@@ -37,22 +36,19 @@ public abstract class AbstractPostRedirectInterceptor<R, N> implements
     }
 
     @Override
-    public Response before(Resource resource, Method method,
-            Class<?> resourceClass,
-            Map<String, Object> parameter) {
+    public Response before(Request request) {
         return null; // go on.
     }
 
     @Override
-    public Response after(Resource resource, Method method,
-            Class<?> resourceClass,
-            Map<String, Object> parameter, Response response) {
+    public Response after(Request request, Response response) {
         // check if responsible
-        if (response.getStatus() == StatusCodes.CREATED && resourceClass
+        if (response.getStatus() == StatusCodes.CREATED && request
+                .getResourceClass()
                 == originClass && response.getEntity() != null && originClass
                 .isAssignableFrom(response.getEntity().getClass())
                 && HttpMethods.POST
-                .equalsIgnoreCase(method.name())) {
+                .equalsIgnoreCase(request.getMethodName())) {
             final R responseEntity = originClass.cast(response.getEntity());
             // build a new response with the new resource location
             Map<String, String> pathValues = buildPathValues(responseEntity);

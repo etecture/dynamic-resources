@@ -66,4 +66,27 @@ public class RequestReaderResolver extends AbstractMimeAndVersionResolver<Reques
     protected String getVersion(Consumes annotation) {
         return annotation.version();
     }
+
+    /**
+     * returns true, if there is a request reader, that matches the given
+     * consumes annotations.
+     *
+     * @param annotations
+     * @return
+     */
+    public boolean exists(Consumes... annotations) {
+        if (annotations.length == 0) {
+            return true;
+        }
+        for (Consumes annotation : annotations) {
+            for (String mimeType : annotation.mimeType()) {
+                if (exists(annotation.requestType(), new MediaTypeExpression(
+                        mimeType), new VersionNumberRangeExpression(annotation
+                        .version()))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }

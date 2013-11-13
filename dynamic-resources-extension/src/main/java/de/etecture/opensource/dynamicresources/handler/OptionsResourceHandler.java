@@ -39,9 +39,10 @@
  */
 package de.etecture.opensource.dynamicresources.handler;
 
-import com.sun.jersey.server.impl.uri.PathTemplate;
+import de.etecture.opensource.dynamicresources.api.DefaultResponse;
 import de.etecture.opensource.dynamicresources.api.MediaType;
-import de.etecture.opensource.dynamicresources.api.Resource;
+import de.etecture.opensource.dynamicresources.api.Request;
+import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.api.Version;
 import de.etecture.opensource.dynamicresources.extension.Current;
 import de.etecture.opensource.dynamicresources.extension.ResponseWriterResolver;
@@ -49,13 +50,13 @@ import de.etecture.opensource.dynamicresources.spi.ResourceMethodHandler;
 import de.etecture.opensource.dynamicresources.spi.Verb;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -72,10 +73,7 @@ public class OptionsResourceHandler implements ResourceMethodHandler {
     ResponseWriterResolver responseWriters;
     @Inject
     @Current
-    HttpServletRequest request;
-    @Inject
-    @Current
-    HttpServletResponse response;
+    HttpServletRequest req;
 
     @Override
     public boolean isAvailable(
@@ -84,39 +82,42 @@ public class OptionsResourceHandler implements ResourceMethodHandler {
     }
 
     @Override
-    public <T> void handleRequest(
-            Class<T> resourceClazz, Map<String, String> pathValues) throws
+    public Response handleRequest(
+            Request request) throws
             IOException {
-        response.setStatus(200);
-        response.setContentType("text/plain");
-        final PrintWriter writer = response.getWriter();
+        final StringWriter sw = new StringWriter();
+        final PrintWriter writer = new PrintWriter(sw);
 
-        writer.printf("Available Methods for Resource: %s\n", resourceClazz
+        writer.printf("Available Methods for Resource: %s\n", request
+                .getResourceClass()
                 .getSimpleName());
-        writer.println(StringUtils.repeat("-", resourceClazz.getSimpleName()
+        writer.println(StringUtils.repeat("-", request.getResourceClass()
+                .getSimpleName()
                 .length() + 32));
         writer.println();
 
         for (ResourceMethodHandler handler : resourceMethodHandlers) {
-            if (handler.isAvailable(resourceClazz)) {
+            if (handler.isAvailable(request.getResourceClass())) {
                 String verb = "";
                 if (handler.getClass().isAnnotationPresent(Verb.class)) {
                     verb = handler.getClass().getAnnotation(Verb.class).value();
                 }
                 writer.printf("\t%s%n\t\t- %s%n", verb, handler
-                        .getDescription(resourceClazz));
+                        .getDescription(request.getResourceClass()));
             }
         }
         writer.println();
-        writer.printf("Available MediaTypes of Resource: %s\n", resourceClazz
+        writer.printf("Available MediaTypes of Resource: %s\n",
+                request.getResourceClass()
                 .getSimpleName());
-        writer.println(StringUtils.repeat("-", resourceClazz.getSimpleName()
+        writer.println(StringUtils.repeat("-", request.getResourceClass()
+                .getSimpleName()
                 .length() + 34));
         writer.println();
 
         String exampleMediaType = null;
         for (Map.Entry<MediaType, List<Version>> e : responseWriters
-                .getAvailableFormats(resourceClazz).entrySet()) {
+                .getAvailableFormats(request.getResourceClass()).entrySet()) {
             writer.printf("\t%s%n", e.getKey().toString());
             writer.print("\t\tVersions: ");
             boolean first = true;
@@ -127,7 +128,8 @@ public class OptionsResourceHandler implements ResourceMethodHandler {
                 writer.print(version.toString());
                 first = false;
                 if (exampleMediaType == null) {
-                    exampleMediaType = String.format("%s/%s.v%s; charset=%s", e
+                    exampleMediaType = String
+                            .format("%s/%s.v%s; charset=%s", e
                             .getKey()
                             .category(), e.getKey().subType(), version
                             .toString(), e.getKey().encoding());
@@ -140,39 +142,12 @@ public class OptionsResourceHandler implements ResourceMethodHandler {
         }
 
         writer.println();
-        writer.printf("Example Request for Resource: %s\n", resourceClazz
-                .getSimpleName());
-        writer.println(StringUtils.repeat("-", resourceClazz.getSimpleName()
-                .length() + 30));
-        writer.println();
-
-        Resource resource = resourceClazz.getAnnotation(Resource.class);
-        String path;
-        if (pathValues != null) {
-            PathTemplate pt = new PathTemplate(resource.uri());
-            path = pt.createURI(pathValues);
-        } else {
-            path = resource.uri();
-            if (!path.startsWith("/")) {
-                path = "/" + path;
-            }
-        }
-
-        writer.printf("> GET %s%s HTTP/1.1%n", request.getContextPath(), path);
-        writer.printf("> Host: %s:%s%n", request.getServerName(), request
-                .getServerPort());
-        if (exampleMediaType != null) {
-            writer.printf("> Accept: %s%n", exampleMediaType);
-        }
-        writer.printf("> ...%n");
-        writer.println();
-        writer.printf("< HTTP/1.1 200 OK%n");
-        if (exampleMediaType != null) {
-            writer.printf("< Content-Type : %s%n", exampleMediaType);
-        }
-        writer.printf("< ...%n");
-        writer.println();
         writer.flush();
+        sw.flush();
+        writer.close();
+        sw.close();
+
+        return new DefaultResponse(sw.toString(), 200);
     }
 
     @Override
@@ -185,8 +160,8 @@ public class OptionsResourceHandler implements ResourceMethodHandler {
 
     @Override
     public <T> T execute(
-            Class<T> resourceClazz,
-            Map<String, Object> params, Object request) throws Exception {
+            Class< T> resourceClazz,
+            Map< String, Object> params, Object request) throws Exception {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }

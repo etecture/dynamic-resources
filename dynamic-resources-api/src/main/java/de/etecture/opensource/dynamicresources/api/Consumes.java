@@ -63,7 +63,7 @@ public @interface Consumes {
     Class requestType();
 
     @Nonbinding
-    String[] mimeType() default "text/plain";
+    String[] mimeType() default {};
 
     @Nonbinding
     String version() default "";

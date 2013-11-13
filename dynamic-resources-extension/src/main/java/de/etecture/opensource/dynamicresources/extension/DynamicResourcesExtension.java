@@ -232,7 +232,7 @@ public class DynamicResourcesExtension implements Extension {
                 createResourcesImpl(bm, resourcesClazz));
     }
 
-    void afterBeanDiscovery(@Observes AfterBeanDiscovery abd) {
+    void afterBeanDiscovery(@Observes AfterBeanDiscovery abd, BeanManager bm) {
         log.info("finished the scanning process");
         for (ResponseWriterBean b : responseWriters) {
             log.info(String.format("add a %s", b.toString()));

@@ -40,13 +40,18 @@
 package de.etecture.opensource.dynamicresources.extension;
 
 import com.sun.jersey.server.impl.uri.PathTemplate;
+import de.etecture.opensource.dynamicresources.api.Request;
 import de.etecture.opensource.dynamicresources.api.Resource;
+import de.etecture.opensource.dynamicresources.api.Response;
+import de.etecture.opensource.dynamicresources.api.ResponseWriter;
 import de.etecture.opensource.dynamicresources.api.StatusCodes;
 import de.etecture.opensource.dynamicresources.api.UriBuilder;
 import de.etecture.opensource.dynamicresources.spi.ResourceMethodHandler;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.enterprise.event.Event;
 import javax.enterprise.inject.Any;
@@ -80,6 +85,10 @@ public class DynamicRestServlet extends HttpServlet {
     Event<HttpServletResponse> responseEvents;
     @Inject
     Event<HttpServletRequest> requestEvents;
+    @Inject
+    ResponseWriterResolver responseWriterResolver;
+    @Inject
+    RequestReaderResolver requestReaderResolver;
 
     private static String stripLastSlashIfExist(String whatever) {
         while (whatever.endsWith("/")) {
@@ -101,11 +110,25 @@ public class DynamicRestServlet extends HttpServlet {
                 Instance<ResourceMethodHandler> selectedResourceMethodHandlers =
                         resourceMethodHandlers.select(new VerbLiteral(req
                         .getMethod()));
+                Request request;
+                try {
+                    request = new DefaultRequest(req, groups, clazz,
+                            requestReaderResolver);
+                } catch (IllegalArgumentException ex) {
+                    resp.sendError(StatusCodes.METHOD_NOT_ALLOWED,
+                            "no such method: " + req.getMethod()
+                            + " for resource: " + clazz.getSimpleName()
+                            + " reason: " + ex.getMessage());
+                    return;
+                }
                 for (ResourceMethodHandler handler
                         : selectedResourceMethodHandlers) {
                     if (handler.isAvailable(clazz)) {
-                        handler.handleRequest(clazz, groups);
-                        return;
+                        Response response = handler.handleRequest(request);
+                        if (response != null) {
+                            writeResponse(request, resp, response);
+                            return;
+                        }
                     }
                 }
                 resp.sendError(StatusCodes.METHOD_NOT_ALLOWED,
@@ -134,6 +157,42 @@ public class DynamicRestServlet extends HttpServlet {
             resp.sendError(StatusCodes.NOT_FOUND, String.format(
                     "There is no resource matching the path %s",
                     req.getPathInfo()));
+        }
+    }
+
+    protected void writeResponse(Request request,
+            HttpServletResponse resp, Response<?> response) throws IOException {
+        for (Map.Entry<String, List<Object>> e : response.getHeaders()) {
+            for (Object o : e.getValue()) {
+                if (o == null) {
+                    // do nothing here
+                } else if (Number.class.isAssignableFrom(o.getClass())) {
+                    resp.addIntHeader(e.getKey(), ((Number) o).intValue());
+                } else if (Date.class.isAssignableFrom(o.getClass())) {
+                    resp.addDateHeader(e.getKey(), ((Date) o).getTime());
+                } else {
+                    resp.addHeader(e.getKey(), o.toString());
+                }
+            }
+        }
+        resp.setContentType(request.getAcceptedMediaType().toString());
+        resp.setStatus(response.getStatus());
+        if (response.getEntity() != null) {
+            ResponseWriter writer =
+                    responseWriterResolver.resolve(response
+                    .getEntity().getClass(), request.getAcceptedMediaType(),
+                    request.getAcceptedVersionRange());
+            if (writer != null) {
+                final PrintWriter respWriter = resp.getWriter();
+                writer.processElement(response.getEntity(), respWriter,
+                        request.getAcceptedMediaType());
+                respWriter.flush();
+            } else {
+                resp.sendError(406, String.format(
+                        "The resource is not available with mediatype: %s and version: %s",
+                        request.getAcceptedMediaType().toString(), request
+                        .getAcceptedVersionRange().toString()));
+            }
         }
     }
 

@@ -42,12 +42,11 @@ package de.etecture.opensource.dynamicresources.handler;
 import de.etecture.opensource.dynamicrepositories.spi.QueryMetaData;
 import de.etecture.opensource.dynamicresources.api.DefaultResponse;
 import de.etecture.opensource.dynamicresources.api.HttpMethods;
-import de.etecture.opensource.dynamicresources.api.Method;
+import de.etecture.opensource.dynamicresources.api.Request;
 import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.spi.AbstractResourceMethodHandler;
 import de.etecture.opensource.dynamicresources.spi.Verb;
 import java.io.IOException;
-import java.util.Map;
 
 /**
  *
@@ -61,19 +60,11 @@ public class DeleteResourceHandler extends AbstractResourceMethodHandler {
     }
 
     @Override
-    public <T> void handleRequest(
-            Class<T> resourceClazz, Map<String, String> pathValues) throws
+    public Response handleRequest(
+            Request request) throws
             IOException {
-
-        Response response = checkSecurityConstraints(resourceClazz);
-        if (response == null) {
-            final Method method = getMethodForRequest(resourceClazz);
-
-            executeQuery(resourceClazz, method, buildMetaData(resourceClazz,
-                    method, buildParameterMap(pathValues, resourceClazz)));
-            response = new DefaultResponse(null,
-                    method.status());
-        }
-        writeResponse(response);
+        executeQuery(request, buildMetaData(request));
+        return new DefaultResponse(null,
+                request.getResourceMethod().status());
     }
 }

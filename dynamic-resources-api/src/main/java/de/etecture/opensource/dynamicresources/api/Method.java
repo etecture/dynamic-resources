@@ -86,11 +86,18 @@ public @interface Method {
     int status() default StatusCodes.OK;
 
     /**
-     * the type of the request if other then the resource type
+     * the request types, this method accepts.
      *
      * @return
      */
-    Class requestType() default Class.class;
+    Consumes[] consumes() default {};
+
+    /**
+     * the content types, this method produces.
+     *
+     * @return
+     */
+    Produces[] produces() default {};
 
     /**
      * the roles that are allowed to request this resource.
@@ -105,5 +112,5 @@ public @interface Method {
      *
      * @return
      */
-    Class[] interceptors() default {};
+    Class<? extends ResourceInterceptor>[] interceptors() default {};
 }

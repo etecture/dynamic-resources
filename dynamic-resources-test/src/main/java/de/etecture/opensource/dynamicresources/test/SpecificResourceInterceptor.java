@@ -39,11 +39,9 @@
  */
 package de.etecture.opensource.dynamicresources.test;
 
-import de.etecture.opensource.dynamicresources.api.Method;
-import de.etecture.opensource.dynamicresources.api.Resource;
+import de.etecture.opensource.dynamicresources.api.Request;
 import de.etecture.opensource.dynamicresources.api.ResourceInterceptor;
 import de.etecture.opensource.dynamicresources.api.Response;
-import java.util.Map;
 
 /**
  *
@@ -52,20 +50,20 @@ import java.util.Map;
 public class SpecificResourceInterceptor implements ResourceInterceptor {
 
     @Override
-    public Response before(Resource resource, Method method,
-            Class<?> resourceClass,
-            Map<String, Object> parameter) {
-        System.out.printf("BEFORE SPECIFIC: %s %s for: %s%n", method,
-                resource.uri(), resourceClass.getSimpleName());
+    public Response before(Request request) {
+        System.out.printf("BEFORE SPECIFIC: %s %s for: %s%n", request
+                .getMethodName(),
+                request.getResource().uri(), request.getResourceClass()
+                .getSimpleName());
         return null;
     }
 
     @Override
-    public Response after(Resource resource, Method method,
-            Class<?> resourceClass,
-            Map<String, Object> parameter, Response response) {
-        System.out.printf("AFTER SPECIFIC: %s %s for: %s%n", method,
-                resource.uri(), resourceClass.getSimpleName());
+    public Response after(Request request, Response response) {
+        System.out.printf("AFTER SPECIFIC: %s %s for: %s%n", request
+                .getMethodName(),
+                request.getResource().uri(), request.getResourceClass()
+                .getSimpleName());
         return response;
     }
 }

@@ -40,8 +40,7 @@
 package de.etecture.opensource.dynamicresources.test;
 
 import de.etecture.opensource.dynamicresources.api.Global;
-import de.etecture.opensource.dynamicresources.api.Method;
-import de.etecture.opensource.dynamicresources.api.Resource;
+import de.etecture.opensource.dynamicresources.api.Request;
 import de.etecture.opensource.dynamicresources.api.ResourceInterceptor;
 import de.etecture.opensource.dynamicresources.api.Response;
 import java.util.Map;
@@ -54,24 +53,26 @@ import java.util.Map;
 public class TestResourceInterceptor implements ResourceInterceptor {
 
     @Override
-    public Response before(Resource resource, Method method,
-            Class<?> resourceClass,
-            Map<String, Object> parameter) {
-        System.out.printf("BEFORE: %s %s for: %s%n", method,
-                resource.uri(), resourceClass.getSimpleName());
-        for (Map.Entry<String, Object> entry : parameter.entrySet()) {
+    public Response before(Request request) {
+        System.out.printf("BEFORE: %s %s for: %s%n", request
+                .getMethodName(),
+                request.getResource().uri(), request.getResourceClass()
+                .getSimpleName());
+        for (Map.Entry<String, String> entry : request.getPathParameter()
+                .entrySet()) {
             System.out.printf("\t%s = %s%n", entry.getKey(), entry.getValue());
         }
         return null;
     }
 
     @Override
-    public Response after(Resource resource, Method method,
-            Class<?> resourceClass,
-            Map<String, Object> parameter, Response response) {
-        System.out.printf("AFTER: %s %s for: %s%n", method,
-                resource.uri(), resourceClass.getSimpleName());
-        for (Map.Entry<String, Object> entry : parameter.entrySet()) {
+    public Response after(Request request, Response response) {
+        System.out.printf("AFTER: %s %s for: %s%n", request
+                .getMethodName(),
+                request.getResource().uri(), request.getResourceClass()
+                .getSimpleName());
+        for (Map.Entry<String, String> entry : request.getPathParameter()
+                .entrySet()) {
             System.out.printf("\t%s = %s%n", entry.getKey(), entry.getValue());
         }
         System.out.printf("\tStatus : %d%n", response.getStatus());

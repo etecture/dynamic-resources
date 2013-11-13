@@ -100,7 +100,10 @@ public abstract class AbstractMimeAndVersionResolver<T, A extends Annotation> {
                             resourceClass)) {
                         continue outer;
                     } else {
-                        final String[] mimeTypes = getMimeType(annotation);
+                        String[] mimeTypes = getMimeType(annotation);
+                        if (mimeTypes.length == 0) {
+                            mimeTypes = new String[]{"text/plain"};
+                        }
                         for (String mimeType : mimeTypes) {
                             MediaType mediaType = new MediaTypeExpression(
                                     mimeType);
@@ -120,6 +123,37 @@ public abstract class AbstractMimeAndVersionResolver<T, A extends Annotation> {
             }
         }
         return formats;
+    }
+
+    public boolean exists(Class<?> type, MediaType expectedMimeType,
+            VersionNumberRange expectedVersion) {
+        final Set<Bean<?>> beans = beanManager.getBeans(beanClass,
+                new AnnotationLiteral<Any>() {
+            private static final long serialVersionUID = 1L;
+        });
+        outer:
+        for (Bean<?> bean : beans) {
+            for (Annotation qualifier : bean.getQualifiers()) {
+                if (qualifier.annotationType() == annotationClass) {
+                    A annotation = annotationClass.cast(qualifier);
+                    if (!getTypeDefinition(annotation).isAssignableFrom(
+                            type)) {
+                        continue outer;
+                    } else {
+                        final String[] mimeTypes = getMimeType(annotation);
+                        for (String mimeType : mimeTypes) {
+                            MediaType mediaType = new MediaTypeExpression(
+                                    mimeType);
+                            if (expectedVersion.includes(getVersion(annotation))) {
+                                return true;
+                            }
+                        }
+                        continue outer;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public T resolve(Class<?> resourceClass,

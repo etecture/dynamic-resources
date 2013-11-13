@@ -66,4 +66,26 @@ public class ResponseWriterResolver extends AbstractMimeAndVersionResolver<Respo
     protected String getVersion(Produces annotation) {
         return annotation.version();
     }
+    /**
+     * returns true, if there is a response writer, that matches the given
+     * consumes annotations.
+     *
+     * @param annotations
+     * @return
+     */
+    public boolean exists(Produces... annotations) {
+        if (annotations.length == 0) {
+            return true;
+        }
+        for (Produces annotation : annotations) {
+            for (String mimeType : annotation.mimeType()) {
+                if (exists(annotation.contentType(), new MediaTypeExpression(
+                        mimeType), new VersionNumberRangeExpression(annotation
+                        .version()))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }

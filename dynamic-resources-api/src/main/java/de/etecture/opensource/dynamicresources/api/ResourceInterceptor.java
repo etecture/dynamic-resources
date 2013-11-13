@@ -39,8 +39,6 @@
  */
 package de.etecture.opensource.dynamicresources.api;
 
-import java.util.Map;
-
 /**
  *
  * @author rhk
@@ -54,25 +52,17 @@ public interface ResourceInterceptor {
      * {@link ResponseImpl} to return with this response immediately (without
      * calling the resource).
      *
-     * @param method
-     * @param resource
-     * @param resourceClass
-     * @param parameter
+     * @param request
      * @return
      */
-    Response before(Resource resource, Method method, Class<?> resourceClass,
-            Map<String, Object> parameter);
+    Response before(Request request);
 
     /**
      * called by the dynamicresources handler after the resource was invoked.
      *
-     * @param method
-     * @param resource
-     * @param resourceClass
-     * @param parameter
+     * @param request
      * @param response
      * @return
      */
-    Response after(Resource resource, Method method, Class<?> resourceClass,
-            Map<String, Object> parameter, Response response);
+    Response after(Request request, Response response);
 }

@@ -48,23 +48,16 @@ import de.etecture.opensource.dynamicresources.api.DefaultResponse;
 import de.etecture.opensource.dynamicresources.api.ExceptionHandler;
 import de.etecture.opensource.dynamicresources.api.Global;
 import de.etecture.opensource.dynamicresources.api.Method;
-import de.etecture.opensource.dynamicresources.api.RequestReader;
+import de.etecture.opensource.dynamicresources.api.Request;
 import de.etecture.opensource.dynamicresources.api.Resource;
 import de.etecture.opensource.dynamicresources.api.ResourceInterceptor;
 import de.etecture.opensource.dynamicresources.api.Response;
-import de.etecture.opensource.dynamicresources.api.ResponseWriter;
-import de.etecture.opensource.dynamicresources.api.StatusCodes;
 import de.etecture.opensource.dynamicresources.extension.Current;
 import de.etecture.opensource.dynamicresources.extension.DefaultQueryMetaData;
-import de.etecture.opensource.dynamicresources.extension.MediaTypeExpression;
 import de.etecture.opensource.dynamicresources.extension.RequestReaderResolver;
 import de.etecture.opensource.dynamicresources.extension.ResponseWriterResolver;
-import de.etecture.opensource.dynamicresources.extension.VersionNumberRangeExpression;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.enterprise.inject.Any;
@@ -76,7 +69,6 @@ import javax.enterprise.util.AnnotationLiteral;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.lang.StringUtils;
 
 /**
  *
@@ -91,9 +83,9 @@ public abstract class AbstractResourceMethodHandler implements
     @Any
     Instance<ExceptionHandler> exceptionHandlers;
     @Inject
-    ResponseWriterResolver responseWriterResolver;
-    @Inject
     RequestReaderResolver requestReaderResolver;
+    @Inject
+    ResponseWriterResolver responseWriterResolver;
     @Inject
     @Current
     HttpServletRequest req;
@@ -110,16 +102,14 @@ public abstract class AbstractResourceMethodHandler implements
         this.kind = kind;
     }
 
-    private Response before(
-            Resource resource,
-            Method method,
-            Class<?> resourceClass,
-            Map<String, Object> parameter) {
+    private Response before(Request request) {
         Response response = null;
         try {
-            for (Class<ResourceInterceptor> ric : method.interceptors()) {
+            for (Class<? extends ResourceInterceptor> ric : request
+                    .getResourceMethod()
+                    .interceptors()) {
                 ResourceInterceptor ri = (ResourceInterceptor) ric.newInstance();
-                response = ri.before(resource, method, resourceClass, parameter);
+                response = ri.before(request);
                 if (response != null) {
                     break;
                 }
@@ -129,7 +119,7 @@ public abstract class AbstractResourceMethodHandler implements
         }
         if (response == null) {
             for (ResourceInterceptor ri : globalInterceptors) {
-                response = ri.before(resource, method, resourceClass, parameter);
+                response = ri.before(request);
                 if (response != null) {
                     break;
                 }
@@ -138,37 +128,26 @@ public abstract class AbstractResourceMethodHandler implements
         return response;
     }
 
-    private Response after(Resource resource, Method method,
-            Class<?> resourceClass,
-            Map<String, Object> parameter, Response response) {
-        for (Class<ResourceInterceptor> ric : method.interceptors()) {
+    private Response after(Request request, Response response) {
+        for (Class<? extends ResourceInterceptor> ric : request
+                .getResourceMethod().interceptors()) {
             final Bean<? extends Object> resolved =
                     beanManager.resolve(beanManager.getBeans(ric));
             ResourceInterceptor ri = (ResourceInterceptor) beanManager
                     .getReference(resolved, ric,
                     beanManager
                     .createCreationalContext(resolved));
-            response = ri.after(resource, method, resourceClass, parameter,
+            response = ri.after(request,
                     response);
             if (response != null) {
                 break;
             }
         }
         for (ResourceInterceptor ri : globalInterceptors) {
-            response = ri.after(resource, method, resourceClass, parameter,
+            response = ri.after(request,
                     response);
         }
         return response;
-    }
-
-    protected <T> Method getMethodForRequest(Class<T> resourceClazz) {
-        Resource resource = resourceClazz.getAnnotation(Resource.class);
-        for (Method methodAnnotation : resource.methods()) {
-            if (req.getMethod().equalsIgnoreCase(methodAnnotation.name())) {
-                return methodAnnotation;
-            }
-        }
-        return null;
     }
 
     @Override
@@ -190,8 +169,8 @@ public abstract class AbstractResourceMethodHandler implements
 
     @Override
     public boolean isAvailable(
-            Class<?> resourceClass) {
-        Resource resource = resourceClass.getAnnotation(Resource.class);
+            Class<?> resourceClazz) {
+        Resource resource = resourceClazz.getAnnotation(Resource.class);
         if (resource == null) {
             return false;
         }
@@ -208,80 +187,57 @@ public abstract class AbstractResourceMethodHandler implements
     }
 
     @Override
-    public <T> void handleRequest(
-            Class<T> resourceClazz, Map<String, String> pathValues) throws
-            IOException {
-        Map<String, Object> parameter =
-                buildParameterMap(pathValues, resourceClazz);
+    public Response handleRequest(Request request) throws IOException {
         Response response;
-        Method methodAnnotation = getMethodForRequest(resourceClazz);
-        if (methodAnnotation == null) {
-            response = new DefaultResponse("method " + req.getMethod()
-                    + " is not defined for resource: " + resourceClazz
-                    .getSimpleName(), StatusCodes.METHOD_NOT_ALLOWED);
-            writeResponse(response);
-        } else {
-            response = checkSecurityConstraints(resourceClazz);
-            if (response == null) {
-                response = before(resourceClazz
-                        .getAnnotation(
-                        Resource.class), methodAnnotation,
-                        resourceClazz, parameter);
-                if (response == null) {
-                    QueryMetaData<T> qmd = buildMetaData(resourceClazz,
-                            methodAnnotation,
-                            parameter);
-                    response =
-                            executeQuery(resourceClazz, methodAnnotation, qmd);
-                    response = after(resourceClazz
-                            .getAnnotation(
-                            Resource.class), methodAnnotation, resourceClazz,
-                            qmd
-                            .getParameterMap(),
-                            response);
-                }
-            }
+        response = before(request);
+        if (response == null) {
+            QueryMetaData qmd = buildMetaData(request);
+            response =
+                    executeQuery(request, qmd);
+            response = after(request, response);
         }
-        writeResponse(response);
+        return response;
     }
 
-    protected <T> QueryMetaData<T> buildMetaData(Class<T> resourceClazz,
-            Method methodAnnotation, Map<String, Object> parameter) throws
+    protected <T> QueryMetaData<T> buildMetaData(Request request) throws
             IOException {
 
+        Map<String, Object> parameter = buildParameterMap(request);
         DefaultQueryMetaData<T> queryMetaData = new DefaultQueryMetaData(
-                methodAnnotation.query(),
-                methodAnnotation.name(),
-                resourceClazz,
+                request.getResourceMethod().query(),
+                request.getResourceMethod().name(),
+                request.getResourceClass(),
                 kind,
                 parameter);
-        if (resourceClazz.isAnnotationPresent(Param.class)) {
-            Param param = resourceClazz.getAnnotation(Param.class);
+
+        if (request.getResourceClass().isAnnotationPresent(Param.class)) {
+            Param param = request.getResourceClass().getAnnotation(Param.class);
+
             queryMetaData.addParameter(param);
-        } else if (resourceClazz.isAnnotationPresent(Params.class)) {
-            for (Param param : resourceClazz.getAnnotation(Params.class)
-                    .value()) {
+        } else if (request.getResourceClass().isAnnotationPresent(Params.class)) {
+            for (Param param : request.getResourceClass().getAnnotation(
+                    Params.class).value()) {
                 queryMetaData.addParameter(param);
             }
         }
         return queryMetaData;
     }
 
-    protected <T> Response<?> handleException(Throwable exception,
-            Class<T> resourceClazz, Method method) {
+    protected Response<?> handleException(Throwable exception,
+            Request request) {
         System.out.printf("handle Exception: %s, resource: %s, method: %s%n",
                 exception.getClass().getSimpleName(),
-                resourceClazz.getSimpleName(),
-                method.name());
+                request.getResourceClass().getSimpleName(),
+                request.getResourceMethod().name());
         for (ExceptionHandler exh : exceptionHandlers) {
             System.out.printf("check handler: %s%n", exh.getClass()
                     .getSimpleName());
             if (exh
-                    .isResponsibleFor(resourceClazz, method.name(), exception
+                    .isResponsibleFor(request, exception
                     .getClass())) {
                 System.out.printf("call exception handler: %s%n", exh.getClass()
                         .getSimpleName());
-                return exh.handleException(resourceClazz, method.name(),
+                return exh.handleException(request,
                         exception);
             }
         }
@@ -289,16 +245,15 @@ public abstract class AbstractResourceMethodHandler implements
     }
 
     protected <T> Response<?> executeQuery(
-            Class<T> resourceClazz,
-            Method method,
+            Request request,
             QueryMetaData<T> queryMetaData) {
         try {
             return new DefaultResponse(
                     getExecutorByTechnology(queryMetaData
                     .getQueryTechnology()).execute(queryMetaData),
-                    method.status());
+                    request.getResourceMethod().status());
         } catch (Throwable ex) {
-            return handleException(ex, resourceClazz, method);
+            return handleException(ex, request);
         }
     }
 
@@ -318,7 +273,8 @@ public abstract class AbstractResourceMethodHandler implements
                 } else {
                     resolvedBean = queryExecutors.iterator().next();
                 }
-            } else if (queryExecutors.size() > 1) {
+            } else if (queryExecutors.size()
+                    > 1) {
                 throw new UnsatisfiedResolutionException(
                         "more than one technologies found.");
             } else {
@@ -345,119 +301,33 @@ public abstract class AbstractResourceMethodHandler implements
         if (request != null) {
             parameter.put("request", request);
         }
-        Method methodAnnotation = getMethodForRequest(resourceClazz);
-        return getExecutorByTechnology(methodAnnotation.query().technology())
-                .execute(
-                new DefaultQueryMetaData<>(
-                methodAnnotation.query(),
-                methodAnnotation.name(),
-                resourceClazz,
-                kind,
-                parameter));
-    }
-
-    protected <T, R> R readRequest(Class<T> resourceClazz) throws IOException {
-        String versionString = req.getHeader("Content-Version");
-        String contentType = req.getHeader("Content-Type");
-        if (StringUtils.isBlank(contentType)) {
-            contentType = "application/xml";
-        }
-        MediaTypeExpression mediaType = new MediaTypeExpression(contentType);
-        VersionNumberRangeExpression version;
-        if (StringUtils.isBlank(versionString)) {
-            version = new VersionNumberRangeExpression(mediaType.version());
-        } else {
-            version = new VersionNumberRangeExpression(versionString);
-        }
-
-        Method methodAnnotation = getMethodForRequest(resourceClazz);
-        RequestReader<R> reader = requestReaderResolver.resolve(methodAnnotation
-                .requestType(),
-                mediaType, version);
-
-        if (reader != null) {
-            return reader.processRequest(req.getReader(), contentType);
-        } else {
-            return null;
-        }
-    }
-
-    protected void writeResponse(Response<?> response) throws IOException {
-        String versionString = req.getHeader("Accept-Version");
-        String contentType = req.getHeader("Accept");
-        if (StringUtils.isBlank(contentType)) {
-            contentType = "application/xml";
-        }
-        MediaTypeExpression mediaType = new MediaTypeExpression(contentType);
-        VersionNumberRangeExpression version;
-        if (StringUtils.isBlank(versionString)) {
-            version = new VersionNumberRangeExpression(mediaType.version());
-        } else {
-            version = new VersionNumberRangeExpression(versionString);
-        }
-
-        for (Map.Entry<String, List<Object>> e : response.getHeaders()) {
-            for (Object o : e.getValue()) {
-                if (o == null) {
-                    // do nothing here
-                } else if (Number.class.isAssignableFrom(o.getClass())) {
-                    resp.addIntHeader(e.getKey(), ((Number) o).intValue());
-                } else if (Date.class.isAssignableFrom(o.getClass())) {
-                    resp.addDateHeader(e.getKey(), ((Date) o).getTime());
-                } else {
-                    resp.addHeader(e.getKey(), o.toString());
-                }
+        for (Method methodAnnotation : resourceClazz.getAnnotation(
+                Resource.class).methods()) {
+            if (methodAnnotation.name().equalsIgnoreCase(this.getClass()
+                    .getAnnotation(Verb.class).value())) {
+                return getExecutorByTechnology(methodAnnotation.query()
+                        .technology())
+                        .execute(
+                        new DefaultQueryMetaData<>(
+                        methodAnnotation.query(),
+                        methodAnnotation.name(),
+                        resourceClazz,
+                        kind,
+                        parameter));
             }
         }
-        resp.setStatus(response.getStatus());
-        resp.setContentType(mediaType.toString());
-        if (response.getEntity() != null) {
-            ResponseWriter writer =
-                    responseWriterResolver.resolve(response
-                    .getEntity().getClass(), mediaType, version);
-            if (writer != null) {
-                writer.processElement(response.getEntity(), resp.getWriter(),
-                        mediaType);
-            } else {
-                resp.sendError(406, String.format(
-                        "The resource is not available with mediatype: %s and version: %s",
-                        mediaType.toString(), version.toString()));
-            }
-        }
+        return null;
     }
 
-    protected <R> Map<String, Object> buildParameterMap(
-            Map<String, String> pathValues,
-            Class<R> resourceClazz) throws IOException {
+    protected Map<String, Object> buildParameterMap(Request request) throws
+            IOException {
         Map<String, Object> parameter = new HashMap<>();
-        parameter.putAll(pathValues);
-        for (String parameterName : Collections.list(req
-                .getParameterNames())) {
-            parameter
-                    .put(parameterName, req.getParameter(parameterName));
-        }
-        Object requestObject = readRequest(resourceClazz);
+        parameter.putAll(request.getPathParameter());
+        parameter.putAll(request.getQueryParameter());
+        Object requestObject = request.getContent();
         if (requestObject != null) {
             parameter.put("request", requestObject);
         }
         return parameter;
-    }
-
-    protected Response checkSecurityConstraints(
-            Class<?> resourceClass) {
-        Method methodAnnotation = getMethodForRequest(resourceClass);
-        String[] allowedRoles = methodAnnotation.rolesAllowed();
-        if (allowedRoles != null && allowedRoles.length > 0) {
-            boolean trust = false;
-            for (String role : allowedRoles) {
-                trust = trust || req.isUserInRole(role);
-            }
-            if (!trust) {
-                return new DefaultResponse("User " + req.getUserPrincipal()
-                        + " is not allowed to perform this request.\n",
-                        StatusCodes.FORBIDDEN);
-            }
-        }
-        return null;
     }
 }
