@@ -110,10 +110,21 @@ public class DynamicRestServlet extends HttpServlet {
                 Instance<ResourceMethodHandler> selectedResourceMethodHandlers =
                         resourceMethodHandlers.select(new VerbLiteral(req
                         .getMethod()));
-                Request request;
                 try {
-                    request = new DefaultRequest(req, groups, clazz,
+                    Request request = new DefaultRequest(req, groups, clazz,
                             requestReaderResolver);
+                    for (ResourceMethodHandler handler
+                            : selectedResourceMethodHandlers) {
+                        if (handler.isAvailable(clazz)) {
+                            Response response = handler.handleRequest(request);
+                            if (response != null) {
+                                writeResponse(request, resp, response);
+                                return;
+                            }
+                        }
+                    }
+                    throw new IllegalArgumentException(
+                            "no resource-method-handler defined for this method");
                 } catch (IllegalArgumentException ex) {
                     resp.sendError(StatusCodes.METHOD_NOT_ALLOWED,
                             "no such method: " + req.getMethod()
@@ -121,20 +132,6 @@ public class DynamicRestServlet extends HttpServlet {
                             + " reason: " + ex.getMessage());
                     return;
                 }
-                for (ResourceMethodHandler handler
-                        : selectedResourceMethodHandlers) {
-                    if (handler.isAvailable(clazz)) {
-                        Response response = handler.handleRequest(request);
-                        if (response != null) {
-                            writeResponse(request, resp, response);
-                            return;
-                        }
-                    }
-                }
-                resp.sendError(StatusCodes.METHOD_NOT_ALLOWED,
-                        "no such method: " + req.getMethod()
-                        + " for resource: " + clazz.getSimpleName());
-                return;
             }
         }
         if ("OPTIONS".equalsIgnoreCase(req.getMethod()) && ("/".equals(req
