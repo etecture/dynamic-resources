@@ -88,8 +88,6 @@ public enum XMLTest implements ResponseWriter {
             writer.writeEndElement();
         }
     },
-    @Produces(contentType = TestResource.class, mimeType = {"application/xml",
-        "text/xml"})
     TEST_NEWEST {
         @Override
         protected void process(Object element, XMLStreamWriter writer) throws

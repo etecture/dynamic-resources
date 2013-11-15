@@ -88,7 +88,6 @@ public enum JSONTest implements ResponseWriter {
                     ((TestResources) element).getCount()).writeEnd();
         }
     },
-    @Produces(contentType = TestResource.class, mimeType = "application/json")
     TEST {
         @Override
         protected void process(Object element, JsonGenerator generator) {
