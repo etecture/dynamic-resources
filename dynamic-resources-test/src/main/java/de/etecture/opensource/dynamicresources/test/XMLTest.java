@@ -201,4 +201,9 @@ public enum XMLTest implements ResponseWriter {
                     ex);
         }
     }
+
+    @Override
+    public int getContentLength(Object entity, MediaType acceptedMediaType) {
+        return -1;
+    }
 }

@@ -113,4 +113,9 @@ public enum JSONTest implements ResponseWriter {
         jg.flush();
         jg.close();
     }
+
+    @Override
+    public int getContentLength(Object entity, MediaType acceptedMediaType) {
+        return -1;
+    }
 }
