@@ -74,5 +74,9 @@ class TestResourceWriter_XML implements ResponseWriter<TestResource> {
             groovy('rocks!')
         }
     }
+
+    int getContentLength(TestResource tr, MediaType mime) {
+        return -1;
+    }
 }
 
