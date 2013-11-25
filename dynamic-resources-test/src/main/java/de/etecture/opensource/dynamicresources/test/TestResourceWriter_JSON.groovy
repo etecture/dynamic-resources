@@ -64,7 +64,7 @@ class TestResourceWriter_JSON implements ResponseWriter {
         json.writeTo(writer);
     }
 
-    int getContentLength(TestResource tr, MediaType mime) {
+    int getContentLength(Object tr, MediaType mime) {
         return -1;
     }
 }
