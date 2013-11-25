@@ -46,6 +46,7 @@ import de.etecture.opensource.dynamicrepositories.spi.QueryExecutor;
 import de.etecture.opensource.dynamicrepositories.spi.QueryMetaData;
 import de.etecture.opensource.dynamicresources.api.DefaultResponse;
 import de.etecture.opensource.dynamicresources.api.ExceptionHandler;
+import de.etecture.opensource.dynamicresources.api.Filter;
 import de.etecture.opensource.dynamicresources.api.Global;
 import de.etecture.opensource.dynamicresources.api.Method;
 import de.etecture.opensource.dynamicresources.api.Request;
@@ -69,6 +70,7 @@ import javax.enterprise.util.AnnotationLiteral;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.beanutils.ConvertUtils;
 
 /**
  *
@@ -322,8 +324,22 @@ public abstract class AbstractResourceMethodHandler implements
     protected Map<String, Object> buildParameterMap(Request request) throws
             IOException {
         Map<String, Object> parameter = new HashMap<>();
+        for (Filter filter : request.getResourceMethod().filters()) {
+            String stringValue = null;
+            if (request.getQueryParameter().containsKey(filter.name())) {
+                String[] paramValues = request.getQueryParameter().get(filter
+                        .name());
+                if (paramValues.length >= 1) {
+                    stringValue = paramValues[0];
+                }
+            }
+            if (stringValue == null && !filter.defaultValue().isEmpty()) {
+                stringValue = filter.defaultValue();
+            }
+            parameter.put(filter.name(), ConvertUtils.convert(stringValue,
+                    filter.type()));
+        }
         parameter.putAll(request.getPathParameter());
-        parameter.putAll(request.getQueryParameter());
         Object requestObject = request.getContent();
         if (requestObject != null) {
             parameter.put("request", requestObject);

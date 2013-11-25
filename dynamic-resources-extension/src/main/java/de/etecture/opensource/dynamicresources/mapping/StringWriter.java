@@ -66,5 +66,10 @@ public enum StringWriter implements ResponseWriter<String> {
             writer.append(element);
             writer.flush();
         }
+
+        @Override
+        public int getContentLength(String entity, MediaType acceptedMediaType) {
+            return entity != null ? entity.length() : 0;
+        }
     }
 }

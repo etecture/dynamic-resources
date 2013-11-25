@@ -107,6 +107,12 @@ public enum ExceptionXMLWriter implements ResponseWriter<Throwable> {
                         ex);
             }
         }
+
+        @Override
+        public int getContentLength(Throwable entity,
+                MediaType acceptedMediaType) {
+            return -1;
+        }
     };
     private static final XMLOutputFactory XML_FACTORY = XMLOutputFactory
             .newFactory();

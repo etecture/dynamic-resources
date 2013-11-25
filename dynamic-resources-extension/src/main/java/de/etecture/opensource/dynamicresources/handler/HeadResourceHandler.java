@@ -37,37 +37,22 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.api;
+package de.etecture.opensource.dynamicresources.handler;
 
-import java.io.IOException;
-import java.io.Writer;
+import de.etecture.opensource.dynamicrepositories.spi.QueryMetaData;
+import de.etecture.opensource.dynamicresources.api.HttpMethods;
+import de.etecture.opensource.dynamicresources.spi.AbstractResourceMethodHandler;
+import de.etecture.opensource.dynamicresources.spi.Verb;
 
 /**
- * this interface is used to write an object to a response writer
  *
  * @author rhk
- * @version ${project.version}
- * @since 1.0.1
  */
-public interface ResponseWriter<T> {
+@Verb(HttpMethods.HEAD)
+public class HeadResourceHandler extends AbstractResourceMethodHandler {
 
-    /**
-     * write the element to the response writer
-     *
-     * @param element the element to be written
-     * @param writer the writer to be used.
-     * @param mimetype the value of mimetype
-     * @throws IOException
-     */
-    void processElement(T element, Writer writer, MediaType mimetype) throws
-            IOException;
+    public HeadResourceHandler() {
+        super(QueryMetaData.Kind.RETRIEVE);
+    }
 
-    /**
-     * returns the length of the content that this writer would produce.
-     *
-     * @param entity
-     * @param acceptedMediaType
-     * @return
-     */
-    int getContentLength(T entity, MediaType acceptedMediaType);
 }

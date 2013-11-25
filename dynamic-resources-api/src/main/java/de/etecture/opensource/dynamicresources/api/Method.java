@@ -113,4 +113,11 @@ public @interface Method {
      * @return
      */
     Class<? extends ResourceInterceptor>[] interceptors() default {};
+
+    /**
+     * the optional filter parameter.
+     *
+     * @return
+     */
+    Filter[] filters() default {};
 }

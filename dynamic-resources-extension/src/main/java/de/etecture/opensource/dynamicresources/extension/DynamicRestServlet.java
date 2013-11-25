@@ -180,6 +180,11 @@ public class DynamicRestServlet extends HttpServlet {
                     .getEntity().getClass(), request.getAcceptedMediaType(),
                     request.getAcceptedVersionRange());
             if (writer != null) {
+                final int contentLength = writer.getContentLength(response
+                        .getEntity(), request.getAcceptedMediaType());
+                if (contentLength >= 0) {
+                    resp.setContentLength(contentLength);
+                }
                 final PrintWriter respWriter = resp.getWriter();
                 writer.processElement(response.getEntity(), respWriter,
                         request.getAcceptedMediaType());
@@ -201,5 +206,13 @@ public class DynamicRestServlet extends HttpServlet {
         resp.setCharacterEncoding("UTF-8");
         executeResource(req, resp);
         resp.getWriter().flush();
+        resp.getWriter().close();
+    }
+
+    @Override
+    protected void doHead(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        System.out.println("do the head");
+        service(req, resp);
     }
 }
