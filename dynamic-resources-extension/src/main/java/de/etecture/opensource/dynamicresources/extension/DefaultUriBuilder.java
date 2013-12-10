@@ -39,7 +39,6 @@
  */
 package de.etecture.opensource.dynamicresources.extension;
 
-import com.sun.jersey.server.impl.uri.PathTemplate;
 import de.etecture.opensource.dynamicresources.api.Resource;
 import de.etecture.opensource.dynamicresources.api.UriBuilder;
 import java.util.Map;
@@ -47,6 +46,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Default;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import org.glassfish.jersey.uri.PathTemplate;
 
 /**
  * this is the default {@link UriBuilder} implementation.

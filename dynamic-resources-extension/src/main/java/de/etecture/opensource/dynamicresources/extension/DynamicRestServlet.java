@@ -39,7 +39,6 @@
  */
 package de.etecture.opensource.dynamicresources.extension;
 
-import com.sun.jersey.server.impl.uri.PathTemplate;
 import de.etecture.opensource.dynamicresources.api.Request;
 import de.etecture.opensource.dynamicresources.api.Resource;
 import de.etecture.opensource.dynamicresources.api.Response;
@@ -64,6 +63,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
+import org.glassfish.jersey.uri.PathTemplate;
 
 /**
  *
