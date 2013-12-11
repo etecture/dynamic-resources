@@ -81,7 +81,7 @@ public class PathParserTest {
     @Test
     public void testCreateUri() {
         String template =
-                "/customers/{custNo:\\d+}/employees/{empNo}/addresses";
+                "customers/{custNo:\\d+}/employees/{empNo}/addresses";
         String expectedPath =
                 "/customers/1234567890/employees/1-9Y2CLO/addresses";
 

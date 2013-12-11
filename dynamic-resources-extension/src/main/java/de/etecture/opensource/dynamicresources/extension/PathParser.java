@@ -87,7 +87,7 @@ public class PathParser {
     public static String createURI(String uriTemplate,
             Map<String, String> groups) {
         Matcher matcher = GROUP_PATTERN.matcher(uriTemplate);
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer = new StringBuffer("/");
         while (matcher.find()) {
             matcher.appendReplacement(buffer, groups.get(matcher.group(1)));
         }
