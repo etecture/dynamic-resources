@@ -63,7 +63,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
-import org.glassfish.jersey.uri.PathTemplate;
 
 /**
  *
@@ -102,10 +101,8 @@ public class DynamicRestServlet extends HttpServlet {
             IOException {
         for (Class<?> clazz : resext.resourcesInterfaces) {
             Resource resource = clazz.getAnnotation(Resource.class);
-            PathTemplate pt = new PathTemplate(stripLastSlashIfExist(resource
-                    .uri()));
             Map<String, String> groups = new HashMap<>();
-            if (pt.match(stripLastSlashIfExist(req.getPathInfo()), groups)) {
+            if (PathParser.match(resource.uri(), req.getPathInfo(), groups)) {
                 // find the ResourceMethodHandler for the method
                 Instance<ResourceMethodHandler> selectedResourceMethodHandlers =
                         resourceMethodHandlers.select(new VerbLiteral(req

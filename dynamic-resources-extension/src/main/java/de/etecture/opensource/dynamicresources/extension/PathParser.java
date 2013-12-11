@@ -39,43 +39,60 @@
  */
 package de.etecture.opensource.dynamicresources.extension;
 
-import de.etecture.opensource.dynamicresources.api.Resource;
-import de.etecture.opensource.dynamicresources.api.UriBuilder;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Default;
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.apache.commons.lang.StringUtils;
 
 /**
- * this is the default {@link UriBuilder} implementation.
  *
  * @author rhk
- * @version ${project.version}
- * @since 1.0.5
+ * @version
+ * @since
  */
-@Default
-@ApplicationScoped
-public class DefaultUriBuilder implements UriBuilder {
+public class PathParser {
 
-    @Inject
-    private HttpServletRequest request;
+    private static final Pattern GROUP_PATTERN = Pattern.compile(
+            "\\{(\\w+?)(?:\\:(.+?))?\\}");
 
-    @Override
-    public String build(
-            Class<?> resourceClazz,
-            Map<String, String> pathValues) {
-        Resource resource = resourceClazz.getAnnotation(Resource.class);
-        String path;
-        if (pathValues != null) {
-            path = PathParser.createURI(resource.uri(), pathValues);
-        } else {
-            path = resource.uri();
-            if (!path.startsWith("/")) {
-                path = "/" + path;
+    public static boolean match(String uriTemplate, String path,
+            Map<String, String> groups) {
+        Matcher matcher = GROUP_PATTERN.matcher(uriTemplate);
+        List<String> groupNames = new ArrayList<>();
+        StringBuffer buffer = new StringBuffer();
+        while (matcher.find()) {
+            String pattern = matcher.group(2);
+            if (StringUtils.isBlank(pattern)) {
+                pattern = "[^/]+";
             }
+            pattern = pattern.replaceAll("\\\\", "\\\\\\\\");
+            matcher.appendReplacement(buffer, String.format("(?<%s>%s)", matcher
+                    .group(1), pattern));
+            groupNames.add(matcher.group(1));
         }
-        return request.getScheme() + "://" + request.getServerName() + ":"
-                + request.getServerPort() + request.getContextPath() + path;
+        matcher.appendTail(buffer);
+        final Pattern uriPattern = Pattern.compile(buffer.toString());
+        matcher = uriPattern.matcher(
+                "/customers/1234567890/employees/1-9Y2CLO/addresses");
+        if (matcher.matches()) {
+            for (String groupName : groupNames) {
+                groups.put(groupName, matcher.group(groupName));
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public static String createURI(String uriTemplate,
+            Map<String, String> groups) {
+        Matcher matcher = GROUP_PATTERN.matcher(uriTemplate);
+        StringBuffer buffer = new StringBuffer();
+        while (matcher.find()) {
+            matcher.appendReplacement(buffer, groups.get(matcher.group(1)));
+        }
+        matcher.appendTail(buffer);
+        return buffer.toString();
     }
 }

@@ -39,43 +39,44 @@
  */
 package de.etecture.opensource.dynamicresources.extension;
 
-import de.etecture.opensource.dynamicresources.api.Resource;
-import de.etecture.opensource.dynamicresources.api.UriBuilder;
+import java.util.HashMap;
 import java.util.Map;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Default;
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
- * this is the default {@link UriBuilder} implementation.
  *
  * @author rhk
- * @version ${project.version}
- * @since 1.0.5
+ * @version
+ * @since
  */
-@Default
-@ApplicationScoped
-public class DefaultUriBuilder implements UriBuilder {
+public class PathParserTest {
 
-    @Inject
-    private HttpServletRequest request;
+    @Test
+    public void testMatch() {
+        String template =
+                "/customers/{custNo:\\d+}/employees/{empNo}/addresses";
+        String path =
+                "/customers/1234567890/employees/1-9Y2CLO/addresses";
 
-    @Override
-    public String build(
-            Class<?> resourceClazz,
-            Map<String, String> pathValues) {
-        Resource resource = resourceClazz.getAnnotation(Resource.class);
-        String path;
-        if (pathValues != null) {
-            path = PathParser.createURI(resource.uri(), pathValues);
-        } else {
-            path = resource.uri();
-            if (!path.startsWith("/")) {
-                path = "/" + path;
-            }
-        }
-        return request.getScheme() + "://" + request.getServerName() + ":"
-                + request.getServerPort() + request.getContextPath() + path;
+        Map<String, String> groups = new HashMap<>();
+        Assert.assertTrue(PathParser.match(template, path, groups));
+        Assert.assertFalse(groups.isEmpty());
+        Assert.assertEquals("1234567890", groups.get("custNo"));
+        Assert.assertEquals("1-9Y2CLO", groups.get("empNo"));
+    }
+
+    @Test
+    public void testCreateUri() {
+        String template =
+                "/customers/{custNo:\\d+}/employees/{empNo}/addresses";
+        String expectedPath =
+                "/customers/1234567890/employees/1-9Y2CLO/addresses";
+
+        Map<String, String> groups = new HashMap<>();
+        groups.put("custNo", "1234567890");
+        groups.put("empNo", "1-9Y2CLO");
+        Assert.assertEquals(expectedPath, PathParser.createURI(template,
+                groups));
     }
 }
