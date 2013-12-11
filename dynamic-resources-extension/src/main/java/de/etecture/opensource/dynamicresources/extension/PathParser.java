@@ -74,8 +74,7 @@ public class PathParser {
         }
         matcher.appendTail(buffer);
         final Pattern uriPattern = Pattern.compile(buffer.toString());
-        matcher = uriPattern.matcher(
-                "/customers/1234567890/employees/1-9Y2CLO/addresses");
+        matcher = uriPattern.matcher(path);
         if (matcher.matches()) {
             for (String groupName : groupNames) {
                 groups.put(groupName, matcher.group(groupName));

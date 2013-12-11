@@ -67,6 +67,18 @@ public class PathParserTest {
     }
 
     @Test
+    public void testMatch_emptyGroups() {
+        String template =
+                "/customers";
+        String path =
+                "/customers";
+
+        Map<String, String> groups = new HashMap<>();
+        Assert.assertTrue(PathParser.match(template, path, groups));
+        Assert.assertTrue(groups.isEmpty());
+    }
+
+    @Test
     public void testCreateUri() {
         String template =
                 "/customers/{custNo:\\d+}/employees/{empNo}/addresses";
