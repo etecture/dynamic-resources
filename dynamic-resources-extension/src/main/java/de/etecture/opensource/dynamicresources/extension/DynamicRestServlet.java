@@ -102,7 +102,12 @@ public class DynamicRestServlet extends HttpServlet {
         for (Class<?> clazz : resext.resourcesInterfaces) {
             Resource resource = clazz.getAnnotation(Resource.class);
             Map<String, String> groups = new HashMap<>();
-            if (PathParser.match(resource.uri(), req.getPathInfo(), groups)) {
+            String uri = resource.uri();
+            if (!uri.startsWith("/")) {
+                uri = "/" + uri;
+            }
+            if (PathParser.match(uri, stripLastSlashIfExist(req
+                    .getPathInfo()), groups)) {
                 // find the ResourceMethodHandler for the method
                 Instance<ResourceMethodHandler> selectedResourceMethodHandlers =
                         resourceMethodHandlers.select(new VerbLiteral(req
