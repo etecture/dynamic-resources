@@ -40,6 +40,7 @@
         <module>dynamic-resources-api</module>
         <module>dynamic-resources-extension</module>
         <module>dynamic-resources-test</module>
+        <module>dynamic-resources-test-api</module>
     </modules>
 
     <build>

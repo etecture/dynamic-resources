@@ -336,6 +336,8 @@ public abstract class AbstractResourceMethodHandler implements
             if (stringValue == null && !filter.defaultValue().isEmpty()) {
                 stringValue = filter.defaultValue();
             }
+            System.out.printf("add parameter: %s=%s%n", filter.name(),
+                    stringValue);
             parameter.put(filter.name(), ConvertUtils.convert(stringValue,
                     filter.type()));
         }

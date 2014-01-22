@@ -60,6 +60,7 @@ public class ResourcesImpl<T> implements Resources<T> {
     private final BeanManager bm;
     private final Class<T> resourceClass;
     protected final Map<String, Object> params;
+    protected Object body;
 
     protected ResourcesImpl(
             BeanManager bm,
@@ -90,6 +91,12 @@ public class ResourcesImpl<T> implements Resources<T> {
     }
 
     @Override
+    public Resources<T> body(Object requestBody) {
+        this.body = requestBody;
+        return this;
+    }
+
+    @Override
     public T invoke(final String methodName) throws Exception {
         HttpContextProducer.setRequest((HttpServletRequest) Proxy
                 .newProxyInstance(ResourcesImpl.class
@@ -107,12 +114,12 @@ public class ResourcesImpl<T> implements Resources<T> {
             }
         }));
 
-        return lookupExecutor(bm, methodName).execute(resourceClass, params,
-                null);
+        return lookupExecutor(bm, methodName)
+                .execute(resourceClass, params, body);
     }
 
     @Override
-    public T invoke(final String methodName, Object content) throws Exception {
+    public void call(final String methodName) throws Exception {
         HttpContextProducer.setRequest((HttpServletRequest) Proxy
                 .newProxyInstance(ResourcesImpl.class
                 .getClassLoader(), new Class[]{HttpServletRequest.class},
@@ -129,8 +136,8 @@ public class ResourcesImpl<T> implements Resources<T> {
             }
         }));
 
-        return lookupExecutor(bm, methodName)
-                .execute(resourceClass, params, content);
+        lookupExecutor(bm, methodName)
+                .execute(Object.class, params, body);
     }
 
     private static ResourceMethodHandler lookupExecutor(BeanManager bm,

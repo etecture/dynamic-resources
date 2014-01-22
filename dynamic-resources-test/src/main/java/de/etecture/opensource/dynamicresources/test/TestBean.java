@@ -100,11 +100,15 @@ public class TestBean {
             }
         };
 
-        return testResources.select("id", id).invoke(HttpMethods.PUT,
-                testResource);
+        return testResources.select("id", id).body(testResource).invoke(
+                HttpMethods.PUT);
     }
 
     public TestResource findTestResource(String id) throws Exception {
         return testResources.select("id", id).invoke(HttpMethods.GET);
+    }
+
+    public void deleteTestResource(String id) throws Exception {
+        testResources.select(id, id).call(HttpMethods.DELETE);
     }
 }

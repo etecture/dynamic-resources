@@ -51,6 +51,7 @@ import de.etecture.opensource.dynamicresources.api.Version;
 import de.etecture.opensource.dynamicresources.api.VersionNumberRange;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang.StringUtils;
@@ -68,7 +69,7 @@ public class DefaultRequest implements Request {
     private final MediaType acceptedMediaType, contentMediaType;
     private final VersionNumberRange acceptedVersionRange;
     private final Version contentVersion;
-    private final Map<String, String[]> queryParameter;
+    private final Map<String, String[]> queryParameter = new HashMap<>();
     private final Map<String, String> pathParameter;
     private final Class<?> resourceClass;
     private final Resource resource;
@@ -121,7 +122,7 @@ public class DefaultRequest implements Request {
                     contentVersionString);
         }
 
-        this.queryParameter = req.getParameterMap();
+        this.queryParameter.putAll(req.getParameterMap());
         this.pathParameter = pathParameter;
         this.resourceClass = resourceClass;
 

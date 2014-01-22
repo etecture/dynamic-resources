@@ -89,6 +89,14 @@ public interface Resources<T> {
     Resources<T> select(String paramName, Object paramValue);
 
     /**
+     * specifies the request body to be sent to the resource.
+     *
+     * @param requestBody
+     * @return
+     */
+    Resources<T> body(Object requestBody);
+
+    /**
      * invokes the method.
      *
      * @param method
@@ -98,13 +106,10 @@ public interface Resources<T> {
     T invoke(String method) throws Exception;
 
     /**
-     * invokes the method.
+     * calls the resource with the given method.
      *
      * @param method
-     * @param request
-     * @return
      * @throws Exception
      */
-    T invoke(String method, Object request) throws Exception;
-
+    void call(String method) throws Exception;
 }
