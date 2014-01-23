@@ -78,4 +78,8 @@ public interface Request {
 
     Method getResourceMethod();
 
+    String getSingleQueryParameterValue(String name, String defaultValue);
+
+    boolean hasQueryParameterValue(String name);
+
 }

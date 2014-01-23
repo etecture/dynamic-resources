@@ -331,4 +331,22 @@ public class DefaultRequest implements Request {
         }
         return requestContent;
     }
+
+    @Override
+    public String getSingleQueryParameterValue(String name,
+            String defaultValue) {
+        String[] values = getQueryParameter().get(name);
+        if (values != null && values.length > 0 && StringUtils.isNotBlank(
+                values[0])) {
+            return values[0];
+        }
+        return defaultValue;
+    }
+
+    @Override
+    public boolean hasQueryParameterValue(String name) {
+        String[] values = getQueryParameter().get(name);
+        return (values != null && values.length > 0 && StringUtils.isNotBlank(
+                values[0]));
+    }
 }
