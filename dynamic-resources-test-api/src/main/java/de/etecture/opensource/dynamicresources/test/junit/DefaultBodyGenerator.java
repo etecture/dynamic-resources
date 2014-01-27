@@ -37,27 +37,29 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.api;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+package de.etecture.opensource.dynamicresources.test.junit;
+
+import de.etecture.opensource.dynamicresources.test.api.BodyGenerator;
+import de.etecture.opensource.dynamicresources.test.api.Request;
+import org.apache.commons.beanutils.ConvertUtils;
+import org.apache.commons.lang.StringUtils;
 
 /**
- * represents the response object for a ReST request.
  *
  * @author rhk
- * @version ${project.version}
- * @since 1.0.5
+ * @version
+ * @since
  */
-public interface Response<T> {
+public class DefaultBodyGenerator implements BodyGenerator {
 
-    T getEntity() throws Exception;
-
-    List<Object> getHeader(String headerName);
-
-    Set<Map.Entry<String, List<Object>>> getHeaders();
-
-    int getStatus();
-
+    @Override
+    public Object generateBody(Request request) {
+        if (StringUtils.isBlank(request.bodyValue())) {
+            return null;
+        } else {
+            return ConvertUtils.convert(request.bodyValue(), request
+                    .requestType());
+        }
+    }
 }

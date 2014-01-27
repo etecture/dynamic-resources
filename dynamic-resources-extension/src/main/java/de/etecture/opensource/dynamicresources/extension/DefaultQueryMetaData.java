@@ -65,27 +65,36 @@ public class DefaultQueryMetaData<T> implements QueryMetaData<T> {
     private final Class<T> queryType;
     private final Kind queryKind;
     private final String technology;
+    private final String connection;
+    private ResultConverter resultConverter;
+    private Class<?> repositoryClass;
 
     public DefaultQueryMetaData(QueryMetaData<T> metaData) {
         this(metaData.getQueryType(), metaData.getQueryKind(), metaData
                 .getQuery(), metaData.getQueryName(), metaData
-                .getQueryTechnology(), metaData.getParameterMap());
+                .getQueryTechnology(), metaData.getConnection(), metaData
+                .getParameterMap());
     }
 
     public DefaultQueryMetaData(Class<T> queryType, Kind queryKind, String query,
-            String queryName, String technology, Map<String, Object> parameters) {
+            String queryName, String technology, String connection,
+            Map<String, Object> parameters) {
         this.queryType = queryType;
         this.queryKind = queryKind;
         this.query = query;
         this.queryName = queryName;
         this.parameters.putAll(parameters);
         this.technology = technology;
+        this.connection = connection;
+        this.resultConverter = null;
+        this.repositoryClass = queryType;
     }
 
     public DefaultQueryMetaData(Query query, String methodName,
             Class<T> queryType, Kind queryKind,
             Map<String, Object> parameters) {
         this.queryType = queryType;
+        this.repositoryClass = queryType;
         this.queryKind = queryKind;
         this.technology = query.technology();
         if (StringUtils.isEmpty(query.name()) && StringUtils.isEmpty(query
@@ -96,7 +105,20 @@ public class DefaultQueryMetaData<T> implements QueryMetaData<T> {
             this.query = query.value();
             this.queryName = query.name();
         }
+
+        this.connection = query.connection();
         this.parameters.putAll(parameters);
+        if (query.converter().getName().equals(ResultConverter.class.getName())) {
+            this.resultConverter = null;
+        } else {
+            try {
+                this.resultConverter = query.converter().newInstance();
+            } catch (InstantiationException | IllegalAccessException ex) {
+                throw new IllegalArgumentException(
+                        "cannot instantiate converter.",
+                        ex);
+            }
+        }
     }
 
     @Override
@@ -153,7 +175,11 @@ public class DefaultQueryMetaData<T> implements QueryMetaData<T> {
 
     @Override
     public ResultConverter<T> getConverter() {
-        return null;
+        return (ResultConverter<T>) this.resultConverter;
+    }
+
+    public void setConverter(ResultConverter resultConverter) {
+        this.resultConverter = resultConverter;
     }
 
     @Override
@@ -168,7 +194,15 @@ public class DefaultQueryMetaData<T> implements QueryMetaData<T> {
 
     @Override
     public Class<?> getRepositoryClass() {
-        return queryType;
+        return repositoryClass;
+    }
+
+    public void setRepositoryClass(Class<?> repositoryClass) {
+        this.repositoryClass = repositoryClass;
+    }
+
+    public void addParameter(String name, Object value) {
+        parameters.put(name, value);
     }
 
     public void addParameter(Param param) {
@@ -193,7 +227,13 @@ public class DefaultQueryMetaData<T> implements QueryMetaData<T> {
         }
     }
 
+    @Override
     public String getQueryTechnology() {
         return this.technology;
+    }
+
+    @Override
+    public String getConnection() {
+        return this.connection;
     }
 }

@@ -42,14 +42,20 @@ public abstract class AbstractPostRedirectInterceptor<R, N> implements
 
     @Override
     public Response after(Request request, Response response) {
+        final Object entity;
+        try {
+            entity = response.getEntity();
+        } catch (Exception ex) {
+            return response;
+        }
         // check if responsible
         if (response.getStatus() == StatusCodes.CREATED && request
-                .getResourceClass()
-                == originClass && response.getEntity() != null && originClass
-                .isAssignableFrom(response.getEntity().getClass())
+                .getResourceClass() == originClass && entity != null
+                && originClass
+                .isAssignableFrom(entity.getClass())
                 && HttpMethods.POST
                 .equalsIgnoreCase(request.getMethodName())) {
-            final R responseEntity = originClass.cast(response.getEntity());
+            final R responseEntity = originClass.cast(entity);
             // build a new response with the new resource location
             Map<String, String> pathValues = buildPathValues(responseEntity);
             if (pathValues == null) {

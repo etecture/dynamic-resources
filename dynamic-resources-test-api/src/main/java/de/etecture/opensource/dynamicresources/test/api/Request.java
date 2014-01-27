@@ -37,27 +37,44 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.api;
+package de.etecture.opensource.dynamicresources.test.api;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import de.etecture.opensource.dynamicrepositories.api.Param;
+import de.etecture.opensource.dynamicrepositories.api.Query;
+import de.etecture.opensource.dynamicresources.api.HttpMethods;
+import de.etecture.opensource.dynamicresources.test.junit.DefaultBodyGenerator;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * represents the response object for a ReST request.
  *
  * @author rhk
- * @version ${project.version}
- * @since 1.0.5
+ * @version
+ * @since
  */
-public interface Response<T> {
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Request {
 
-    T getEntity() throws Exception;
+    Class<?> resource();
 
-    List<Object> getHeader(String headerName);
+    Class<?> requestType() default Object.class;
 
-    Set<Map.Entry<String, List<Object>>> getHeaders();
+    String method() default HttpMethods.GET;
 
-    int getStatus();
+    Query[] before() default {};
 
+    Query[] after() default {};
+
+    String parameterSet() default "";
+
+    Param[] pathParameter() default {};
+
+    Param[] queryParameter() default {};
+
+    String bodyValue() default "";
+
+    Class<? extends BodyGenerator> bodyGenerator() default DefaultBodyGenerator.class;
 }

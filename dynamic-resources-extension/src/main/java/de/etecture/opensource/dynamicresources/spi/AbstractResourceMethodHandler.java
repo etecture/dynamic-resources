@@ -110,7 +110,8 @@ public abstract class AbstractResourceMethodHandler implements
             for (Class<? extends ResourceInterceptor> ric : request
                     .getResourceMethod()
                     .interceptors()) {
-                ResourceInterceptor ri = (ResourceInterceptor) ric.newInstance();
+                ResourceInterceptor ri = (ResourceInterceptor) ric
+                        .newInstance();
                 response = ri.before(request);
                 if (response != null) {
                     break;
@@ -131,19 +132,34 @@ public abstract class AbstractResourceMethodHandler implements
     }
 
     private Response after(Request request, Response response) {
-        for (Class<? extends ResourceInterceptor> ric : request
-                .getResourceMethod().interceptors()) {
-            final Bean<? extends Object> resolved =
-                    beanManager.resolve(beanManager.getBeans(ric));
-            ResourceInterceptor ri = (ResourceInterceptor) beanManager
-                    .getReference(resolved, ric,
-                    beanManager
-                    .createCreationalContext(resolved));
-            response = ri.after(request,
-                    response);
-            if (response != null) {
-                break;
+        try {
+            for (Class<? extends ResourceInterceptor> ric : request
+                    .getResourceMethod().interceptors()) {
+                final Bean<? extends Object> resolved =
+                        beanManager.resolve(beanManager.getBeans(ric));
+                if (resolved != null) {
+                    ResourceInterceptor ri =
+                            (ResourceInterceptor) beanManager
+                            .getReference(resolved, ric,
+                            beanManager
+                            .createCreationalContext(resolved));
+                    response = ri.after(request,
+                            response);
+                    if (response != null) {
+                        break;
+                    }
+                } else {
+                    ResourceInterceptor ri = (ResourceInterceptor) ric
+                            .newInstance();
+                    response = ri.after(request, response);
+                    if (response != null) {
+                        break;
+                    }
+
+                }
             }
+        } catch (InstantiationException | IllegalAccessException ex) {
+            throw new RuntimeException("cannot invoke resource interceptor", ex);
         }
         for (ResourceInterceptor ri : globalInterceptors) {
             response = ri.after(request,
@@ -189,11 +205,12 @@ public abstract class AbstractResourceMethodHandler implements
     }
 
     @Override
-    public Response handleRequest(Request request) throws IOException {
-        Response response;
+    public <T> Response<T> handleRequest(Request<T> request) throws IOException {
+        Response<T> response;
         response = before(request);
         if (response == null) {
-            QueryMetaData qmd = buildMetaData(request);
+            QueryMetaData qmd = buildMetaData(request, request
+                    .getResourceClass());
             response =
                     executeQuery(request, qmd);
             response = after(request, response);
@@ -201,14 +218,14 @@ public abstract class AbstractResourceMethodHandler implements
         return response;
     }
 
-    protected <T> QueryMetaData<T> buildMetaData(Request request) throws
-            IOException {
+    protected <T> QueryMetaData<T> buildMetaData(Request<?> request,
+            Class<T> queryType) throws IOException {
 
         Map<String, Object> parameter = buildParameterMap(request);
         DefaultQueryMetaData<T> queryMetaData = new DefaultQueryMetaData(
                 request.getResourceMethod().query(),
                 request.getResourceMethod().name(),
-                request.getResourceClass(),
+                queryType,
                 kind,
                 parameter);
 
@@ -227,8 +244,10 @@ public abstract class AbstractResourceMethodHandler implements
 
     protected Response<?> handleException(Throwable exception,
             Request request) {
-        System.out.printf("handle Exception: %s, resource: %s, method: %s%n",
+        System.out.printf(
+                "handle Exception: %s, message: %s, resource: %s, method: %s%n",
                 exception.getClass().getSimpleName(),
+                exception.getMessage(),
                 request.getResourceClass().getSimpleName(),
                 request.getResourceMethod().name());
         for (ExceptionHandler exh : exceptionHandlers) {
@@ -259,7 +278,7 @@ public abstract class AbstractResourceMethodHandler implements
         }
     }
 
-    private QueryExecutor getExecutorByTechnology(String technology) {
+    protected QueryExecutor getExecutorByTechnology(String technology) {
         Bean<?> resolvedBean;
         if ("default".equalsIgnoreCase(technology)) {
             Set<Bean<?>> queryExecutors = beanManager.getBeans(
@@ -294,36 +313,10 @@ public abstract class AbstractResourceMethodHandler implements
         return qe;
     }
 
-    @Override
-    public <T> T execute(
-            Class<T> resourceClazz,
-            Map<String, Object> params, Object request) throws Exception {
-        Map<String, Object> parameter = new HashMap<>();
-        parameter.putAll(params);
-        if (request != null) {
-            parameter.put("request", request);
-        }
-        for (Method methodAnnotation : resourceClazz.getAnnotation(
-                Resource.class).methods()) {
-            if (methodAnnotation.name().equalsIgnoreCase(this.getClass()
-                    .getAnnotation(Verb.class).value())) {
-                return getExecutorByTechnology(methodAnnotation.query()
-                        .technology())
-                        .execute(
-                        new DefaultQueryMetaData<>(
-                        methodAnnotation.query(),
-                        methodAnnotation.name(),
-                        resourceClazz,
-                        kind,
-                        parameter));
-            }
-        }
-        return null;
-    }
-
-    protected Map<String, Object> buildParameterMap(Request request) throws
+    protected Map<String, Object> buildParameterMap(Request<?> request) throws
             IOException {
         Map<String, Object> parameter = new HashMap<>();
+        parameter.putAll(request.getParameter());
         for (Filter filter : request.getResourceMethod().filters()) {
             String stringValue = null;
             if (request.getQueryParameter().containsKey(filter.name())) {

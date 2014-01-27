@@ -103,13 +103,63 @@ public interface Resources<T> {
      * @return
      * @throws Exception
      */
-    T invoke(String method) throws Exception;
+    Response<T> invoke(String method) throws Exception;
 
     /**
-     * calls the resource with the given method.
+     * shortcut for: {code}invoke("GET").getEntity(){code}
      *
-     * @param method
+     * @return
      * @throws Exception
      */
-    void call(String method) throws Exception;
+    T get() throws Exception;
+
+    /**
+     * shortcut for: {code}invoke("DELETE").getEntity(){code}
+     *
+     * @return
+     * @throws Exception
+     */
+    T delete() throws Exception;
+
+    /**
+     * shortcut for: {code}invoke("DELETE").getStatus() == {code}
+     *
+     * @return
+     * @throws Exception
+     */
+    boolean remove() throws Exception;
+
+    /**
+     * shortcut for: {code}invoke("PUT").getEntity(){code}
+     *
+     * @return
+     * @throws Exception
+     */
+    T put() throws Exception;
+
+    /**
+     * shortcut for: {code}invoke("POST").getEntity(){code}
+     *
+     * @return
+     * @throws Exception
+     */
+    T post() throws Exception;
+
+    /**
+     * shortcut for: {code}body(requestBody).invoke("PUT").getEntity(){code}
+     *
+     * @param requestBody
+     * @return
+     * @throws Exception
+     */
+    T put(Object requestBody) throws Exception;
+
+    /**
+     * shortcut for: {code}body(requestBody).invoke("POST").getEntity(){code}
+     *
+     * @param requestBody
+     * @return
+     * @throws Exception
+     */
+    T post(Object requestBody) throws Exception;
 }

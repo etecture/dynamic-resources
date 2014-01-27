@@ -39,7 +39,6 @@
  */
 package de.etecture.opensource.dynamicresources.test;
 
-import de.etecture.opensource.dynamicresources.api.HttpMethods;
 import de.etecture.opensource.dynamicresources.api.Resources;
 import javax.annotation.PostConstruct;
 import javax.ejb.Singleton;
@@ -64,11 +63,10 @@ public class TestBean {
         try {
             System.out.println("####################");
             System.out.println("lookup TestResources");
-            TestResources trs = testResourcesList.invoke(HttpMethods.GET);
+            TestResources trs = testResourcesList.get();
             System.out.println("result is: " + trs.getCount());
             System.out.println("lookup TestResource with id 1234567890");
-            TestResource tr = testResources.select("id", "1234567890").invoke(
-                    HttpMethods.GET);
+            TestResource tr = testResources.select("id", "1234567890").get();
             System.out.println("result is: " + tr.getFirstName() + " " + tr
                     .getLastName());
             System.out.println("####################");
@@ -100,15 +98,14 @@ public class TestBean {
             }
         };
 
-        return testResources.select("id", id).body(testResource).invoke(
-                HttpMethods.PUT);
+        return testResources.select("id", id).put(testResource);
     }
 
     public TestResource findTestResource(String id) throws Exception {
-        return testResources.select("id", id).invoke(HttpMethods.GET);
+        return testResources.select("id", id).get();
     }
 
     public void deleteTestResource(String id) throws Exception {
-        testResources.select(id, id).call(HttpMethods.DELETE);
+        testResources.select(id, id).delete();
     }
 }

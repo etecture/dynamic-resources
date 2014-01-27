@@ -55,16 +55,27 @@ import java.util.Set;
 public class DefaultResponse<T> implements Response<T> {
 
     private final T entity;
+    private final Exception exception;
     private int status;
     private final Map<String, List<Object>> header = new HashMap<>();
 
     public DefaultResponse(T entity, int status) {
         this.entity = entity;
         this.status = status;
+        this.exception = null;
+    }
+
+    public DefaultResponse(Exception exception, int status) {
+        this.entity = null;
+        this.status = status;
+        this.exception = exception;
     }
 
     @Override
-    public T getEntity() {
+    public T getEntity() throws Exception {
+        if (exception != null) {
+            throw exception;
+        }
         return entity;
     }
 

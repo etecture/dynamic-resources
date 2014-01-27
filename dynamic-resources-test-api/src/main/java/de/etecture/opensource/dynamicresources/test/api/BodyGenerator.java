@@ -37,22 +37,21 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.test;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package de.etecture.opensource.dynamicresources.test.api;
 
 /**
- * marks a parameter in a test-method to be the resource to be tested here.
+ * generates the body for a request.
  *
  * @author rhk
  * @version
  * @since
  */
-@Target(ElementType.PARAMETER)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Response {
+public interface BodyGenerator {
 
+    /**
+     *
+     * @param request
+     * @return
+     */
+    Object generateBody(Request request);
 }

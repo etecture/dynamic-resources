@@ -37,24 +37,22 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+package de.etecture.opensource.dynamicresources.test.api;
 
-package de.etecture.opensource.dynamicresources.test;
-
-import de.etecture.opensource.dynamicrepositories.api.Query;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * marks a parameter in a test-method to be the resource to be tested here.
  *
  * @author rhk
  * @version
  * @since
  */
-@Target(ElementType.METHOD)
+@Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface CleanupDatabase {
+public @interface Response {
 
-    Query[] value() default {};
 }

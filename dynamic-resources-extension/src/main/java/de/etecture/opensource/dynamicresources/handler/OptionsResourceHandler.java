@@ -158,10 +158,4 @@ public class OptionsResourceHandler implements ResourceMethodHandler {
                 resourceClazz.getSimpleName());
     }
 
-    @Override
-    public <T> T execute(
-            Class< T> resourceClazz,
-            Map< String, Object> params, Object request) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
 }

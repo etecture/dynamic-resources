@@ -38,9 +38,8 @@
  *
  */
 
-package de.etecture.opensource.dynamicresources.test;
+package de.etecture.opensource.dynamicresources.test.api;
 
-import de.etecture.opensource.dynamicrepositories.api.Query;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -54,7 +53,11 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface PrepareDatabase {
+public @interface Expect {
 
-    Query[] value() default {};
+    int status() default -1;
+
+    Class<?> responseType() default Object.class;
+
+    Class<? extends Throwable>[] exception() default {};
 }

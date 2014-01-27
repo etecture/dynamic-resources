@@ -40,6 +40,8 @@
 package de.etecture.opensource.dynamicresources.extension;
 
 import de.etecture.opensource.dynamicresources.api.Resources;
+import de.etecture.opensource.dynamicresources.api.Response;
+import de.etecture.opensource.dynamicresources.api.StatusCodes;
 import de.etecture.opensource.dynamicresources.spi.ResourceMethodHandler;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -97,8 +99,9 @@ public class ResourcesImpl<T> implements Resources<T> {
     }
 
     @Override
-    public T invoke(final String methodName) throws Exception {
-        HttpContextProducer.setRequest((HttpServletRequest) Proxy
+    public Response<T> invoke(final String methodName) throws Exception {
+        final HttpServletRequest req =
+                (HttpServletRequest) Proxy
                 .newProxyInstance(ResourcesImpl.class
                 .getClassLoader(), new Class[]{HttpServletRequest.class},
                 new InvocationHandler() {
@@ -112,37 +115,19 @@ public class ResourcesImpl<T> implements Resources<T> {
                         "method %s is not supported",
                         method.getName()));
             }
-        }));
-
+        });
+        HttpContextProducer.setRequest(req);
+        DefaultRequest.Builder<T> builder = DefaultRequest
+                .fromMethod(resourceClass, methodName)
+                .addParameter(params)
+                .withRequestContent(body);
         return lookupExecutor(bm, methodName)
-                .execute(resourceClass, params, body);
-    }
-
-    @Override
-    public void call(final String methodName) throws Exception {
-        HttpContextProducer.setRequest((HttpServletRequest) Proxy
-                .newProxyInstance(ResourcesImpl.class
-                .getClassLoader(), new Class[]{HttpServletRequest.class},
-                new InvocationHandler() {
-            @Override
-            public Object invoke(Object proxy, Method method, Object[] args)
-                    throws Throwable {
-                if ("getMethod".equals(method.getName())) {
-                    return methodName;
-                }
-                throw new UnsupportedOperationException(String.format(
-                        "method %s is not supported",
-                        method.getName()));
-            }
-        }));
-
-        lookupExecutor(bm, methodName)
-                .execute(Object.class, params, body);
+                .handleRequest(builder.build());
     }
 
     private static ResourceMethodHandler lookupExecutor(BeanManager bm,
             final String methodName) {
-      final Set<Bean<?>> beans =
+        final Set<Bean<?>> beans =
                 bm.getBeans(ResourceMethodHandler.class,
                 new VerbLiteral(methodName));
         System.out.println(methodName + " " + beans.size());
@@ -152,5 +137,40 @@ public class ResourcesImpl<T> implements Resources<T> {
         System.out.println(b);
         return b.create(bm
                 .createCreationalContext(b));
+    }
+
+    @Override
+    public T get() throws Exception {
+        return invoke("GET").getEntity();
+    }
+
+    @Override
+    public T delete() throws Exception {
+        return invoke("DELETE").getEntity();
+    }
+
+    @Override
+    public boolean remove() throws Exception {
+        return invoke("DELETE").getStatus() == StatusCodes.OK;
+    }
+
+    @Override
+    public T put() throws Exception {
+        return invoke("PUT").getEntity();
+    }
+
+    @Override
+    public T post() throws Exception {
+        return invoke("POST").getEntity();
+    }
+
+    @Override
+    public T put(Object requestBody) throws Exception {
+        return body(requestBody).put();
+    }
+
+    @Override
+    public T post(Object requestBody) throws Exception {
+        return body(requestBody).post();
     }
 }

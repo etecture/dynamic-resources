@@ -84,12 +84,6 @@
     </scm>
     <dependencies>
         <dependency>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>jsr311-api</artifactId>
-            <version>1.1.1</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
             <groupId>org.glassfish</groupId>
             <artifactId>javax.json</artifactId>
             <version>1.0</version>
@@ -98,13 +92,13 @@
         <dependency>
             <groupId>de.etecture.opensource</groupId>
             <artifactId>dynamic-repositories-api</artifactId>
-            <version>1.2.11</version>
+            <version>[1.5.0,)</version>
             <type>jar</type>
         </dependency>
         <dependency>
             <groupId>javax</groupId>
             <artifactId>javaee-api</artifactId>
-            <version>6.0</version>
+            <version>7.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

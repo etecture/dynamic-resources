@@ -113,8 +113,11 @@ public class DynamicRestServlet extends HttpServlet {
                         resourceMethodHandlers.select(new VerbLiteral(req
                         .getMethod()));
                 try {
-                    Request request = new DefaultRequest(req, groups, clazz,
-                            requestReaderResolver);
+                    Request<?> request = DefaultRequest
+                            .fromHttpRequest(req, clazz)
+                            .addPathParameter(groups)
+                            .withRequestReaderResolver(requestReaderResolver)
+                            .build();
                     for (ResourceMethodHandler handler
                             : selectedResourceMethodHandlers) {
                         if (handler.isAvailable(clazz)) {
@@ -176,19 +179,25 @@ public class DynamicRestServlet extends HttpServlet {
         }
         resp.setContentType(request.getAcceptedMediaType().toString());
         resp.setStatus(response.getStatus());
-        if (response.getEntity() != null) {
+        Object entity;
+        try {
+            entity = response.getEntity();
+        } catch (Exception ex) {
+            entity = ex;
+        }
+        if (entity != null) {
             ResponseWriter writer =
-                    responseWriterResolver.resolve(response
-                    .getEntity().getClass(), request.getAcceptedMediaType(),
+                    responseWriterResolver.resolve(entity.getClass(), request
+                    .getAcceptedMediaType(),
                     request.getAcceptedVersionRange());
             if (writer != null) {
-                final int contentLength = writer.getContentLength(response
-                        .getEntity(), request.getAcceptedMediaType());
+                final int contentLength = writer.getContentLength(entity,
+                        request.getAcceptedMediaType());
                 if (contentLength >= 0) {
                     resp.setContentLength(contentLength);
                 }
                 final PrintWriter respWriter = resp.getWriter();
-                writer.processElement(response.getEntity(), respWriter,
+                writer.processElement(entity, respWriter,
                         request.getAcceptedMediaType());
                 respWriter.flush();
             } else {

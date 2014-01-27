@@ -50,10 +50,11 @@ import java.util.Map;
  * @author rhk
  */
 @Global
-public class TestResourceInterceptor implements ResourceInterceptor {
+public class TestResourceInterceptor implements
+        ResourceInterceptor {
 
     @Override
-    public Response before(Request request) {
+    public <T> Response<T> before(Request<T> request) {
         System.out.printf("BEFORE: %s %s for: %s%n", request
                 .getMethodName(),
                 request.getResource().uri(), request.getResourceClass()
@@ -66,7 +67,8 @@ public class TestResourceInterceptor implements ResourceInterceptor {
     }
 
     @Override
-    public Response after(Request request, Response response) {
+    public <T> Response<T> after(Request<T> request,
+            Response<T> response) {
         System.out.printf("AFTER: %s %s for: %s%n", request
                 .getMethodName(),
                 request.getResource().uri(), request.getResourceClass()
@@ -76,7 +78,11 @@ public class TestResourceInterceptor implements ResourceInterceptor {
             System.out.printf("\t%s = %s%n", entry.getKey(), entry.getValue());
         }
         System.out.printf("\tStatus : %d%n", response.getStatus());
-        System.out.printf("\tEntity : %s%n", response.getEntity());
+        try {
+            System.out.printf("\tEntity : %s%n", response.getEntity());
+        } catch (Exception ex) {
+            System.out.printf("\tException : %s%n", ex);
+        }
         return response;
     }
 }

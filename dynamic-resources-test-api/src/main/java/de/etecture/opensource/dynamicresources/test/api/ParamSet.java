@@ -37,11 +37,13 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+package de.etecture.opensource.dynamicresources.test.api;
 
-package de.etecture.opensource.dynamicresources.test;
-
+import de.etecture.opensource.dynamicrepositories.api.Param;
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  *
@@ -49,10 +51,15 @@ import java.lang.annotation.RetentionPolicy;
  * @version
  * @since
  */
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Parameter {
+public @interface ParamSet {
 
     String name();
 
-    String value();
+    Param[] pathParameter() default {};
+
+    Param[] queryParameter() default {};
+
+    String[] includes() default {};
 }

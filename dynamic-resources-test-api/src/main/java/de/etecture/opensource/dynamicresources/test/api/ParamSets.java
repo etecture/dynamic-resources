@@ -37,27 +37,24 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.api;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+package de.etecture.opensource.dynamicresources.test.api;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * represents the response object for a ReST request.
  *
  * @author rhk
- * @version ${project.version}
- * @since 1.0.5
+ * @version
+ * @since
  */
-public interface Response<T> {
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface ParamSets {
 
-    T getEntity() throws Exception;
-
-    List<Object> getHeader(String headerName);
-
-    Set<Map.Entry<String, List<Object>>> getHeaders();
-
-    int getStatus();
+    ParamSet[] value();
 
 }

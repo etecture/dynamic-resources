@@ -37,10 +37,16 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+package de.etecture.opensource.dynamicresources.test.junit;
 
-package de.etecture.opensource.dynamicresources.test;
-
-import de.etecture.opensource.dynamicresources.api.HttpMethods;
+import de.etecture.opensource.dynamicresources.test.api.Request;
+import java.util.ArrayList;
+import java.util.List;
+import org.jboss.weld.environment.se.Weld;
+import org.jboss.weld.environment.se.WeldContainer;
+import org.junit.runners.BlockJUnit4ClassRunner;
+import org.junit.runners.model.FrameworkMethod;
+import org.junit.runners.model.InitializationError;
 
 /**
  *
@@ -48,10 +54,36 @@ import de.etecture.opensource.dynamicresources.api.HttpMethods;
  * @version
  * @since
  */
-public @interface ResourceTest {
-    String method() default HttpMethods.GET;
+public class ResourceTestRunner extends BlockJUnit4ClassRunner {
 
-    Parameter[] pathParameter() default {};
+    private final static Weld weld = new Weld();
+    private WeldContainer container;
 
-    Parameter[] queryParameter() default {};
+    public ResourceTestRunner(Class<?> clazz) throws InitializationError {
+        super(clazz);
+    }
+
+    @Override
+    protected void collectInitializationErrors(
+            List<Throwable> errors) {
+        try {
+            container = weld.initialize();
+        } catch (Throwable t) {
+            errors.add(t);
+        }
+    }
+
+    @Override
+    protected List<FrameworkMethod> computeTestMethods() {
+        List<FrameworkMethod> methods = new ArrayList<>();
+        methods.addAll(super.computeTestMethods());
+        System.out.println("compute Test Methods");
+        for (FrameworkMethod method : super.getTestClass().getAnnotatedMethods(
+                Request.class)) {
+            System.out.println("add method: " + method.getName());
+            methods.add(new ResourceTestMethod(container, method.getMethod()));
+        }
+
+        return methods;
+    }
 }

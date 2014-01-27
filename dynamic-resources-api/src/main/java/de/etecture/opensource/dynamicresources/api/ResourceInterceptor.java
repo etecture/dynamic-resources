@@ -55,7 +55,7 @@ public interface ResourceInterceptor {
      * @param request
      * @return
      */
-    Response before(Request request);
+    <T> Response<T> before(Request<T> request);
 
     /**
      * called by the dynamicresources handler after the resource was invoked.
@@ -64,5 +64,5 @@ public interface ResourceInterceptor {
      * @param response
      * @return
      */
-    Response after(Request request, Response response);
+    <T> Response<T> after(Request<T> request, Response<T> response);
 }

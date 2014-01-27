@@ -40,9 +40,11 @@
 package de.etecture.opensource.dynamicresources.test;
 
 import de.etecture.opensource.dynamicrepositories.api.Query;
+import de.etecture.opensource.dynamicrepositories.technologies.SingleColumnConverter;
 import de.etecture.opensource.dynamicresources.api.HttpMethods;
 import de.etecture.opensource.dynamicresources.api.Method;
 import de.etecture.opensource.dynamicresources.api.Resource;
+import de.etecture.opensource.dynamicresources.api.StatusCodes;
 
 /**
  *
@@ -57,40 +59,45 @@ import de.etecture.opensource.dynamicresources.api.Resource;
     @Method(
             name = HttpMethods.PUT,
             description = "updates a TestResource with the given id",
+            status = StatusCodes.CREATED,
             query =
             @Query(
             technology = "Neo4j",
             value = ""
             + "MERGE "
-            + "  (this:Test {"
+            + "  (t:Test {"
             + "    id: {id} "
-            + "  })"
+            + "  }) "
             + "ON CREATE SET "
-            + "  this.firstName = {firstName}, "
-            + "  this.lastName = {lastName}, "
-            + "  this.`_created` = timestamp(), "
-            + "  this.`_updated` = timestamp() "
+            + "  t.firstName = {firstName}, "
+            + "  t.lastName = {lastName}, "
+            + "  t.`_created` = timestamp(), "
+            + "  t.`_updated` = timestamp() "
             + "ON MATCH SET "
-            + "  this.firstName = {firstName}, "
-            + "  this.lastName = {lastName}, "
-            + "  this.`_updated` = timestamp() "
+            + "  t.firstName = {firstName}, "
+            + "  t.lastName = {lastName}, "
+            + "  t.`_updated` = timestamp() "
             + "RETURN "
-            + "  this.id AS `id`, "
-            + "  this.firstName AS `firstName`, "
-            + "  this.lastName AS `lastName`")),
+            + "  t.id AS `id`, "
+            + "  t.firstName AS `firstName`, "
+            + "  t.lastName AS `lastName`")),
     @Method(
             name = HttpMethods.DELETE,
             description = "deletes a TestResource with the given id",
+            status = StatusCodes.NO_CONTENT,
             query =
             @Query(
             technology = "Neo4j",
+            converter = SingleColumnConverter.class,
             value = ""
             + "MATCH "
             + "  (this:Test) "
             + "WHERE "
             + "  this.id = {id} "
             + "DELETE "
-            + "  this"))})
+            + "  this "
+            + "RETURN "
+            + "  count(*)>=0"))})
 public interface TestResource {
 
     String getId();

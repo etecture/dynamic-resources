@@ -42,7 +42,7 @@
         <dependency>
             <groupId>de.etecture.opensource</groupId>
             <artifactId>dynamic-repositories-extension</artifactId>
-            <version>[1.2.11,)</version>
+            <version>[1.5.0,)</version>
             <type>jar</type>
         </dependency>
         <dependency>
@@ -54,13 +54,13 @@
         <dependency>
             <groupId>de.herschke</groupId>
             <artifactId>neo4j-uplink-api</artifactId>
-            <version>1.2.0</version>
+            <version>2.0.0</version>
             <type>jar</type>
         </dependency>
         <dependency>
             <groupId>de.herschke</groupId>
             <artifactId>neo4j-uplink-ejb</artifactId>
-            <version>1.2.0</version>
+            <version>2.0.0</version>
             <type>jar</type>
         </dependency>
         <dependency>

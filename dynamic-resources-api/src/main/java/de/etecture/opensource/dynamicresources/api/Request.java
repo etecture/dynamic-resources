@@ -50,7 +50,7 @@ import java.util.Map;
  * @version
  * @since
  */
-public interface Request {
+public interface Request<T> {
 
     MediaType getAcceptedMediaType();
 
@@ -70,11 +70,13 @@ public interface Request {
 
     Map<String, String[]> getQueryParameter();
 
+    Map<String, Object> getParameter();
+
     Class<?> getRequestType();
 
     Resource getResource();
 
-    Class<?> getResourceClass();
+    Class<T> getResourceClass();
 
     Method getResourceMethod();
 

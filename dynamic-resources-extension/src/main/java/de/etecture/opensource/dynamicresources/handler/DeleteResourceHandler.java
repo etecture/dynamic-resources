@@ -63,7 +63,7 @@ public class DeleteResourceHandler extends AbstractResourceMethodHandler {
     public Response handleRequest(
             Request request) throws
             IOException {
-        executeQuery(request, buildMetaData(request));
+        executeQuery(request, buildMetaData(request, Boolean.class));
         return new DefaultResponse(null,
                 request.getResourceMethod().status());
     }
