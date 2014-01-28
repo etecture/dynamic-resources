@@ -41,6 +41,7 @@ package de.etecture.opensource.dynamicresources.test;
 
 import de.etecture.opensource.dynamicresources.api.Resources;
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.inject.Inject;
@@ -59,8 +60,9 @@ public class TestBean {
     Resources<TestResource> testResources;
 
     @PostConstruct
-    public void init() {
+    public void init(){
         try {
+            createTestResource("1234567890", "blibla", "blubb");
             System.out.println("####################");
             System.out.println("lookup TestResources");
             TestResources trs = testResourcesList.get();
@@ -70,7 +72,17 @@ public class TestBean {
             System.out.println("result is: " + tr.getFirstName() + " " + tr
                     .getLastName());
             System.out.println("####################");
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
+            System.out.println("Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    @PreDestroy
+    public void destruct() {
+        try {
+            deleteTestResource("1234567890");
+        } catch (Throwable ex) {
             System.out.println("Exception: " + ex.getMessage());
             ex.printStackTrace();
         }
@@ -79,33 +91,19 @@ public class TestBean {
     public TestResource createTestResource(
             final String id,
             final String firstName,
-            final String lastName) throws Exception {
+            final String lastName) throws Throwable {
 
-        TestResource testResource = new TestResource() {
-            @Override
-            public String getId() {
-                return id;
-            }
-
-            @Override
-            public String getFirstName() {
-                return firstName;
-            }
-
-            @Override
-            public String getLastName() {
-                return lastName;
-            }
-        };
+        TestResource testResource =
+                new TestResourceImpl(id, firstName, lastName);
 
         return testResources.select("id", id).put(testResource);
     }
 
-    public TestResource findTestResource(String id) throws Exception {
+    public TestResource findTestResource(String id) throws Throwable {
         return testResources.select("id", id).get();
     }
 
-    public void deleteTestResource(String id) throws Exception {
-        testResources.select(id, id).delete();
+    public void deleteTestResource(String id) throws Throwable {
+        testResources.select("id", id).delete();
     }
 }

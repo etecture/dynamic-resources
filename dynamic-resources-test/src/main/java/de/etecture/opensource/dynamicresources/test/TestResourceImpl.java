@@ -37,26 +37,41 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.api;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+package de.etecture.opensource.dynamicresources.test;
+
+import org.json.simple.JSONAware;
+import org.json.simple.JSONObject;
 
 /**
- * represents the response object for a ReST request.
  *
  * @author rhk
- * @version ${project.version}
- * @since 1.0.5
+ * @version
+ * @since
  */
-public interface Response<T> {
+public class TestResourceImpl extends JSONObject implements TestResource,
+        JSONAware {
+    private static final long serialVersionUID = 1L;
 
-    T getEntity() throws ResourceException;
+    public TestResourceImpl(String id, String firstName, String lastName) {
+        put("id", id);
+        put("firstName", firstName);
+        put("lastName", lastName);
+    }
 
-    List<Object> getHeader(String headerName);
+    @Override
+    public String getId() {
+        return (String) get("id");
+    }
 
-    Set<Map.Entry<String, List<Object>>> getHeaders();
+    @Override
+    public String getFirstName() {
+        return (String) get("firstName");
+    }
 
-    int getStatus();
+    @Override
+    public String getLastName() {
+        return (String) get("lastName");
+    }
+
 }

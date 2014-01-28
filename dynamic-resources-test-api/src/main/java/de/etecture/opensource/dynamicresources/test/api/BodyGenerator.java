@@ -39,6 +39,8 @@
  */
 package de.etecture.opensource.dynamicresources.test.api;
 
+import java.util.Map;
+
 /**
  * generates the body for a request.
  *
@@ -46,12 +48,13 @@ package de.etecture.opensource.dynamicresources.test.api;
  * @version
  * @since
  */
-public interface BodyGenerator {
+public interface BodyGenerator<T> {
 
     /**
      *
      * @param request
+     * @param parameter
      * @return
      */
-    Object generateBody(Request request);
+    T generateBody(Request request, Map<String, Object> parameter);
 }

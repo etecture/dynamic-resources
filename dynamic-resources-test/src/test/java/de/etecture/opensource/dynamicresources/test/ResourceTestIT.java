@@ -43,12 +43,14 @@ import de.etecture.opensource.dynamicrepositories.api.Param;
 import de.etecture.opensource.dynamicrepositories.spi.Technology;
 import de.etecture.opensource.dynamicresources.api.HttpMethods;
 import de.etecture.opensource.dynamicresources.api.StatusCodes;
+import de.etecture.opensource.dynamicresources.test.api.BodyGenerator;
 import de.etecture.opensource.dynamicresources.test.api.Expect;
 import de.etecture.opensource.dynamicresources.test.api.ParamSet;
 import de.etecture.opensource.dynamicresources.test.api.ParamSets;
 import de.etecture.opensource.dynamicresources.test.api.Request;
 import de.etecture.opensource.dynamicresources.test.api.Response;
 import de.etecture.opensource.dynamicresources.test.junit.ResourceTestRunner;
+import java.util.Map;
 import static org.junit.Assert.*;
 import org.junit.runner.RunWith;
 
@@ -82,6 +84,18 @@ public class ResourceTestIT {
     protected final static String PARAM_FIRSTNAME = "firstName";
     protected final static String PARAM_LASTNAME = "lastName";
 
+    public static class TestResourceGenerator implements
+            BodyGenerator<TestResource> {
+
+        public TestResource generateBody(Request request,
+                Map<String, Object> parameter) {
+            return new TestResourceImpl(
+                    (String) parameter.get(PARAM_ID),
+                    (String) parameter.get(PARAM_FIRSTNAME),
+                    (String) parameter.get(PARAM_LASTNAME));
+        }
+    }
+
     @Request(method = HttpMethods.GET,
              resource = TestResource.class,
              parameterSet = PARAMETER_SET)
@@ -98,6 +112,7 @@ public class ResourceTestIT {
 
     @Request(method = HttpMethods.PUT,
              resource = TestResource.class,
+             bodyGenerator = TestResourceGenerator.class,
              parameterSet = PARAMETER_SET)
     @Expect(status = StatusCodes.CREATED)
     public void testPutTestResource_testResourceDoesNotExists(
@@ -112,6 +127,7 @@ public class ResourceTestIT {
 
     @Request(method = HttpMethods.PUT,
              resource = TestResource.class,
+             bodyGenerator = TestResourceGenerator.class,
              parameterSet = PARAMETER_SET)
     @Expect(status = StatusCodes.CREATED)
     public void testPutTestResource_testResourceAlreadyExists(

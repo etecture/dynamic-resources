@@ -52,7 +52,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.enterprise.event.Event;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Default;
 import javax.enterprise.inject.Instance;
@@ -80,10 +79,6 @@ public class DynamicRestServlet extends HttpServlet {
     @Inject
     @Default
     UriBuilder uriBuilder;
-    @Inject
-    Event<HttpServletResponse> responseEvents;
-    @Inject
-    Event<HttpServletRequest> requestEvents;
     @Inject
     ResponseWriterResolver responseWriterResolver;
     @Inject
@@ -182,7 +177,7 @@ public class DynamicRestServlet extends HttpServlet {
         Object entity;
         try {
             entity = response.getEntity();
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             entity = ex;
         }
         if (entity != null) {
@@ -212,8 +207,6 @@ public class DynamicRestServlet extends HttpServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        requestEvents.fire(req);
-        responseEvents.fire(resp);
         resp.setCharacterEncoding("UTF-8");
         executeResource(req, resp);
         resp.getWriter().flush();

@@ -262,7 +262,7 @@ public abstract class AbstractResourceMethodHandler implements
                         exception);
             }
         }
-        return new DefaultResponse(exception, 500);
+        return new DefaultResponse(exception);
     }
 
     protected <T> Response<?> executeQuery(

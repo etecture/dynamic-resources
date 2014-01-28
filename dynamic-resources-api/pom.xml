@@ -9,6 +9,7 @@
     </parent>
 
     <artifactId>dynamic-resources-api</artifactId>
+    <version>1.5.2-SNAPSHOT</version>
     <packaging>jar</packaging>
 	
     <name>Dynamic CDI Resources - API</name>

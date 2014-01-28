@@ -232,7 +232,7 @@ public class ResourceTestMethod extends FrameworkMethod {
                 request.method()).addParameter(requestParameter)
                 .withRequestContent(request.bodyGenerator().newInstance()
                 .generateBody(
-                request)).build());
+                request, requestParameter)).build());
     }
 
     private boolean executeQueries(String prefix, Query... queries) throws
@@ -276,7 +276,7 @@ public class ResourceTestMethod extends FrameworkMethod {
                 requestParameter);
         qm.addParameter("request", request.bodyGenerator()
                 .newInstance().generateBody(
-                request));
+                request, requestParameter));
         qm.setRepositoryClass(super.getMethod().getDeclaringClass());
         qm.setConverter(new ResultConverter() {
             @Override
@@ -312,7 +312,7 @@ public class ResourceTestMethod extends FrameworkMethod {
                             "response entity not of type " + expect
                             .responseType().getName());
                 }
-            } catch (Exception ex) {
+            } catch (Throwable ex) {
                 for (Class<? extends Throwable> exc : expect.exception()) {
                     if (exc.isAssignableFrom(ex.getClass())) {
                         return;

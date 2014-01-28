@@ -37,13 +37,7 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
-package de.etecture.opensource.dynamicresources.extension;
-
-import de.etecture.opensource.dynamicresources.api.SecurityContext;
-import javax.enterprise.inject.Default;
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
+package de.etecture.opensource.dynamicresources.api;
 
 /**
  *
@@ -51,21 +45,31 @@ import javax.servlet.http.HttpServletRequest;
  * @version
  * @since
  */
-@Default
-public class DefaultSecurityContext implements SecurityContext {
+public class ResourceException extends Exception {
+    private static final long serialVersionUID = 1L;
 
-    @Inject
-    @Current
-    HttpServletRequest req;
-
-    @Override
-    public boolean isUserInRole(String role) {
-        return req.isUserInRole(role);
+    /**
+     * Creates a new instance of
+     * <code>ResourceException</code> without detail message.
+     */
+    public ResourceException() {
     }
 
-    @Override
-    public String getUserPrincipal() {
-        return req.getUserPrincipal().getName();
+    /**
+     * Constructs an instance of
+     * <code>ResourceException</code> with the specified detail message.
+     *
+     * @param msg the detail message.
+     */
+    public ResourceException(String msg) {
+        super(msg);
     }
 
+    public ResourceException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public ResourceException(Throwable cause) {
+        super(cause);
+    }
 }

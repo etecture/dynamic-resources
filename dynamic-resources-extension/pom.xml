@@ -9,6 +9,7 @@
     </parent>
 
     <artifactId>dynamic-resources-extension</artifactId>
+    <version>1.5.2-SNAPSHOT</version>
     <packaging>jar</packaging>
 	
     <name>Dynamic CDI Resources - Extension</name>
@@ -23,7 +24,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>dynamic-resources-api</artifactId>
-            <version>${project.version}</version>
+            <version>1.5.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.googlecode.json-simple</groupId>

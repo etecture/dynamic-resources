@@ -83,5 +83,4 @@ public interface Request<T> {
     String getSingleQueryParameterValue(String name, String defaultValue);
 
     boolean hasQueryParameterValue(String name);
-
 }

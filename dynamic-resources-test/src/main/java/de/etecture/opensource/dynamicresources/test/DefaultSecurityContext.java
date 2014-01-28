@@ -37,26 +37,34 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.api;
+package de.etecture.opensource.dynamicresources.test;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import de.etecture.opensource.dynamicresources.api.SecurityContext;
+import javax.annotation.Resource;
+import javax.ejb.SessionContext;
+import javax.enterprise.context.RequestScoped;
+import javax.enterprise.inject.Default;
 
 /**
- * represents the response object for a ReST request.
  *
  * @author rhk
- * @version ${project.version}
- * @since 1.0.5
+ * @version
+ * @since
  */
-public interface Response<T> {
+@Default
+@RequestScoped
+public class DefaultSecurityContext implements SecurityContext {
 
-    T getEntity() throws ResourceException;
+    @Resource
+    SessionContext ctx;
 
-    List<Object> getHeader(String headerName);
+    @Override
+    public boolean isUserInRole(String role) {
+        return ctx != null && ctx.isCallerInRole(role);
+    }
 
-    Set<Map.Entry<String, List<Object>>> getHeaders();
-
-    int getStatus();
+    @Override
+    public String getUserPrincipal() {
+        return ctx == null ? "" : ctx.getCallerPrincipal().getName();
+    }
 }

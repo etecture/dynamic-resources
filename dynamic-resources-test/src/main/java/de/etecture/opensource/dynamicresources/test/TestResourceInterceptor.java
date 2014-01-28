@@ -80,7 +80,7 @@ public class TestResourceInterceptor implements
         System.out.printf("\tStatus : %d%n", response.getStatus());
         try {
             System.out.printf("\tEntity : %s%n", response.getEntity());
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             System.out.printf("\tException : %s%n", ex);
         }
         return response;

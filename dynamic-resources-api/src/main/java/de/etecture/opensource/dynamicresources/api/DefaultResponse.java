@@ -55,7 +55,7 @@ import java.util.Set;
 public class DefaultResponse<T> implements Response<T> {
 
     private final T entity;
-    private final Exception exception;
+    private final Throwable exception;
     private int status;
     private final Map<String, List<Object>> header = new HashMap<>();
 
@@ -65,16 +65,17 @@ public class DefaultResponse<T> implements Response<T> {
         this.exception = null;
     }
 
-    public DefaultResponse(Exception exception, int status) {
+    public DefaultResponse(Throwable exception) {
         this.entity = null;
-        this.status = status;
+        this.status = 500;
         this.exception = exception;
     }
 
     @Override
-    public T getEntity() throws Exception {
+    public T getEntity() throws ResourceException {
         if (exception != null) {
-            throw exception;
+            throw new ResourceException(
+                    "invokation of request results in error: ", exception);
         }
         return entity;
     }

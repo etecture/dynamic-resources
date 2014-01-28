@@ -42,6 +42,7 @@ package de.etecture.opensource.dynamicresources.test.junit;
 
 import de.etecture.opensource.dynamicresources.test.api.BodyGenerator;
 import de.etecture.opensource.dynamicresources.test.api.Request;
+import java.util.Map;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.lang.StringUtils;
 
@@ -54,7 +55,7 @@ import org.apache.commons.lang.StringUtils;
 public class DefaultBodyGenerator implements BodyGenerator {
 
     @Override
-    public Object generateBody(Request request) {
+    public Object generateBody(Request request, Map parameter) {
         if (StringUtils.isBlank(request.bodyValue())) {
             return null;
         } else {

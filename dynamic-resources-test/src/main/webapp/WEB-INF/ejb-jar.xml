@@ -7,7 +7,7 @@
 
     <enterprise-beans>
         <session>
-            <ejb-name>Neo4jRestService</ejb-name>
+            <ejb-name>Neo4jEJBUplink</ejb-name>
             <env-entry>
                 <env-entry-name>neo4j-server-url</env-entry-name>
                 <env-entry-type>java.lang.String</env-entry-type>

@@ -39,10 +39,12 @@
  */
 package de.etecture.opensource.dynamicresources.extension;
 
+import de.etecture.opensource.dynamicresources.api.ResourceException;
 import de.etecture.opensource.dynamicresources.api.Resources;
 import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.api.StatusCodes;
 import de.etecture.opensource.dynamicresources.spi.ResourceMethodHandler;
+import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -99,7 +101,7 @@ public class ResourcesImpl<T> implements Resources<T> {
     }
 
     @Override
-    public Response<T> invoke(final String methodName) throws Exception {
+    public Response<T> invoke(final String methodName) throws ResourceException {
         final HttpServletRequest req =
                 (HttpServletRequest) Proxy
                 .newProxyInstance(ResourcesImpl.class
@@ -107,9 +109,12 @@ public class ResourcesImpl<T> implements Resources<T> {
                 new InvocationHandler() {
             @Override
             public Object invoke(Object proxy, Method method, Object[] args)
-                    throws Throwable {
+                            throws ResourceException {
                 if ("getMethod".equals(method.getName())) {
                     return methodName;
+                } else if ("toString".equals(method.getName())) {
+                    return "dummy-reqeust to execute " + methodName + " on "
+                            + resourceClass.getSimpleName();
                 }
                 throw new UnsupportedOperationException(String.format(
                         "method %s is not supported",
@@ -121,8 +126,13 @@ public class ResourcesImpl<T> implements Resources<T> {
                 .fromMethod(resourceClass, methodName)
                 .addParameter(params)
                 .withRequestContent(body);
-        return lookupExecutor(bm, methodName)
-                .handleRequest(builder.build());
+        try {
+            return lookupExecutor(bm, methodName)
+                    .handleRequest(builder.build());
+        } catch (IOException iOException) {
+            throw new ResourceException("Can't invoke " + methodName + " on "
+                    + resourceClass.getSimpleName(), iOException);
+        }
     }
 
     private static ResourceMethodHandler lookupExecutor(BeanManager bm,
@@ -140,37 +150,37 @@ public class ResourcesImpl<T> implements Resources<T> {
     }
 
     @Override
-    public T get() throws Exception {
+    public T get() throws ResourceException {
         return invoke("GET").getEntity();
     }
 
     @Override
-    public T delete() throws Exception {
+    public T delete() throws ResourceException {
         return invoke("DELETE").getEntity();
     }
 
     @Override
-    public boolean remove() throws Exception {
+    public boolean remove() throws ResourceException {
         return invoke("DELETE").getStatus() == StatusCodes.OK;
     }
 
     @Override
-    public T put() throws Exception {
+    public T put() throws ResourceException {
         return invoke("PUT").getEntity();
     }
 
     @Override
-    public T post() throws Exception {
+    public T post() throws ResourceException {
         return invoke("POST").getEntity();
     }
 
     @Override
-    public T put(Object requestBody) throws Exception {
+    public T put(Object requestBody) throws ResourceException {
         return body(requestBody).put();
     }
 
     @Override
-    public T post(Object requestBody) throws Exception {
+    public T post(Object requestBody) throws ResourceException {
         return body(requestBody).post();
     }
 }

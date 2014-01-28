@@ -37,26 +37,29 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.api;
+package de.etecture.opensource.dynamicresources.test;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import de.etecture.opensource.dynamicresources.api.SecurityContext;
+import javax.enterprise.context.RequestScoped;
+import javax.enterprise.inject.Alternative;
 
 /**
- * represents the response object for a ReST request.
  *
  * @author rhk
- * @version ${project.version}
- * @since 1.0.5
+ * @version
+ * @since
  */
-public interface Response<T> {
+@Alternative
+@RequestScoped
+public class AlternativeSecurityContext implements SecurityContext {
 
-    T getEntity() throws ResourceException;
+    @Override
+    public boolean isUserInRole(String role) {
+        return true;
+    }
 
-    List<Object> getHeader(String headerName);
-
-    Set<Map.Entry<String, List<Object>>> getHeaders();
-
-    int getStatus();
+    @Override
+    public String getUserPrincipal() {
+        return "unknown";
+    }
 }

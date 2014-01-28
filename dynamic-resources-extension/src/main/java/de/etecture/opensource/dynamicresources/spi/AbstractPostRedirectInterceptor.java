@@ -45,7 +45,7 @@ public abstract class AbstractPostRedirectInterceptor<R, N> implements
         final Object entity;
         try {
             entity = response.getEntity();
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             return response;
         }
         // check if responsible

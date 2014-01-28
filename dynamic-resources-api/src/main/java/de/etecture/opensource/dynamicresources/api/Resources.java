@@ -101,65 +101,65 @@ public interface Resources<T> {
      *
      * @param method
      * @return
-     * @throws Exception
+     * @throws ResourceException
      */
-    Response<T> invoke(String method) throws Exception;
+    Response<T> invoke(String method) throws ResourceException;
 
     /**
      * shortcut for: {code}invoke("GET").getEntity(){code}
      *
      * @return
-     * @throws Exception
+     * @throws ResourceException
      */
-    T get() throws Exception;
+    T get() throws ResourceException;
 
     /**
      * shortcut for: {code}invoke("DELETE").getEntity(){code}
      *
      * @return
-     * @throws Exception
+     * @throws ResourceException
      */
-    T delete() throws Exception;
+    T delete() throws ResourceException;
 
     /**
      * shortcut for: {code}invoke("DELETE").getStatus() == {code}
      *
      * @return
-     * @throws Exception
+     * @throws ResourceException
      */
-    boolean remove() throws Exception;
+    boolean remove() throws ResourceException;
 
     /**
      * shortcut for: {code}invoke("PUT").getEntity(){code}
      *
      * @return
-     * @throws Exception
+     * @throws ResourceException
      */
-    T put() throws Exception;
+    T put() throws ResourceException;
 
     /**
      * shortcut for: {code}invoke("POST").getEntity(){code}
      *
      * @return
-     * @throws Exception
+     * @throws ResourceException
      */
-    T post() throws Exception;
+    T post() throws ResourceException;
 
     /**
      * shortcut for: {code}body(requestBody).invoke("PUT").getEntity(){code}
      *
      * @param requestBody
      * @return
-     * @throws Exception
+     * @throws ResourceException
      */
-    T put(Object requestBody) throws Exception;
+    T put(Object requestBody) throws ResourceException;
 
     /**
      * shortcut for: {code}body(requestBody).invoke("POST").getEntity(){code}
      *
      * @param requestBody
      * @return
-     * @throws Exception
+     * @throws ResourceException
      */
-    T post(Object requestBody) throws Exception;
+    T post(Object requestBody) throws ResourceException;
 }
