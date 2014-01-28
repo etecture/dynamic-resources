@@ -37,51 +37,35 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.interceptor;
 
-import de.etecture.opensource.dynamicresources.api.DefaultResponse;
-import de.etecture.opensource.dynamicresources.api.Global;
-import de.etecture.opensource.dynamicresources.api.Request;
-import de.etecture.opensource.dynamicresources.api.ResourceInterceptor;
-import de.etecture.opensource.dynamicresources.api.Response;
+package de.etecture.opensource.dynamicresources.extension;
+
 import de.etecture.opensource.dynamicresources.api.SecurityContext;
-import de.etecture.opensource.dynamicresources.api.StatusCodes;
+import javax.enterprise.inject.Default;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 
 /**
- * checks the security for the resources in the before method.
  *
  * @author rhk
  * @version
  * @since
  */
-@Global
-public class SecurityResourceInterceptor implements ResourceInterceptor {
+@Default
+public class DefaultSecurityContext implements SecurityContext {
 
     @Inject
-    SecurityContext security;
+    @Current
+    HttpServletRequest req;
 
     @Override
-    public Response before(Request request) {
-        String[] allowedRoles = request.getResourceMethod().rolesAllowed();
-        if (allowedRoles != null && allowedRoles.length > 0) {
-            boolean trust = false;
-            for (String role : allowedRoles) {
-                trust = trust || security.isUserInRole(role);
-            }
-            if (!trust) {
-                return new DefaultResponse("User " + security
-                        .getUserPrincipal()
-                        + " is not allowed to perform this request.\n",
-                        StatusCodes.FORBIDDEN);
-            }
-        }
-        return null;
-
+    public boolean isUserInRole(String role) {
+        return req.isUserInRole(role);
     }
 
     @Override
-    public Response after(Request request, Response response) {
-        return response;
+    public String getUserPrincipal() {
+        return req.getUserPrincipal().getName();
     }
+
 }
