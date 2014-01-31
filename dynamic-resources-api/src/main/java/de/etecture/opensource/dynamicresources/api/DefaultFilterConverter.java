@@ -37,40 +37,24 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.handler;
+package de.etecture.opensource.dynamicresources.api;
 
-import de.etecture.opensource.dynamicresources.api.DefaultResponse;
-import de.etecture.opensource.dynamicresources.api.ExceptionHandler;
-import de.etecture.opensource.dynamicresources.api.Request;
-import de.herschke.neo4j.uplink.api.Neo4jServerException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Map;
+import org.apache.commons.beanutils.ConvertUtils;
 
 /**
- * handles all {@link Neo4jServerException}s.
  *
  * @author rhk
- * @version ${project.version}
- * @since 0.0.1
+ * @version
+ * @since
  */
-public class ServerErrorHandler implements
-        ExceptionHandler {
+public class DefaultFilterConverter implements FilterConverter {
 
     @Override
-    public <T> boolean isResponsibleFor(
-            Request<T> request,
-            Class<? extends Throwable> exceptionClass) {
-        return Neo4jServerException.class.isAssignableFrom(exceptionClass);
-    }
-
-    @Override
-    public <T> DefaultResponse<T> handleException(
-            Request<T> request, Throwable exception) {
-        Logger.getLogger(ServerErrorHandler.class.getSimpleName()).log(
-                Level.SEVERE, String.format(
-                "cannot execute method: %s at resource: %s",
-                request.getMethodName(), request.getResourceClass()
-                .getSimpleName()), exception);
-        return new DefaultResponse(request.getRequestType(), exception);
+    public <R> void convert(Filter filter, Request<R> request,
+            Map<String, Object> parameter) {
+        parameter.put(filter.name(), ConvertUtils.convert(request
+                .getSingleQueryParameterValue(filter.name(), filter
+                .defaultValue()), filter.type()));
     }
 }

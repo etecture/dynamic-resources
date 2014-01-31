@@ -277,6 +277,13 @@ public class DefaultRequest<T> implements Request<T> {
                 range = new VersionNumberRangeExpression(contentVersion);
             }
             if (requestReaderResolver != null) {
+                //Logger.getLogger("DefaultRequest").fine(
+                System.out.println(
+                        String.format(
+                        "lookup reader for type: %s in mediatype: %s and version: %s",
+                        getRequestType().getSimpleName(),
+                        contentMediaType,
+                        range));
                 RequestReader reader = requestReaderResolver.resolve(
                         getRequestType(),
                         contentMediaType, range);
@@ -285,9 +292,16 @@ public class DefaultRequest<T> implements Request<T> {
                     requestContent = reader.processRequest(contentReader,
                             contentMediaType.toString());
                 } else {
+                    //Logger.getLogger("DefaultRequest").warning(
+                    System.err.println(
+                            "no requestReader found!, so request cannot be read from reader!");
+
                     requestContent = null;
                 }
             } else {
+                // Logger.getLogger("DefaultRequest").warning(
+                System.err.println(
+                        "no requestReaderResolver provided, so request cannot be read from reader!");
                 requestContent = null;
             }
         }

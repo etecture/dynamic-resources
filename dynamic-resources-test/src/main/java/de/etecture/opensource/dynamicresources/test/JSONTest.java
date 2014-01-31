@@ -44,7 +44,6 @@ import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.api.Produces;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
 import java.io.IOException;
-import java.io.Serializable;
 import java.io.Writer;
 import java.util.Collections;
 import javax.json.Json;
@@ -72,10 +71,7 @@ public enum JSONTest implements ResponseWriter {
         protected void process(Object element, JsonGenerator generator) {
             final EntityNotFoundException enfe =
                     (EntityNotFoundException) element;
-            final Serializable entityId =
-                    enfe.getEntityId();
             generator.writeStartObject()
-                    .write("id", entityId.toString())
                     .write("entity", enfe.getEntityClass().getSimpleName())
                     .writeEnd();
         }

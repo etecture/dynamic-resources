@@ -40,7 +40,6 @@
 package de.etecture.opensource.dynamicresources.test;
 
 import de.etecture.opensource.dynamicrepositories.api.Query;
-import de.etecture.opensource.dynamicrepositories.technologies.SingleColumnConverter;
 import de.etecture.opensource.dynamicresources.api.HttpMethods;
 import de.etecture.opensource.dynamicresources.api.Method;
 import de.etecture.opensource.dynamicresources.api.Resource;
@@ -88,7 +87,6 @@ import de.etecture.opensource.dynamicresources.api.StatusCodes;
             query =
             @Query(
             technology = "Neo4j",
-            converter = SingleColumnConverter.class,
             value = ""
             + "MATCH "
             + "  (this:Test) "

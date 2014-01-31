@@ -37,40 +37,34 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.handler;
+
+package de.etecture.opensource.dynamicresources.test;
 
 import de.etecture.opensource.dynamicresources.api.DefaultResponse;
 import de.etecture.opensource.dynamicresources.api.ExceptionHandler;
 import de.etecture.opensource.dynamicresources.api.Request;
-import de.herschke.neo4j.uplink.api.Neo4jServerException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import de.etecture.opensource.dynamicresources.api.Response;
 
 /**
- * handles all {@link Neo4jServerException}s.
  *
  * @author rhk
- * @version ${project.version}
- * @since 0.0.1
+ * @version
+ * @since
  */
-public class ServerErrorHandler implements
+public class TestExceptionHandler implements
         ExceptionHandler {
 
     @Override
     public <T> boolean isResponsibleFor(
             Request<T> request,
             Class<? extends Throwable> exceptionClass) {
-        return Neo4jServerException.class.isAssignableFrom(exceptionClass);
+        return Exception.class.isAssignableFrom(exceptionClass);
     }
 
     @Override
-    public <T> DefaultResponse<T> handleException(
+    public <T> Response<T> handleException(
             Request<T> request, Throwable exception) {
-        Logger.getLogger(ServerErrorHandler.class.getSimpleName()).log(
-                Level.SEVERE, String.format(
-                "cannot execute method: %s at resource: %s",
-                request.getMethodName(), request.getResourceClass()
-                .getSimpleName()), exception);
+        exception.printStackTrace();
         return new DefaultResponse(request.getRequestType(), exception);
     }
 }

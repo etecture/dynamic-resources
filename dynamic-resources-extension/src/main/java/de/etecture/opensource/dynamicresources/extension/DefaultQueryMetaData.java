@@ -45,7 +45,6 @@ import de.etecture.opensource.dynamicrepositories.api.Query;
 import de.etecture.opensource.dynamicrepositories.api.ResultConverter;
 import de.etecture.opensource.dynamicrepositories.spi.QueryMetaData;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -62,6 +61,7 @@ public class DefaultQueryMetaData<T> implements QueryMetaData<T> {
     private final Map<String, Object> parameters = new HashMap<>();
     private final String queryName;
     private final String query;
+    private final Type type;
     private final Class<T> queryType;
     private final Kind queryKind;
     private final String technology;
@@ -70,15 +70,18 @@ public class DefaultQueryMetaData<T> implements QueryMetaData<T> {
     private Class<?> repositoryClass;
 
     public DefaultQueryMetaData(QueryMetaData<T> metaData) {
-        this(metaData.getQueryType(), metaData.getQueryKind(), metaData
+        this(metaData.getType(), metaData.getQueryType(), metaData
+                .getQueryKind(), metaData
                 .getQuery(), metaData.getQueryName(), metaData
                 .getQueryTechnology(), metaData.getConnection(), metaData
                 .getParameterMap());
     }
 
-    public DefaultQueryMetaData(Class<T> queryType, Kind queryKind, String query,
+    public DefaultQueryMetaData(Type type, Class<T> queryType, Kind queryKind,
+            String query,
             String queryName, String technology, String connection,
             Map<String, Object> parameters) {
+        this.type = type;
         this.queryType = queryType;
         this.queryKind = queryKind;
         this.query = query;
@@ -91,9 +94,10 @@ public class DefaultQueryMetaData<T> implements QueryMetaData<T> {
     }
 
     public DefaultQueryMetaData(Query query, String methodName,
-            Class<T> queryType, Kind queryKind,
+            Class<T> queryType, Type type, Kind queryKind,
             Map<String, Object> parameters) {
         this.queryType = queryType;
+        this.type = type;
         this.repositoryClass = queryType;
         this.queryKind = queryKind;
         this.technology = query.technology();
@@ -183,8 +187,8 @@ public class DefaultQueryMetaData<T> implements QueryMetaData<T> {
     }
 
     @Override
-    public Type getQueryGenericType() {
-        return null;
+    public Type getType() {
+        return type;
     }
 
     @Override

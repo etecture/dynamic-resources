@@ -52,6 +52,7 @@ public interface ResourceInterceptor {
      * {@link ResponseImpl} to return with this response immediately (without
      * calling the resource).
      *
+     * @param <T>
      * @param request
      * @return
      */
@@ -60,6 +61,7 @@ public interface ResourceInterceptor {
     /**
      * called by the dynamicresources handler after the resource was invoked.
      *
+     * @param <T>
      * @param request
      * @param response
      * @return

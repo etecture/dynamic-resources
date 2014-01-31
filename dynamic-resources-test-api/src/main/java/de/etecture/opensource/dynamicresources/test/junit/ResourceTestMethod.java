@@ -56,7 +56,6 @@ import de.etecture.opensource.dynamicresources.test.api.Request;
 import de.etecture.opensource.dynamicresources.test.api.Response;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -130,7 +129,6 @@ public class ResourceTestMethod extends FrameworkMethod {
                                 getMethod().getParameterTypes()[i];
                         final de.etecture.opensource.dynamicresources.api.Response<?> response =
                                 requestResource(request.resource());
-                        checkExpect(response);
                         if (de.etecture.opensource.dynamicresources.api.Response.class
                                 .isAssignableFrom(paramType)) {
                             newParams[i] = response;
@@ -138,7 +136,8 @@ public class ResourceTestMethod extends FrameworkMethod {
                                 .isAssignableFrom(paramType)) {
                             try {
                                 newParams[i] = response.getEntity();
-                            } catch (Exception exception) {
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
                                 newParams[i] = null;
                             }
                         } else if (Exception.class.isAssignableFrom(paramType)) {
@@ -146,12 +145,14 @@ public class ResourceTestMethod extends FrameworkMethod {
                                 response.getEntity();
                                 newParams[i] = null;
                             } catch (Exception ex) {
+                                ex.printStackTrace();
                                 newParams[i] = ex;
                             }
                         } else {
                             throw new IllegalStateException(
                                     "Can only handle a resource-interface or Response as type for response-injection!");
                         }
+                        checkExpect(response);
                     } else if (Param.class.isAssignableFrom(parameterAnnotation
                             .annotationType())) {
                         Param param = (Param) parameterAnnotation;
@@ -269,7 +270,8 @@ public class ResourceTestMethod extends FrameworkMethod {
             String technology,
             String connection) throws Exception {
         final DefaultQueryMetaData qm =
-                new DefaultQueryMetaData(Boolean.class,
+                new DefaultQueryMetaData(QueryMetaData.Type.SINGLE,
+                Boolean.class,
                 QueryMetaData.Kind.RETRIEVE, query, queryName,
                 technology,
                 connection,
@@ -280,8 +282,7 @@ public class ResourceTestMethod extends FrameworkMethod {
         qm.setRepositoryClass(super.getMethod().getDeclaringClass());
         qm.setConverter(new ResultConverter() {
             @Override
-            public Object convert(Class returnType, Type genericReturnType,
-                    Object result) {
+            public Object convert(Class returnType, Object result) {
                 return result != null;
             }
         });

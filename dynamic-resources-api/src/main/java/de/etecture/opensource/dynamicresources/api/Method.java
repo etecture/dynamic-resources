@@ -86,6 +86,19 @@ public @interface Method {
     int status() default StatusCodes.OK;
 
     /**
+     * a resource to redirect to.
+     *
+     * N.B. If this class is specified and a resource is given, then the status
+     * is set to {@link StatusCodes#SEE_OTHER}.
+     *
+     * The path-parameters for the see-other-uri will be caught from the
+     * parameters.
+     *
+     * @return
+     */
+    Class<?> seeOther() default Class.class;
+
+    /**
      * the request types, this method accepts.
      *
      * @return

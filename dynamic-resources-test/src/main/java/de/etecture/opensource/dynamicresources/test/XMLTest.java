@@ -45,7 +45,6 @@ import de.etecture.opensource.dynamicresources.api.Produces;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
 import de.etecture.opensource.dynamicresources.api.UriBuilder;
 import java.io.IOException;
-import java.io.Serializable;
 import java.io.Writer;
 import java.util.Collections;
 import javax.inject.Inject;
@@ -79,10 +78,7 @@ public enum XMLTest implements ResponseWriter {
                 XMLStreamException {
             final EntityNotFoundException enfe =
                     (EntityNotFoundException) element;
-            final Serializable entityId =
-                    enfe.getEntityId();
             writer.writeStartElement("NotFoundException");
-            writer.writeAttribute("id", entityId.toString());
             writer.writeAttribute("entity", enfe.getEntityClass()
                     .getSimpleName());
             writer.writeEndElement();

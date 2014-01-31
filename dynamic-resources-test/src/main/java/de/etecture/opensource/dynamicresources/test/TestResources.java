@@ -40,6 +40,7 @@
 package de.etecture.opensource.dynamicresources.test;
 
 import de.etecture.opensource.dynamicrepositories.api.Query;
+import de.etecture.opensource.dynamicresources.api.Consumes;
 import de.etecture.opensource.dynamicresources.api.HttpMethods;
 import de.etecture.opensource.dynamicresources.api.Method;
 import de.etecture.opensource.dynamicresources.api.Resource;
@@ -65,15 +66,19 @@ import java.util.List;
     @Method(
             name = HttpMethods.POST,
             description = "creates a new TestResources",
+            consumes =
+            @Consumes(
+            requestType = TestResource.class),
+            seeOther = TestResource.class,
             query =
             @Query(
             technology = "Neo4j",
             value = ""
             + "CREATE "
             + "  (this:Test { "
-            + "    id: {id}, "
-            + "    firstName: {request.firstName}, "
-            + "    lastName: {request.lastName}, "
+            + "    id: {request}.id, "
+            + "    firstName: {request}.firstName, "
+            + "    lastName: {request}.lastName, "
             + "    `_created`: timestamp(), "
             + "    `_updated`: timestamp() "
             + "  }) "
@@ -81,7 +86,7 @@ import java.util.List;
             + "MATCH "
             + "  (this:Test) "
             + "RETURN "
-            + "  collect(this) AS `allTestResources`")),
+            + "  'id' as paramName, this.id as paramValue")),
     @Method(
             name = HttpMethods.DELETE,
             description = "deletes all TestResources",

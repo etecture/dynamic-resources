@@ -39,6 +39,8 @@
  */
 package de.etecture.opensource.dynamicresources.extension;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -89,9 +91,20 @@ public class PathParser {
         Matcher matcher = GROUP_PATTERN.matcher(uriTemplate);
         StringBuffer buffer = new StringBuffer("/");
         while (matcher.find()) {
-            matcher.appendReplacement(buffer, groups.get(matcher.group(1)));
+            matcher.appendReplacement(buffer, encode(groups
+                    .get(matcher.group(1))));
         }
         matcher.appendTail(buffer);
         return buffer.toString();
+    }
+
+    private static String encode(String string) {
+        try {
+            return URLEncoder.encode(string, "UTF-8");
+        } catch (UnsupportedEncodingException ex) {
+            System.err.println("did not found encoding:!!!");
+            ex.printStackTrace();
+            return string;
+        }
     }
 }

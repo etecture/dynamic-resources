@@ -37,40 +37,62 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.handler;
+package de.etecture.opensource.dynamicresources.api;
 
-import de.etecture.opensource.dynamicresources.api.DefaultResponse;
-import de.etecture.opensource.dynamicresources.api.ExceptionHandler;
-import de.etecture.opensource.dynamicresources.api.Request;
-import de.herschke.neo4j.uplink.api.Neo4jServerException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import de.etecture.opensource.dynamicresources.api.AbstractCompoundFilterConverter.FilterPart;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
- * handles all {@link Neo4jServerException}s.
  *
+ * @param <F>
  * @author rhk
- * @version ${project.version}
- * @since 0.0.1
+ * @version
+ * @since
  */
-public class ServerErrorHandler implements
-        ExceptionHandler {
+public abstract class AbstractCompoundFilterConverter<F extends FilterPart>
+        implements FilterConverter {
 
-    @Override
-    public <T> boolean isResponsibleFor(
-            Request<T> request,
-            Class<? extends Throwable> exceptionClass) {
-        return Neo4jServerException.class.isAssignableFrom(exceptionClass);
+    public interface FilterPart {
+
+        String name();
+
+        int ordinal();
+
+        String value(Request<?> request);
+    }
+    private final Set<F> parts = new HashSet<>();
+    private final String template;
+
+    protected AbstractCompoundFilterConverter(String template, F... parts) {
+        this(template, Arrays.asList(parts));
+    }
+
+    protected AbstractCompoundFilterConverter(
+            String template,
+            Collection<F> parts) {
+        this.template = template;
+        this.parts.addAll(parts);
+
     }
 
     @Override
-    public <T> DefaultResponse<T> handleException(
-            Request<T> request, Throwable exception) {
-        Logger.getLogger(ServerErrorHandler.class.getSimpleName()).log(
-                Level.SEVERE, String.format(
-                "cannot execute method: %s at resource: %s",
-                request.getMethodName(), request.getResourceClass()
-                .getSimpleName()), exception);
-        return new DefaultResponse(request.getRequestType(), exception);
+    public <R> void convert(Filter filter,
+            Request<R> request,
+            Map<String, Object> parameter) {
+        if (!request.hasQueryParameterValue(filter.name())) {
+            Object[] partValues = new Object[parts.size()];
+            for (F part : parts) {
+                partValues[part.ordinal()] = part.value(request);
+            }
+            parameter.put(filter.name(),
+                String.format(template, partValues));
+        } else {
+            parameter.put(filter.name(), request.getSingleQueryParameterValue(
+                    filter.name(), filter.defaultValue()));
+        }
     }
 }

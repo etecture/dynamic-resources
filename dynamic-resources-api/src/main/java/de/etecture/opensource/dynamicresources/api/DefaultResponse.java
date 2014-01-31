@@ -65,7 +65,7 @@ public class DefaultResponse<T> implements Response<T> {
         this.exception = null;
     }
 
-    public DefaultResponse(Throwable exception) {
+    public DefaultResponse(Class<T> responseType, Throwable exception) {
         this.entity = null;
         this.status = 500;
         this.exception = exception;

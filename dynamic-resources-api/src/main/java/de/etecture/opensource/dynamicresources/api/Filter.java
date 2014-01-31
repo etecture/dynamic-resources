@@ -68,4 +68,11 @@ public @interface Filter {
      * @return
      */
     Class<?> type() default String.class;
+
+    /**
+     * the converter, that converts the query values to the type of this filter.
+     *
+     * @return
+     */
+    Class<? extends FilterConverter> converter() default DefaultFilterConverter.class;
 }

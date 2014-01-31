@@ -44,6 +44,7 @@ import de.etecture.opensource.dynamicresources.api.DefaultResponse;
 import de.etecture.opensource.dynamicresources.api.HttpMethods;
 import de.etecture.opensource.dynamicresources.api.Request;
 import de.etecture.opensource.dynamicresources.api.Response;
+import de.etecture.opensource.dynamicresources.extension.DefaultQueryMetaData;
 import de.etecture.opensource.dynamicresources.spi.AbstractResourceMethodHandler;
 import de.etecture.opensource.dynamicresources.spi.Verb;
 import java.io.IOException;
@@ -60,10 +61,11 @@ public class DeleteResourceHandler extends AbstractResourceMethodHandler {
     }
 
     @Override
-    public Response handleRequest(
-            Request request) throws
+    public <T> Response<T> handleRequest(Request<T> request) throws
             IOException {
-        executeQuery(request, buildMetaData(request, Boolean.class));
+        final DefaultQueryMetaData qmd =
+                buildMetaData(request, Boolean.class, QueryMetaData.Type.SINGLE);
+        executeQuery(request, qmd);
         return new DefaultResponse(null,
                 request.getResourceMethod().status());
     }

@@ -49,28 +49,29 @@ import de.etecture.opensource.dynamicresources.api.ExceptionHandler;
 import de.etecture.opensource.dynamicresources.api.Filter;
 import de.etecture.opensource.dynamicresources.api.Global;
 import de.etecture.opensource.dynamicresources.api.Method;
+import de.etecture.opensource.dynamicresources.api.PathParamSubstitution;
 import de.etecture.opensource.dynamicresources.api.Request;
 import de.etecture.opensource.dynamicresources.api.Resource;
 import de.etecture.opensource.dynamicresources.api.ResourceInterceptor;
 import de.etecture.opensource.dynamicresources.api.Response;
-import de.etecture.opensource.dynamicresources.extension.Current;
+import de.etecture.opensource.dynamicresources.api.StatusCodes;
+import de.etecture.opensource.dynamicresources.api.UriBuilder;
 import de.etecture.opensource.dynamicresources.extension.DefaultQueryMetaData;
 import de.etecture.opensource.dynamicresources.extension.RequestReaderResolver;
 import de.etecture.opensource.dynamicresources.extension.ResponseWriterResolver;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.enterprise.inject.Any;
+import javax.enterprise.inject.Default;
 import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.UnsatisfiedResolutionException;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.util.AnnotationLiteral;
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.beanutils.ConvertUtils;
 
 /**
  *
@@ -89,14 +90,11 @@ public abstract class AbstractResourceMethodHandler implements
     @Inject
     ResponseWriterResolver responseWriterResolver;
     @Inject
-    @Current
-    HttpServletRequest req;
-    @Inject
-    @Current
-    HttpServletResponse resp;
-    @Inject
     @Global
     Instance<ResourceInterceptor> globalInterceptors;
+    @Inject
+    @Default
+    UriBuilder uriBuilder;
     private final QueryMetaData.Kind kind;
 
     protected AbstractResourceMethodHandler(
@@ -209,23 +207,55 @@ public abstract class AbstractResourceMethodHandler implements
         Response<T> response;
         response = before(request);
         if (response == null) {
-            QueryMetaData qmd = buildMetaData(request, request
-                    .getResourceClass());
-            response =
-                    executeQuery(request, qmd);
+            final Class<?> seeOther = request.getResourceMethod().seeOther();
+            if (seeOther == Class.class || seeOther == null) {
+                QueryMetaData qmd = buildMetaData(request, request
+                        .getResourceClass(), QueryMetaData.Type.SINGLE);
+                response =
+                        executeQuery(request, qmd);
+
+            } else {
+                if (seeOther.isAnnotationPresent(Resource.class)) {
+                    try {
+                        DefaultQueryMetaData qmd = buildMetaData(request,
+                                PathParamSubstitution.class,
+                                QueryMetaData.Type.LIST);
+                        final List<PathParamSubstitution> substitutions =
+                                (List<PathParamSubstitution>) getExecutorByTechnology(
+                                qmd.getQueryTechnology()).execute(qmd);
+                        Map<String, String> pathValues = new HashMap<>();
+                        for (PathParamSubstitution substitution : substitutions) {
+                            pathValues.put(substitution.getParamName(),
+                                    substitution.getParamValue());
+                        }
+                        response = new DefaultResponse((T) null,
+                                StatusCodes.SEE_OTHER);
+                        ((DefaultResponse) response).addHeader("Location",
+                                uriBuilder.build(
+                                seeOther, pathValues));
+                    } catch (Exception ex) {
+                        response = handleException(ex, request);
+                    }
+                } else {
+                    throw new IOException("specified see-other-class: "
+                            + seeOther + " is not a resource!");
+                }
+            }
+
             response = after(request, response);
         }
         return response;
     }
 
-    protected <T> QueryMetaData<T> buildMetaData(Request<?> request,
-            Class<T> queryType) throws IOException {
+    protected <T> DefaultQueryMetaData<T> buildMetaData(Request<?> request,
+            Class<T> queryType, QueryMetaData.Type type) throws IOException {
 
         Map<String, Object> parameter = buildParameterMap(request);
         DefaultQueryMetaData<T> queryMetaData = new DefaultQueryMetaData(
                 request.getResourceMethod().query(),
                 request.getResourceMethod().name(),
                 queryType,
+                type,
                 kind,
                 parameter);
 
@@ -242,8 +272,8 @@ public abstract class AbstractResourceMethodHandler implements
         return queryMetaData;
     }
 
-    protected Response<?> handleException(Throwable exception,
-            Request request) {
+    protected <T> Response<T> handleException(Throwable exception,
+            Request<T> request) {
         System.out.printf(
                 "handle Exception: %s, message: %s, resource: %s, method: %s%n",
                 exception.getClass().getSimpleName(),
@@ -258,15 +288,14 @@ public abstract class AbstractResourceMethodHandler implements
                     .getClass())) {
                 System.out.printf("call exception handler: %s%n", exh.getClass()
                         .getSimpleName());
-                return exh.handleException(request,
-                        exception);
+                return exh.handleException(request, exception);
             }
         }
-        return new DefaultResponse(exception);
+        return new DefaultResponse(request.getRequestType(), exception);
     }
 
-    protected <T> Response<?> executeQuery(
-            Request request,
+    protected <T> Response<T> executeQuery(
+            Request<T> request,
             QueryMetaData<T> queryMetaData) {
         try {
             return new DefaultResponse(
@@ -317,25 +346,19 @@ public abstract class AbstractResourceMethodHandler implements
             IOException {
         Map<String, Object> parameter = new HashMap<>();
         parameter.putAll(request.getParameter());
-        for (Filter filter : request.getResourceMethod().filters()) {
-            String stringValue = null;
-            if (request.getQueryParameter().containsKey(filter.name())) {
-                String[] paramValues = request.getQueryParameter().get(filter
-                        .name());
-                if (paramValues.length >= 1) {
-                    stringValue = paramValues[0];
-                }
-            }
-            if (stringValue == null && !filter.defaultValue().isEmpty()) {
-                stringValue = filter.defaultValue();
-            }
-            System.out.printf("add parameter: %s=%s%n", filter.name(),
-                    stringValue);
-            parameter.put(filter.name(), ConvertUtils.convert(stringValue,
-                    filter.type()));
-        }
         parameter.putAll(request.getPathParameter());
+        for (Filter filter : request.getResourceMethod().filters()) {
+            try {
+                filter.converter().newInstance().convert(filter, request,
+                        parameter);
+            } catch (InstantiationException | IllegalAccessException ex) {
+                throw new IOException("cannot convert filter parameter "
+                        + filter.name() + " for request " + request
+                        .getMethodName() + "!", ex);
+            }
+        }
         Object requestObject = request.getContent();
+        System.out.println("request is: " + requestObject);
         if (requestObject != null) {
             parameter.put("request", requestObject);
         }

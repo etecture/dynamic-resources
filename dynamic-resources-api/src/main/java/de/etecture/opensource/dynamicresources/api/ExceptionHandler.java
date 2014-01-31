@@ -59,7 +59,7 @@ public interface ExceptionHandler {
      * @param exceptionClass
      * @return
      */
-    boolean isResponsibleFor(Request request,
+    <T> boolean isResponsibleFor(Request<T> request,
             Class<? extends Throwable> exceptionClass);
 
     /**
@@ -74,6 +74,6 @@ public interface ExceptionHandler {
      * @param exception the exception that was raised
      * @return
      */
-    Response<?> handleException(Request request,
+    <T> Response<T> handleException(Request<T> request,
             Throwable exception);
 }

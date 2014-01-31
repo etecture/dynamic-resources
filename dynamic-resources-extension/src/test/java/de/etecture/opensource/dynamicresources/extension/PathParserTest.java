@@ -81,13 +81,14 @@ public class PathParserTest {
     @Test
     public void testCreateUri() {
         String template =
-                "customers/{custNo:\\d+}/employees/{empNo}/addresses";
+                "customers/{custNo:\\d+}/employees/{empNo}/addresses/{whatever}";
         String expectedPath =
-                "/customers/1234567890/employees/1-9Y2CLO/addresses";
+                "/customers/1234567890/employees/1%2B9Y2CLO/addresses/a+value";
 
         Map<String, String> groups = new HashMap<>();
         groups.put("custNo", "1234567890");
-        groups.put("empNo", "1-9Y2CLO");
+        groups.put("empNo", "1+9Y2CLO");
+        groups.put("whatever", "a value");
         Assert.assertEquals(expectedPath, PathParser.createURI(template,
                 groups));
     }
