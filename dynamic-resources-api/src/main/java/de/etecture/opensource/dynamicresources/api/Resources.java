@@ -97,7 +97,21 @@ public interface Resources<T> {
     Resources<T> body(Object requestBody);
 
     /**
-     * invokes the method.
+     * specifies that a specific status code is expected. If the response is not
+     * of the given status code, a ResourceException is thrown on the
+     * shortcut-methods.
+     *
+     * If this method is not called, no status-code check will be performed.
+     *
+     * @param expectedStatusCode
+     * @return
+     */
+    Resources<T> expect(int expectedStatusCode);
+
+    /**
+     * invokes the method and returns the response immediatly.
+     *
+     * This method does no check for types or exceptions or statuscodes.
      *
      * @param method
      * @return

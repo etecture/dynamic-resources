@@ -65,26 +65,32 @@ public class ResourcesImpl<T> implements Resources<T> {
     private final Class<T> resourceClass;
     protected final Map<String, Object> params;
     protected Object body;
+    private int expectedStatus;
 
     protected ResourcesImpl(
             BeanManager bm,
             Class<T> resourceClass,
+            Object body,
+            int expectedStatus,
             Map<String, Object> params) {
         this.bm = bm;
+        this.body = body;
+        this.expectedStatus = expectedStatus;
         this.params = params;
         this.resourceClass = resourceClass;
     }
 
     public ResourcesImpl(
             BeanManager bm, Class<T> resourceClass) {
-        this(bm, resourceClass, new HashMap<String, Object>());
+        this(bm, resourceClass, null, -1, new HashMap<String, Object>());
 
     }
 
     @Override
     public Resources<T> select(
             Map<String, Object> params) {
-        return new ResourcesWithParametersImpl<>(bm, resourceClass, params);
+        return new ResourcesWithParametersImpl(bm, resourceClass, body,
+                expectedStatus, params);
     }
 
     @Override
@@ -92,6 +98,12 @@ public class ResourcesImpl<T> implements Resources<T> {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put(paramName, paramValue);
         return select(parameters);
+    }
+
+    @Override
+    public Resources<T> expect(int expectedStatusCode) {
+        this.expectedStatus = expectedStatusCode;
+        return this;
     }
 
     @Override
@@ -108,7 +120,8 @@ public class ResourcesImpl<T> implements Resources<T> {
                 .getClassLoader(), new Class[]{HttpServletRequest.class},
                 new InvocationHandler() {
             @Override
-            public Object invoke(Object proxy, Method method, Object[] args)
+                    public Object invoke(Object proxy, Method method,
+                            Object[] args)
                             throws ResourceException {
                 if ("getMethod".equals(method.getName())) {
                     return methodName;
@@ -149,14 +162,39 @@ public class ResourcesImpl<T> implements Resources<T> {
                 .createCreationalContext(b));
     }
 
+    private T invokeAndCheck(String method) throws ResourceException {
+        Response<T> response = invoke(method);
+        if (expectedStatus == -1 || response.getStatus() == expectedStatus) {
+            Object entity = response.getEntity();
+            if (entity == null) {
+                return null;
+            }
+            if (resourceClass.isInstance(entity)) {
+                return resourceClass.cast(entity);
+            } else if (entity instanceof String) {
+                throw new ResourceException(((String) entity));
+            } else {
+                throw new ResourceException(String.format(
+                        "Returned entity of %s %s is not the expected type. Instead it is: %s",
+                        method, resourceClass.getSimpleName(),
+                        entity.getClass().getName()));
+            }
+        } else {
+            throw new ResourceException(String.format(
+                    "Response of %s %s is not of expected status: %s. Actual status is: %s",
+                    method, resourceClass.getSimpleName(), expectedStatus,
+                    response.getStatus()));
+        }
+    }
+
     @Override
     public T get() throws ResourceException {
-        return invoke("GET").getEntity();
+        return invokeAndCheck("GET");
     }
 
     @Override
     public T delete() throws ResourceException {
-        return invoke("DELETE").getEntity();
+        return invokeAndCheck("DELETE");
     }
 
     @Override
@@ -166,12 +204,12 @@ public class ResourcesImpl<T> implements Resources<T> {
 
     @Override
     public T put() throws ResourceException {
-        return invoke("PUT").getEntity();
+        return invokeAndCheck("PUT");
     }
 
     @Override
     public T post() throws ResourceException {
-        return invoke("POST").getEntity();
+        return invokeAndCheck("POST");
     }
 
     @Override

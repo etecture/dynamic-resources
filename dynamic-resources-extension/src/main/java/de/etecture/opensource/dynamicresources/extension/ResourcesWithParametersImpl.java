@@ -50,10 +50,10 @@ import javax.enterprise.inject.spi.BeanManager;
  */
 public class ResourcesWithParametersImpl<T> extends ResourcesImpl<T> {
 
-
     public ResourcesWithParametersImpl(BeanManager bm,
-            Class<T> resourceClass, Map<String, Object> parameter) {
-        super(bm, resourceClass, parameter);
+            Class<T> resourceClass, Object body, int expectedStatus,
+            Map<String, Object> params) {
+        super(bm, resourceClass, body, expectedStatus, params);
     }
 
     @Override
