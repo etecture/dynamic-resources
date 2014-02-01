@@ -37,16 +37,8 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.test.junit;
 
-import de.etecture.opensource.dynamicresources.test.api.Request;
-import java.util.ArrayList;
-import java.util.List;
-import org.jboss.weld.environment.se.Weld;
-import org.jboss.weld.environment.se.WeldContainer;
-import org.junit.runners.BlockJUnit4ClassRunner;
-import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.InitializationError;
+package de.etecture.opensource.dynamicresources.test.junit;
 
 /**
  *
@@ -54,35 +46,18 @@ import org.junit.runners.model.InitializationError;
  * @version
  * @since
  */
-public class ResourceTestRunner extends BlockJUnit4ClassRunner {
-    private final static Weld weld = new Weld();
-    private WeldContainer container;
+public class ExpectationFailedError extends AssertionError {
 
-    public ResourceTestRunner(Class<?> clazz) throws InitializationError {
-        super(clazz);
+    private static final long serialVersionUID = 1L;
+
+    public ExpectationFailedError() {
     }
 
-
-    @Override
-    protected void collectInitializationErrors(
-            List<Throwable> errors) {
-        try {
-            container = weld.initialize();
-        } catch (Throwable t) {
-            errors.add(t);
-        }
+    public ExpectationFailedError(String message) {
+        super(message, null);
     }
 
-    @Override
-    protected List<FrameworkMethod> computeTestMethods() {
-        List<FrameworkMethod> methods = new ArrayList<>();
-        methods.addAll(super.computeTestMethods());
-        for (FrameworkMethod method : super.getTestClass().getAnnotatedMethods(
-                Request.class)) {
-            methods.add(
-                    new ResourceTestMethod(container, method.getMethod()));
-        }
-
-        return methods;
+    public ExpectationFailedError(String message, Throwable cause) {
+        super(message, cause);
     }
 }

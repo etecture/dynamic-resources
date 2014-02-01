@@ -39,6 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.test.junit;
 
+import com.google.common.io.NullOutputStream;
 import de.etecture.opensource.dynamicrepositories.api.Param;
 import de.etecture.opensource.dynamicrepositories.api.Query;
 import de.etecture.opensource.dynamicrepositories.api.ResultConverter;
@@ -54,16 +55,21 @@ import de.etecture.opensource.dynamicresources.test.api.ParamSet;
 import de.etecture.opensource.dynamicresources.test.api.ParamSets;
 import de.etecture.opensource.dynamicresources.test.api.Request;
 import de.etecture.opensource.dynamicresources.test.api.Response;
+import de.herschke.testhelper.ConsoleWriter;
+import de.herschke.testhelper.ConsoleWriter.Color;
+import java.io.PrintStream;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
-import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.BeanManager;
-import junit.framework.AssertionFailedError;
+import javax.inject.Inject;
+import javax.inject.Qualifier;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jboss.weld.environment.se.WeldContainer;
@@ -77,18 +83,74 @@ import org.junit.runners.model.FrameworkMethod;
  */
 public class ResourceTestMethod extends FrameworkMethod {
 
-    private final WeldContainer container;
+    public static final PrintStream newOut =
+            new PrintStream(new NullOutputStream());
     private final Request request;
-    private final BeanManager bm;
     private final QueryExecutorResolver queryExecutors;
     private final Map<String, Object> requestParameter;
     private final ResourceMethodHandler handler;
     private final Expect expect;
+    private final ConsoleWriter out = new ConsoleWriter(System.out, 80);
+    private final WeldContainer container;
+
+    private String getEntityType(Object entity) {
+        if (entity instanceof Proxy) {
+            Class[] intfces = entity.getClass().getInterfaces();
+            String[] names = new String[intfces.length];
+            for (int i = 0; i < intfces.length; i++) {
+                names[i] = intfces[i].getName();
+            }
+            return Arrays.toString(names);
+        } else {
+            return entity.getClass()
+                    .getCanonicalName();
+        }
+    }
+
+    private void handleInjections(Object target) {
+        for (Field field : super.getMethod().getDeclaringClass()
+                .getDeclaredFields()) {
+            if (field.isAnnotationPresent(Inject.class)) {
+                try {
+                    Set<Annotation> qualifiers = new HashSet<>();
+                    for (Annotation annotation : field.getAnnotations()) {
+                        if (annotation.annotationType().isAnnotationPresent(
+                                Qualifier.class)) {
+                            qualifiers.add(annotation);
+                        }
+                    }
+                    Object value = container.instance().select(field.getType(),
+                            qualifiers
+                            .toArray(new Annotation[qualifiers.size()])).get();
+                    field.setAccessible(true);
+                    field.set(target, value);
+                } catch (IllegalArgumentException | IllegalAccessException ex) {
+                    throw new IllegalStateException("Cannot inject field: "
+                            + field, ex);
+                }
+            }
+        }
+    }
+
+    private static enum Status {
+
+        PASSED(Color.GREEN),
+        FAILED(Color.BROWN),
+        ERROR(Color.RED);
+        private final Color color;
+
+        private Status(Color color) {
+            this.color = color;
+        }
+
+        public Color color() {
+            return this.color;
+        }
+    }
 
     public ResourceTestMethod(WeldContainer container, Method method) {
         super(method);
         this.container = container;
-        this.bm = container.getBeanManager();
         this.queryExecutors = container.instance()
                 .select(QueryExecutorResolver.class).get();
         request = method.getAnnotation(Request.class);
@@ -98,21 +160,49 @@ public class ResourceTestMethod extends FrameworkMethod {
         } catch (Exception ex) {
             throw new IllegalStateException("cannot build the parameters:", ex);
         }
-        final Set<Bean<?>> beans =
-                bm.getBeans(ResourceMethodHandler.class,
-                new VerbLiteral(request.method()));
-        Bean<ResourceMethodHandler> b = (Bean<ResourceMethodHandler>) bm
-                .resolve(
-                beans);
-        this.handler = b.create(bm
-                .createCreationalContext(b));
+        this.handler = container.instance().select(ResourceMethodHandler.class,
+                new VerbLiteral(request.method())).get();
     }
 
     @Override
     public Object invokeExplosively(final Object target, Object... params)
             throws Throwable {
+        final PrintStream oldOut = System.out;
+        final PrintStream oldErr = System.err;
+        Status status = Status.PASSED;
+        System.setOut(newOut);
+        System.setErr(newOut);
         try {
+            out.startBox(super.getMethod().getDeclaringClass().getSimpleName()
+                    + "#" + super.getName());
+            out.printLeft("preparing database");
             executeQueries("prepare_", request.before());
+            out.printRight('.', Color.GREEN, "done");
+            out.printLeft("invoke: %s %s",
+                    request.method(), request.resource().getSimpleName());
+            final de.etecture.opensource.dynamicresources.api.Response<?> response =
+                    requestResource(request.resource());
+            out.printRight('.', Color.GREEN, "done");
+            out.printLeft("checking response");
+            Object entity;
+            try {
+                entity = checkExpect(response);
+                out.printRight('.', Color.GREEN, "done");
+            } catch (Throwable t) {
+                out.printRight('.', Color.RED, "failed");
+                status = Status.FAILED;
+                throw t;
+            }
+            out.println("  --> Status: %d", response.getStatus());
+            if (entity != null) {
+                out.println("  --> Type: %s", getEntityType(entity));
+                out.println("  --> Entity:");
+                out.println("  %s", StringUtils
+                        .abbreviate(entity.toString().replaceAll("\n", ""), 74));
+            } else {
+                out.println("  --> Entity: null");
+            }
+            out.printLeft("preparing test-method parameters");
             final Object[] newParams = new Object[getMethod()
                     .getParameterTypes().length];
             if (params.length > 0) {
@@ -127,32 +217,15 @@ public class ResourceTestMethod extends FrameworkMethod {
                             .annotationType())) {
                         Class<?> paramType =
                                 getMethod().getParameterTypes()[i];
-                        final de.etecture.opensource.dynamicresources.api.Response<?> response =
-                                requestResource(request.resource());
                         if (de.etecture.opensource.dynamicresources.api.Response.class
                                 .isAssignableFrom(paramType)) {
                             newParams[i] = response;
-                        } else if (request.resource()
-                                .isAssignableFrom(paramType)) {
-                            try {
-                                newParams[i] = response.getEntity();
-                            } catch (Exception ex) {
-                                ex.printStackTrace();
-                                newParams[i] = null;
-                            }
-                        } else if (Exception.class.isAssignableFrom(paramType)) {
-                            try {
-                                response.getEntity();
-                                newParams[i] = null;
-                            } catch (Exception ex) {
-                                ex.printStackTrace();
-                                newParams[i] = ex;
-                            }
+                        } else if (paramType.isInstance(entity)) {
+                            newParams[i] = entity;
                         } else {
                             throw new IllegalStateException(
                                     "Can only handle a resource-interface or Response as type for response-injection!");
                         }
-                        checkExpect(response);
                     } else if (Param.class.isAssignableFrom(parameterAnnotation
                             .annotationType())) {
                         Param param = (Param) parameterAnnotation;
@@ -167,9 +240,32 @@ public class ResourceTestMethod extends FrameworkMethod {
                     }
                 }
             }
+            out.printRight('.', Color.GREEN, "done");
+            out.printRuler();
+            System.setOut(oldOut);
+            System.setErr(oldErr);
+            handleInjections(target);
             return super.invokeExplosively(target, newParams);
+        } catch (AssertionError t) {
+            status = Status.FAILED;
+            throw t;
+        } catch (Throwable t) {
+            status = Status.ERROR;
+            throw t;
         } finally {
+            System.setOut(newOut);
+            System.setErr(newOut);
+            out.printRuler();
+            out.printLeft("cleaning up database");
             executeQueries("cleanup_", request.after());
+            out.printRight('.', Color.GREEN, "done");
+            out.printRuler();
+            out.printCentered(status.color(), "%s %s", super.getName(), status
+                    .name());
+            out.endBox();
+            out.println();
+            System.setOut(oldOut);
+            System.setErr(oldErr);
         }
     }
 
@@ -229,8 +325,10 @@ public class ResourceTestMethod extends FrameworkMethod {
     private <T> de.etecture.opensource.dynamicresources.api.Response<T> requestResource(
             Class<T> responseType) throws
             Exception {
-        return handler.handleRequest(DefaultRequest.fromMethod(responseType,
-                request.method()).addParameter(requestParameter)
+        return handler.handleRequest(DefaultRequest
+                .fromMethod(responseType, request.method())
+                .addParameter(requestParameter)
+                .addPathParameter(requestParameter)
                 .withRequestContent(request.bodyGenerator().newInstance()
                 .generateBody(
                 request, requestParameter)).build());
@@ -297,32 +395,46 @@ public class ResourceTestMethod extends FrameworkMethod {
         }
     }
 
-    private void checkExpect(
+    @SuppressWarnings("UseSpecificCatch")
+    private Object checkExpect(
             de.etecture.opensource.dynamicresources.api.Response<?> response) {
-        if (expect != null) {
-            if (expect.status() >= 0 && response.getStatus() != expect.status()) {
-                throw new AssertionFailedError("expected status is " + expect
+        Object entity;
+        Throwable cause;
+        try {
+            entity = response.getEntity();
+            cause = null;
+        } catch (Throwable ex) {
+            cause = ex;
+            entity = ex;
+        }
+        if (expect == null) {
+            return entity;
+        } else {
+            if (expect.status() >= 0 && response.getStatus() != expect
+                    .status()) {
+                throw new ExpectationFailedError("expected status is "
+                        + expect
                         .status() + " but actual status is " + response
-                        .getStatus());
+                        .getStatus(), cause);
             }
-            try {
-                Object entity = response.getEntity();
-                if (entity != null && !expect.responseType().isAssignableFrom(
-                        entity.getClass())) {
-                    throw new AssertionFailedError(
-                            "response entity not of type " + expect
-                            .responseType().getName());
-                }
-            } catch (Throwable ex) {
-                for (Class<? extends Throwable> exc : expect.exception()) {
-                    if (exc.isAssignableFrom(ex.getClass())) {
-                        return;
+            if (expect.responseType().isInstance(entity)) {
+                return entity;
+            } else {
+                if (entity instanceof Throwable) {
+                    for (Class<? extends Throwable> exc : expect.exception()) {
+                        if (exc.isAssignableFrom(entity.getClass())) {
+                            return entity;
+                        }
                     }
+                    throw new ExpectationFailedError(
+                            "response exception is not of type " + Arrays
+                            .toString(
+                            expect.exception()), cause);
                 }
-                throw new AssertionFailedError(
-                        "response exception is not of type " + Arrays.toString(
-                        expect.exception()));
             }
+            throw new ExpectationFailedError(
+                    "response entity not of type " + expect
+                    .responseType().getName(), cause);
         }
     }
 }
