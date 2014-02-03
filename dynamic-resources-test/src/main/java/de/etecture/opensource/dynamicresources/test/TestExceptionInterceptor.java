@@ -40,8 +40,8 @@
 
 package de.etecture.opensource.dynamicresources.test;
 
+import de.etecture.opensource.dynamicresources.api.AbstractResourceInterceptor;
 import de.etecture.opensource.dynamicresources.api.DefaultResponse;
-import de.etecture.opensource.dynamicresources.api.ExceptionHandler;
 import de.etecture.opensource.dynamicresources.api.Request;
 import de.etecture.opensource.dynamicresources.api.Response;
 
@@ -51,19 +51,12 @@ import de.etecture.opensource.dynamicresources.api.Response;
  * @version
  * @since
  */
-public class TestExceptionHandler implements
-        ExceptionHandler {
+public class TestExceptionInterceptor extends AbstractResourceInterceptor {
 
     @Override
-    public <T> boolean isResponsibleFor(
+    public <T> Response<T> afterFailure(
             Request<T> request,
-            Class<? extends Throwable> exceptionClass) {
-        return Exception.class.isAssignableFrom(exceptionClass);
-    }
-
-    @Override
-    public <T> Response<T> handleException(
-            Request<T> request, Throwable exception) {
+            Response<T> originalResponse, Throwable exception) {
         exception.printStackTrace();
         return new DefaultResponse(request.getRequestType(), exception);
     }

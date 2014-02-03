@@ -39,15 +39,15 @@
  */
 package de.etecture.opensource.dynamicresources.test;
 
+import de.etecture.opensource.dynamicresources.api.AbstractResourceInterceptor;
 import de.etecture.opensource.dynamicresources.api.Request;
-import de.etecture.opensource.dynamicresources.api.ResourceInterceptor;
 import de.etecture.opensource.dynamicresources.api.Response;
 
 /**
  *
  * @author rhk
  */
-public class SpecificResourceInterceptor implements ResourceInterceptor {
+public class SpecificResourceInterceptor extends AbstractResourceInterceptor {
 
     @Override
     public Response before(Request request) {
@@ -59,7 +59,7 @@ public class SpecificResourceInterceptor implements ResourceInterceptor {
     }
 
     @Override
-    public Response after(Request request, Response response) {
+    public Response afterSuccess(Request request, Response response) {
         System.out.printf("AFTER SPECIFIC: %s %s for: %s%n", request
                 .getMethodName(),
                 request.getResource().uri(), request.getResourceClass()

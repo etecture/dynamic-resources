@@ -41,6 +41,7 @@ package de.etecture.opensource.dynamicresources.extension;
 
 import de.etecture.opensource.dynamicresources.api.Request;
 import de.etecture.opensource.dynamicresources.api.Resource;
+import de.etecture.opensource.dynamicresources.api.ResourceException;
 import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
 import de.etecture.opensource.dynamicresources.api.StatusCodes;
@@ -93,7 +94,7 @@ public class DynamicRestServlet extends HttpServlet {
 
     private void executeResource(final HttpServletRequest req,
             HttpServletResponse resp) throws
-            IOException {
+            IOException, ResourceException {
         for (Class<?> clazz : resext.resourcesInterfaces) {
             Resource resource = clazz.getAnnotation(Resource.class);
             Map<String, String> groups = new HashMap<>();
@@ -207,10 +208,14 @@ public class DynamicRestServlet extends HttpServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        resp.setCharacterEncoding("UTF-8");
-        executeResource(req, resp);
-        resp.getWriter().flush();
-        resp.getWriter().close();
+        try {
+            resp.setCharacterEncoding("UTF-8");
+            executeResource(req, resp);
+            resp.getWriter().flush();
+            resp.getWriter().close();
+        } catch (ResourceException ex) {
+            throw new ServletException(ex);
+        }
     }
 
     @Override

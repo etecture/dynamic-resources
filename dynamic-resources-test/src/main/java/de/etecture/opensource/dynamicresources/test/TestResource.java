@@ -54,6 +54,9 @@ import de.etecture.opensource.dynamicresources.api.StatusCodes;
     @Method(
             name = HttpMethods.GET,
             description = "retrieves a TestResource with the given id",
+            query =
+            @Query(
+            technology = "Neo4j"),
             interceptors = {SpecificResourceInterceptor.class}),
     @Method(
             name = HttpMethods.PUT,

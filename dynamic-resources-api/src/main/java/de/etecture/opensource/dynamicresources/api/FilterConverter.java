@@ -59,5 +59,5 @@ public interface FilterConverter {
      * @param parameter
      */
     <R> void convert(Filter filter, Request<R> request,
-            Map<String, Object> parameter);
+            Map<String, Object> parameter) throws InvalidFilterValueException;
 }

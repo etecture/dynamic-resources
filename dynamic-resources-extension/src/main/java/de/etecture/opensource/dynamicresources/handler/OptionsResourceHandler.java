@@ -42,6 +42,7 @@ package de.etecture.opensource.dynamicresources.handler;
 import de.etecture.opensource.dynamicresources.api.DefaultResponse;
 import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.api.Request;
+import de.etecture.opensource.dynamicresources.api.ResourceException;
 import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.api.Version;
 import de.etecture.opensource.dynamicresources.extension.Current;
@@ -84,70 +85,76 @@ public class OptionsResourceHandler implements ResourceMethodHandler {
     @Override
     public Response handleRequest(
             Request request) throws
-            IOException {
-        final StringWriter sw = new StringWriter();
-        final PrintWriter writer = new PrintWriter(sw);
+            ResourceException {
+        try {
+            final StringWriter sw = new StringWriter();
+            final PrintWriter writer = new PrintWriter(sw);
 
-        writer.printf("Available Methods for Resource: %s\n", request
-                .getResourceClass()
-                .getSimpleName());
-        writer.println(StringUtils.repeat("-", request.getResourceClass()
-                .getSimpleName()
-                .length() + 32));
-        writer.println();
+            writer.printf("Available Methods for Resource: %s\n", request
+                    .getResourceClass()
+                    .getSimpleName());
+            writer.println(StringUtils.repeat("-", request.getResourceClass()
+                    .getSimpleName()
+                    .length() + 32));
+            writer.println();
 
-        for (ResourceMethodHandler handler : resourceMethodHandlers) {
-            if (handler.isAvailable(request.getResourceClass())) {
-                String verb = "";
-                if (handler.getClass().isAnnotationPresent(Verb.class)) {
-                    verb = handler.getClass().getAnnotation(Verb.class).value();
+            for (ResourceMethodHandler handler : resourceMethodHandlers) {
+                if (handler.isAvailable(request.getResourceClass())) {
+                    String verb = "";
+                    if (handler.getClass().isAnnotationPresent(Verb.class)) {
+                        verb = handler.getClass().getAnnotation(Verb.class)
+                                .value();
+                    }
+                    writer.printf("\t%s%n\t\t- %s%n", verb, handler
+                            .getDescription(request.getResourceClass()));
                 }
-                writer.printf("\t%s%n\t\t- %s%n", verb, handler
-                        .getDescription(request.getResourceClass()));
-            }
-        }
-        writer.println();
-        writer.printf("Available MediaTypes of Resource: %s\n",
-                request.getResourceClass()
-                .getSimpleName());
-        writer.println(StringUtils.repeat("-", request.getResourceClass()
-                .getSimpleName()
-                .length() + 34));
-        writer.println();
-
-        String exampleMediaType = null;
-        for (Map.Entry<MediaType, List<Version>> e : responseWriters
-                .getAvailableFormats(request.getResourceClass()).entrySet()) {
-            writer.printf("\t%s%n", e.getKey().toString());
-            writer.print("\t\tVersions: ");
-            boolean first = true;
-            for (Version version : e.getValue()) {
-                if (!first) {
-                    writer.print(", ");
-                }
-                writer.print(version.toString());
-                first = false;
-                if (exampleMediaType == null) {
-                    exampleMediaType = String
-                            .format("%s/%s.v%s; charset=%s", e
-                            .getKey()
-                            .category(), e.getKey().subType(), version
-                            .toString(), e.getKey().encoding());
-                }
-            }
-            if (exampleMediaType == null) {
-                exampleMediaType = e.getKey().toString();
             }
             writer.println();
+            writer.printf("Available MediaTypes of Resource: %s\n",
+                    request.getResourceClass()
+                    .getSimpleName());
+            writer.println(StringUtils.repeat("-", request.getResourceClass()
+                    .getSimpleName()
+                    .length() + 34));
+            writer.println();
+
+            String exampleMediaType = null;
+            for (Map.Entry<MediaType, List<Version>> e : responseWriters
+                    .getAvailableFormats(request.getResourceClass()).entrySet()) {
+                writer.printf("\t%s%n", e.getKey().toString());
+                writer.print("\t\tVersions: ");
+                boolean first = true;
+                for (Version version : e.getValue()) {
+                    if (!first) {
+                        writer.print(", ");
+                    }
+                    writer.print(version.toString());
+                    first = false;
+                    if (exampleMediaType == null) {
+                        exampleMediaType = String
+                                .format("%s/%s.v%s; charset=%s", e
+                                .getKey()
+                                .category(), e.getKey().subType(), version
+                                .toString(), e.getKey().encoding());
+                    }
+                }
+                if (exampleMediaType == null) {
+                    exampleMediaType = e.getKey().toString();
+                }
+                writer.println();
+            }
+
+            writer.println();
+            writer.flush();
+            sw.flush();
+            writer.close();
+            sw.close();
+
+            return new DefaultResponse(sw.toString(), 200);
+        } catch (IOException ex) {
+            throw new ResourceException("cannot write the options-response: ",
+                    ex);
         }
-
-        writer.println();
-        writer.flush();
-        sw.flush();
-        writer.close();
-        sw.close();
-
-        return new DefaultResponse(sw.toString(), 200);
     }
 
     @Override

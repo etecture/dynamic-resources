@@ -39,27 +39,45 @@
  */
 package de.etecture.opensource.dynamicresources.api;
 
-import java.util.Map;
-import org.apache.commons.beanutils.ConvertUtils;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
+ * is thrown, when the framework recognizes a filter value, that did not match
+ * the specified regular expression.
  *
  * @author rhk
  * @version
  * @since
  */
-public class DefaultFilterConverter implements FilterConverter {
+public class InvalidFilterValueException extends ResourceException {
+    private static final long serialVersionUID = 1L;
+    private final Request request;
+    private final Filter filter;
+    private final List<String> actualValues;
 
-    @Override
-    public <R> void convert(Filter filter, Request<R> request,
-            Map<String, Object> parameter) throws InvalidFilterValueException {
-        final String value = request.getSingleQueryParameterValue(filter.name(),
-                filter.defaultValue());
-        if (value != null && value.matches(filter.validationRegex())) {
-            parameter.put(filter.name(), ConvertUtils.convert(value, filter
-                    .type()));
-        } else {
-            throw new InvalidFilterValueException(request, filter, value);
-        }
+    public InvalidFilterValueException(
+            Request request, Filter filter,
+            String... actualValues) {
+        super(String.format(
+                "The filter parameter: %s for resource-call: %S %s is not valid.",
+                filter.name(), request.getMethodName(), request
+                .getResourceClass().getSimpleName()));
+        this.request = request;
+        this.filter = filter;
+        this.actualValues = Arrays.asList(actualValues);
+    }
+
+    public List<String> getActualValues() {
+        return Collections.unmodifiableList(actualValues);
+    }
+
+    public Request getRequest() {
+        return request;
+    }
+
+    public Filter getFilter() {
+        return filter;
     }
 }

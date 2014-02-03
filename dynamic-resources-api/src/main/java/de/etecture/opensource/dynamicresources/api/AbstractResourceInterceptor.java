@@ -37,10 +37,8 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.api;
 
-import java.util.Map;
-import org.apache.commons.beanutils.ConvertUtils;
+package de.etecture.opensource.dynamicresources.api;
 
 /**
  *
@@ -48,18 +46,25 @@ import org.apache.commons.beanutils.ConvertUtils;
  * @version
  * @since
  */
-public class DefaultFilterConverter implements FilterConverter {
+public abstract class AbstractResourceInterceptor implements ResourceInterceptor {
 
     @Override
-    public <R> void convert(Filter filter, Request<R> request,
-            Map<String, Object> parameter) throws InvalidFilterValueException {
-        final String value = request.getSingleQueryParameterValue(filter.name(),
-                filter.defaultValue());
-        if (value != null && value.matches(filter.validationRegex())) {
-            parameter.put(filter.name(), ConvertUtils.convert(value, filter
-                    .type()));
-        } else {
-            throw new InvalidFilterValueException(request, filter, value);
-        }
+    public <T> Response<T> before(
+            Request<T> request) {
+        return null;
+    }
+
+    @Override
+    public <T> Response<T> afterSuccess(
+            Request<T> request,
+            Response<T> response) {
+        return response;
+    }
+
+    @Override
+    public <T> Response<T> afterFailure(
+            Request<T> request,
+            Response<T> originalResponse, Throwable exception) {
+        return originalResponse;
     }
 }

@@ -37,40 +37,41 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.handler;
 
-import de.etecture.opensource.dynamicresources.api.DefaultResponse;
-import de.etecture.opensource.dynamicresources.api.ExceptionHandler;
-import de.etecture.opensource.dynamicresources.api.Request;
-import de.herschke.neo4j.uplink.api.Neo4jServerException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+package de.etecture.opensource.dynamicresources.api;
 
 /**
- * handles all {@link Neo4jServerException}s.
  *
+ * @param <E>
  * @author rhk
- * @version ${project.version}
- * @since 0.0.1
+ * @version
+ * @since
  */
-public class ServerErrorHandler implements
-        ExceptionHandler {
+public abstract class AbstractExceptionHandler<E extends Throwable> extends AbstractResourceInterceptor {
 
-    @Override
-    public <T> boolean isResponsibleFor(
-            Request<T> request,
-            Class<? extends Throwable> exceptionClass) {
-        return Neo4jServerException.class.isAssignableFrom(exceptionClass);
+    private final Class<E> expectedException;
+
+    public AbstractExceptionHandler(Class<E> expectedException) {
+        this.expectedException = expectedException;
     }
 
+    protected abstract <T> Response<T> buildErrorResponse(Request<T> request,
+            E exception);
+
     @Override
-    public <T> DefaultResponse<T> handleException(
-            Request<T> request, Throwable exception) {
-        Logger.getLogger(ServerErrorHandler.class.getSimpleName()).log(
-                Level.SEVERE, String.format(
-                "cannot execute method: %s at resource: %s",
-                request.getMethodName(), request.getResourceClass()
-                .getSimpleName()), exception);
-        return new DefaultResponse(request.getRequestType(), exception);
+    public <T> Response<T> afterFailure(
+            Request<T> request,
+            Response<T> originalResponse, Throwable exception) {
+        if (expectedException.isInstance(exception)) {
+            Response<T> response = buildErrorResponse(request, expectedException
+                    .cast(exception));
+            if (response != null) {
+                return response;
+            } else {
+                return originalResponse;
+            }
+        } else {
+            return originalResponse;
+        }
     }
 }

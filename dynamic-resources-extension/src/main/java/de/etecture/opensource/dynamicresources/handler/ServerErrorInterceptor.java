@@ -37,29 +37,40 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.api;
+package de.etecture.opensource.dynamicresources.handler;
 
-import java.util.Map;
-import org.apache.commons.beanutils.ConvertUtils;
+import de.etecture.opensource.dynamicresources.api.AbstractResourceInterceptor;
+import de.etecture.opensource.dynamicresources.api.DefaultResponse;
+import de.etecture.opensource.dynamicresources.api.Global;
+import de.etecture.opensource.dynamicresources.api.Request;
+import de.etecture.opensource.dynamicresources.api.Response;
+import de.herschke.neo4j.uplink.api.Neo4jServerException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
+ * handles all {@link Neo4jServerException}s.
  *
  * @author rhk
- * @version
- * @since
+ * @version ${project.version}
+ * @since 0.0.1
  */
-public class DefaultFilterConverter implements FilterConverter {
+@Global
+public class ServerErrorInterceptor extends AbstractResourceInterceptor {
 
     @Override
-    public <R> void convert(Filter filter, Request<R> request,
-            Map<String, Object> parameter) throws InvalidFilterValueException {
-        final String value = request.getSingleQueryParameterValue(filter.name(),
-                filter.defaultValue());
-        if (value != null && value.matches(filter.validationRegex())) {
-            parameter.put(filter.name(), ConvertUtils.convert(value, filter
-                    .type()));
-        } else {
-            throw new InvalidFilterValueException(request, filter, value);
+    public <T> Response<T> afterFailure(
+            Request<T> request,
+            Response<T> originalResponse, Throwable exception) {
+        if (Neo4jServerException.class.isInstance(exception)) {
+            Logger.getLogger(ServerErrorInterceptor.class.getSimpleName()).log(
+                    Level.SEVERE, String.format(
+                    "cannot execute: %S %s due to: %s(%s)",
+                    request.getMethodName(), request.getResourceClass()
+                    .getSimpleName(), exception.getClass().getName(), exception
+                    .getMessage()), exception);
+            return new DefaultResponse(request.getRequestType(), exception);
         }
+        return originalResponse;
     }
 }

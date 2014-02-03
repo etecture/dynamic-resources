@@ -41,7 +41,6 @@
 package de.etecture.opensource.dynamicresources.api;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -56,7 +55,7 @@ public interface Request<T> {
 
     VersionNumberRange getAcceptedVersionRange();
 
-    Object getContent() throws IOException;
+    Object getContent() throws ResourceException;
 
     MediaType getContentMediaType();
 

@@ -81,7 +81,14 @@ public class SecurityResourceInterceptor implements ResourceInterceptor {
     }
 
     @Override
-    public Response after(Request request, Response response) {
+    public Response afterSuccess(Request request, Response response) {
         return response;
+    }
+
+    @Override
+    public <T> Response<T> afterFailure(
+            Request<T> request,
+            Response<T> originalResponse, Throwable exception) {
+        return originalResponse;
     }
 }

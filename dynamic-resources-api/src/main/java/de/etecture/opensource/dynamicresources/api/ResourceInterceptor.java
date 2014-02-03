@@ -59,12 +59,30 @@ public interface ResourceInterceptor {
     <T> Response<T> before(Request<T> request);
 
     /**
-     * called by the dynamicresources handler after the resource was invoked.
+     * called by the dynamicresources handler afterSuccess the resource was
+     * invoked.
      *
      * @param <T>
      * @param request
      * @param response
      * @return
      */
-    <T> Response<T> after(Request<T> request, Response<T> response);
+    <T> Response<T> afterSuccess(Request<T> request, Response<T> response);
+
+    /**
+     * called by the dynamic resource service when an exception was thrown while
+     * requesting a resource.
+     * <p>
+     * implementors must return an instance of {@link ResponseImpl} that is
+     * later * writen to the desired media type with the corresponding
+     * {@link ResponseWriter}
+     *
+     * @param <T>
+     * @param request
+     * @param originalResponse
+     * @param exception the exception that was raised
+     * @return
+     */
+    <T> Response<T> afterFailure(Request<T> request,
+            Response<T> originalResponse, Throwable exception);
 }
