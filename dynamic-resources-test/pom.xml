@@ -80,7 +80,7 @@
             <!-- the implementation of dynamic-repositories with neo4j remote access -->
             <groupId>de.etecture.opensource</groupId>
             <artifactId>dynamic-repositories-remote-neo4j</artifactId>
-            <version>[1.5.0,)</version>
+            <version>[1.5.1,)</version>
             <type>jar</type>
         </dependency>
         <dependency>

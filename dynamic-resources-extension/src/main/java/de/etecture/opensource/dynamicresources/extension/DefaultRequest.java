@@ -47,6 +47,7 @@ import de.etecture.opensource.dynamicresources.api.Produces;
 import de.etecture.opensource.dynamicresources.api.Request;
 import de.etecture.opensource.dynamicresources.api.RequestReader;
 import de.etecture.opensource.dynamicresources.api.Resource;
+import de.etecture.opensource.dynamicresources.api.ResourceException;
 import de.etecture.opensource.dynamicresources.api.Version;
 import de.etecture.opensource.dynamicresources.api.VersionNumberRange;
 import java.io.BufferedReader;
@@ -54,6 +55,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang.StringUtils;
 
@@ -267,45 +269,51 @@ public class DefaultRequest<T> implements Request<T> {
     }
 
     @Override
-    public Object getContent() throws IOException {
-        if (!wasRead) {
-            wasRead = true;
-            VersionNumberRange range;
-            if (contentVersion == null) {
-                range = new VersionNumberRangeExpression("(0.0.0,]");
-            } else {
-                range = new VersionNumberRangeExpression(contentVersion);
-            }
-            if (requestReaderResolver != null) {
-                //Logger.getLogger("DefaultRequest").fine(
-                System.out.println(
-                        String.format(
-                        "lookup reader for type: %s in mediatype: %s and version: %s",
-                        getRequestType().getSimpleName(),
-                        contentMediaType,
-                        range));
-                RequestReader reader = requestReaderResolver.resolve(
-                        getRequestType(),
-                        contentMediaType, range);
-
-                if (reader != null) {
-                    requestContent = reader.processRequest(contentReader,
-                            contentMediaType.toString());
+    public Object getContent() throws ResourceException {
+        try {
+            if (!wasRead) {
+                wasRead = true;
+                VersionNumberRange range;
+                if (contentVersion == null) {
+                    range = new VersionNumberRangeExpression("(0.0.0,]");
                 } else {
-                    //Logger.getLogger("DefaultRequest").warning(
-                    System.err.println(
-                            "no requestReader found!, so request cannot be read from reader!");
+                    range = new VersionNumberRangeExpression(contentVersion);
+                }
+                if (requestReaderResolver != null) {
+                    //Logger.getLogger("DefaultRequest").fine(
+                    System.out.println(
+                            String.format(
+                            "lookup reader for type: %s in mediatype: %s and version: %s",
+                            getRequestType().getSimpleName(),
+                            contentMediaType,
+                            range));
+                    RequestReader reader = requestReaderResolver.resolve(
+                            getRequestType(),
+                            contentMediaType, range);
 
+                    if (reader != null) {
+                        requestContent = reader.processRequest(contentReader,
+                                contentMediaType.toString());
+                    } else {
+                        Logger.getLogger("DefaultRequest").warning(
+                                "no requestReader found!, so request cannot be read from reader!");
+
+                        requestContent = null;
+                    }
+                } else {
+                    Logger.getLogger("DefaultRequest").warning(
+                            "no requestReaderResolver provided, so request cannot be read from reader!");
                     requestContent = null;
                 }
-            } else {
-                // Logger.getLogger("DefaultRequest").warning(
-                System.err.println(
-                        "no requestReaderResolver provided, so request cannot be read from reader!");
-                requestContent = null;
             }
+            return requestContent;
+        } catch (IOException ex) {
+            throw new ResourceException(String.format(
+                    "cannot read the body of type: %s for the call: %S %s",
+                    getRequestType().getSimpleName(), getMethodName(),
+                    getResourceClass().getSimpleName()),
+                    ex);
         }
-        return requestContent;
     }
 
     @Override

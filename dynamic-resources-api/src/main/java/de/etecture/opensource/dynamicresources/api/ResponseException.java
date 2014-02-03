@@ -37,10 +37,8 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.api;
 
-import java.util.Map;
-import org.apache.commons.beanutils.ConvertUtils;
+package de.etecture.opensource.dynamicresources.api;
 
 /**
  *
@@ -48,18 +46,15 @@ import org.apache.commons.beanutils.ConvertUtils;
  * @version
  * @since
  */
-public class DefaultFilterConverter implements FilterConverter {
+public class ResponseException extends ResourceException {
 
-    @Override
-    public <R> void convert(Filter filter, Request<R> request,
-            Map<String, Object> parameter) throws InvalidFilterValueException {
-        final String value = request.getSingleQueryParameterValue(filter.name(),
-                filter.defaultValue());
-        if (value != null && value.matches(filter.validationRegex())) {
-            parameter.put(filter.name(), ConvertUtils.convert(value, filter
-                    .type()));
-        } else {
-            throw new InvalidFilterValueException(request, filter, value);
-        }
+    private static final long serialVersionUID = 1L;
+
+    /**
+     *
+     * @param cause
+     */
+    public ResponseException(Throwable cause) {
+        super("invocation of request results in error:", cause);
     }
 }

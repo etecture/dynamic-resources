@@ -44,7 +44,6 @@ import de.etecture.opensource.dynamicresources.api.Resources;
 import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.api.StatusCodes;
 import de.etecture.opensource.dynamicresources.spi.ResourceMethodHandler;
-import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -139,13 +138,8 @@ public class ResourcesImpl<T> implements Resources<T> {
                 .fromMethod(resourceClass, methodName)
                 .addParameter(params)
                 .withRequestContent(body);
-        try {
-            return lookupExecutor(bm, methodName)
-                    .handleRequest(builder.build());
-        } catch (IOException iOException) {
-            throw new ResourceException("Can't invoke " + methodName + " on "
-                    + resourceClass.getSimpleName(), iOException);
-        }
+        return lookupExecutor(bm, methodName)
+                .handleRequest(builder.build());
     }
 
     private static ResourceMethodHandler lookupExecutor(BeanManager bm,

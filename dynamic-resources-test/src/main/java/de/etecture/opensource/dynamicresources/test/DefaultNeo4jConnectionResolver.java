@@ -6,6 +6,7 @@ import de.etecture.opensource.dynamicrepositories.spi.Technology;
 import de.herschke.neo4j.uplink.api.Neo4jUplink;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
+import javax.enterprise.inject.Default;
 
 /**
  *
@@ -15,6 +16,7 @@ import javax.ejb.Singleton;
  */
 @Singleton
 @Technology("Neo4j")
+@Default
 public class DefaultNeo4jConnectionResolver implements
         ConnectionResolver<Neo4jUplink> {
 

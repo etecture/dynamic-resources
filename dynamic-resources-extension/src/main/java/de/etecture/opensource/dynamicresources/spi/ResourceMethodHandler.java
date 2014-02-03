@@ -40,8 +40,8 @@
 package de.etecture.opensource.dynamicresources.spi;
 
 import de.etecture.opensource.dynamicresources.api.Request;
+import de.etecture.opensource.dynamicresources.api.ResourceException;
 import de.etecture.opensource.dynamicresources.api.Response;
-import java.io.IOException;
 
 /**
  * handles the execution of queries for a given method.
@@ -72,8 +72,8 @@ public interface ResourceMethodHandler {
      * @param <T>
      * @param request
      * @return the response for this request
-     * @throws IOException
+     * @throws ResourceException
      */
-    <T> Response<T> handleRequest(Request<T> request) throws IOException;
+    <T> Response<T> handleRequest(Request<T> request) throws ResourceException;
 
 }

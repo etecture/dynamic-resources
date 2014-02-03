@@ -46,13 +46,14 @@ import java.util.Set;
 /**
  * represents the response object for a ReST request.
  *
+ * @param <T>
  * @author rhk
  * @version ${project.version}
  * @since 1.0.5
  */
 public interface Response<T> {
 
-    T getEntity() throws ResourceException;
+    T getEntity() throws ResponseException;
 
     List<Object> getHeader(String headerName);
 

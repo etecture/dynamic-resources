@@ -1,9 +1,10 @@
 package de.etecture.opensource.dynamicresources.test;
 
-import de.etecture.opensource.dynamicrepositories.spi.Technology;
 import de.etecture.opensource.dynamicrepositories.spi.ConnectionResolver;
+import de.etecture.opensource.dynamicrepositories.spi.Technology;
 import de.herschke.neo4j.uplink.api.Neo4jUplink;
 import de.herschke.neo4j.uplink.cdi.Remote;
+import javax.enterprise.inject.Alternative;
 import javax.inject.Inject;
 
 /**
@@ -13,6 +14,7 @@ import javax.inject.Inject;
  * @since
  */
 @Technology("Neo4j")
+@Alternative
 public class SampleConnectionResolver implements ConnectionResolver<Neo4jUplink> {
 
     @Inject

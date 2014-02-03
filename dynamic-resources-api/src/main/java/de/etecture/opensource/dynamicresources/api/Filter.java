@@ -75,4 +75,13 @@ public @interface Filter {
      * @return
      */
     Class<? extends FilterConverter> converter() default DefaultFilterConverter.class;
+
+    /**
+     * the regex to check the given filter value.
+     *
+     * if not specified, any value is accepted.
+     *
+     * @return
+     */
+    String validationRegex() default "^.*$";
 }

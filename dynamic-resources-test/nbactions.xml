@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+    <action>
+        <actionName>rebuild</actionName>
+        <goals>
+            <goal>clean</goal>
+            <goal>install</goal>
+        </goals>
+        <properties>
+            <Env.MAVEN_OPTS>-Xms512m -Xmx2G -XX:MaxPermSize=1024m -Djava.awt.headless=true</Env.MAVEN_OPTS>
+        </properties>
+    </action>
+</actions>

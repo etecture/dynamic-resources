@@ -72,10 +72,9 @@ public class DefaultResponse<T> implements Response<T> {
     }
 
     @Override
-    public T getEntity() throws ResourceException {
+    public T getEntity() throws ResponseException {
         if (exception != null) {
-            throw new ResourceException(
-                    "invokation of request results in error: ", exception);
+            throw new ResponseException(exception);
         }
         return entity;
     }
