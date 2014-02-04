@@ -37,17 +37,8 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.test.api;
 
-import de.etecture.opensource.dynamicrepositories.api.Param;
-import de.etecture.opensource.dynamicrepositories.api.Query;
-import de.etecture.opensource.dynamicresources.api.HttpMethods;
-import de.etecture.opensource.dynamicresources.test.junit.DefaultBodyGenerator;
-import de.etecture.opensource.dynamicresources.test.utils.Nop;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package de.etecture.opensource.dynamicresources.test.utils;
 
 /**
  *
@@ -55,31 +46,10 @@ import java.lang.annotation.Target;
  * @version
  * @since
  */
-@Target(ElementType.METHOD)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Request {
+public class Nop implements Runnable {
 
-    Class<?> resource();
-
-    Class<?> requestType() default Object.class;
-
-    String method() default HttpMethods.GET;
-
-    Query[] before() default {};
-
-    Query[] after() default {};
-
-    String parameterSet() default "";
-
-    Param[] pathParameter() default {};
-
-    Param[] queryParameter() default {};
-
-    String bodyValue() default "";
-
-    Class<? extends BodyGenerator> bodyGenerator() default DefaultBodyGenerator.class;
-
-    Class<? extends Runnable> beforeRequest() default Nop.class;
-
-    Class<? extends Runnable> afterRequest() default Nop.class;
+    @Override
+    public void run() {
+        // conceptionally do nothing within here.
+    }
 }

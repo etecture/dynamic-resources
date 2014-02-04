@@ -50,7 +50,10 @@ import de.etecture.opensource.dynamicresources.test.api.ParamSets;
 import de.etecture.opensource.dynamicresources.test.api.Request;
 import de.etecture.opensource.dynamicresources.test.api.Response;
 import de.etecture.opensource.dynamicresources.test.junit.ResourceTestRunner;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import static org.junit.Assert.*;
 import org.junit.runner.RunWith;
 
@@ -108,6 +111,32 @@ public class ResourceTestIT {
         assertEquals(id, testResource.getId());
         assertEquals(firstName, testResource.getFirstName());
         assertEquals(lastName, testResource.getLastName());
+    }
+
+    @Request(method = HttpMethods.GET,
+             resource = TestResources.class,
+             beforeRequest = IndexConstructor.class,
+             queryParameter =
+            @Param(name = "query",
+                   value = "name:Muster*"))
+    @Expect(status = StatusCodes.OK)
+    public void testQueryTestResources(
+            @Response TestResources testResources) {
+        assertNotNull(testResources);
+        assertNotNull(testResources.getAllTestResources());
+        assertFalse(testResources.getAllTestResources().isEmpty());
+        assertEquals(2, testResources.getAllTestResources().size());
+        Set<String> firstNames = new HashSet<String>();
+        Set<String> lastNames = new HashSet<String>();
+        for (TestResource tr : testResources.getAllTestResources()) {
+            firstNames.add(tr.getFirstName());
+            lastNames.add(tr.getLastName());
+        }
+        assertEquals(2, firstNames.size());
+        assertTrue(firstNames.containsAll(Arrays.asList("Max", "Manuela")));
+        assertEquals(2, lastNames.size());
+        assertTrue(lastNames.containsAll(Arrays.asList("Mustermann",
+                "Musterfrau")));
     }
 
     @Request(method = HttpMethods.PUT,

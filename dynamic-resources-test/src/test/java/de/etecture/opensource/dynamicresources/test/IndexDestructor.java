@@ -37,17 +37,12 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.test.api;
+package de.etecture.opensource.dynamicresources.test;
 
-import de.etecture.opensource.dynamicrepositories.api.Param;
-import de.etecture.opensource.dynamicrepositories.api.Query;
-import de.etecture.opensource.dynamicresources.api.HttpMethods;
-import de.etecture.opensource.dynamicresources.test.junit.DefaultBodyGenerator;
-import de.etecture.opensource.dynamicresources.test.utils.Nop;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import de.herschke.neo4j.uplink.api.Neo4jUplink;
+import de.herschke.neo4j.uplink.cdi.Remote;
+import java.util.logging.Logger;
+import javax.inject.Inject;
 
 /**
  *
@@ -55,31 +50,15 @@ import java.lang.annotation.Target;
  * @version
  * @since
  */
-@Target(ElementType.METHOD)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Request {
+public class IndexDestructor implements Runnable {
 
-    Class<?> resource();
+    private static final Logger LOGGER =
+            Logger.getLogger(IndexDestructor.class.getName());
+    @Inject
+    @Remote(url = "http://localhost:17474/db/data")
+    Neo4jUplink uplink;
 
-    Class<?> requestType() default Object.class;
-
-    String method() default HttpMethods.GET;
-
-    Query[] before() default {};
-
-    Query[] after() default {};
-
-    String parameterSet() default "";
-
-    Param[] pathParameter() default {};
-
-    Param[] queryParameter() default {};
-
-    String bodyValue() default "";
-
-    Class<? extends BodyGenerator> bodyGenerator() default DefaultBodyGenerator.class;
-
-    Class<? extends Runnable> beforeRequest() default Nop.class;
-
-    Class<? extends Runnable> afterRequest() default Nop.class;
+    public void run() {
+        LOGGER.info("delete testIndex");
+    }
 }

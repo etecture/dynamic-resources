@@ -41,6 +41,7 @@ package de.etecture.opensource.dynamicresources.test;
 
 import de.etecture.opensource.dynamicrepositories.api.Query;
 import de.etecture.opensource.dynamicresources.api.Consumes;
+import de.etecture.opensource.dynamicresources.api.Filter;
 import de.etecture.opensource.dynamicresources.api.HttpMethods;
 import de.etecture.opensource.dynamicresources.api.Method;
 import de.etecture.opensource.dynamicresources.api.Resource;
@@ -54,15 +55,21 @@ import java.util.List;
           methods = {
     @Method(
             name = HttpMethods.GET,
-            description = "retrieves all existing testResources",
+            filters =
+            @Filter(
+            name = "query",
+            defaultValue = "*"),
             query =
             @Query(
             technology = "Neo4j",
             value = ""
-            + "MATCH "
-            + "  (this:Test) "
+            + "start this=node:testIndex({query}) "
+            + "WITH "
+            + "  CASE WHEN HAS(this.id) THEN "
+            + "    {id: this.id, firstName: this.firstName, lastName: this.lastName}"
+            + "  END AS t "
             + "RETURN "
-            + "  COUNT(this) AS `count`, collect(this) AS `allTestResources`")),
+            + "    collect(t) AS `allTestResources`")),
     @Method(
             name = HttpMethods.POST,
             description = "creates a new TestResources",

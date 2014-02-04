@@ -55,6 +55,7 @@ import de.etecture.opensource.dynamicresources.test.api.ParamSet;
 import de.etecture.opensource.dynamicresources.test.api.ParamSets;
 import de.etecture.opensource.dynamicresources.test.api.Request;
 import de.etecture.opensource.dynamicresources.test.api.Response;
+import de.etecture.opensource.dynamicresources.test.utils.Nop;
 import de.herschke.testhelper.ConsoleWriter;
 import de.herschke.testhelper.ConsoleWriter.Color;
 import java.io.PrintStream;
@@ -178,6 +179,12 @@ public class ResourceTestMethod extends FrameworkMethod {
             out.printLeft("preparing database");
             executeQueries("prepare_", request.before());
             out.printRight('.', Color.GREEN, "done");
+            if (request.beforeRequest() != Nop.class) {
+                out.printLeft("invoke: %s", request.beforeRequest()
+                        .getSimpleName());
+                container.instance().select(request.beforeRequest()).get().run();
+                out.printRight('.', Color.GREEN, "done");
+            }
             out.printLeft("invoke: %s %s",
                     request.method(), request.resource().getSimpleName());
             final de.etecture.opensource.dynamicresources.api.Response<?> response =
@@ -256,6 +263,12 @@ public class ResourceTestMethod extends FrameworkMethod {
             System.setOut(newOut);
             System.setErr(newOut);
             out.printRuler();
+            if (request.afterRequest() != Nop.class) {
+                out.printLeft("invoke: %s", request.afterRequest()
+                        .getSimpleName());
+                container.instance().select(request.afterRequest()).get().run();
+                out.printRight('.', Color.GREEN, "done");
+            }
             out.printLeft("cleaning up database");
             executeQueries("cleanup_", request.after());
             out.printRight('.', Color.GREEN, "done");
@@ -325,13 +338,19 @@ public class ResourceTestMethod extends FrameworkMethod {
     private <T> de.etecture.opensource.dynamicresources.api.Response<T> requestResource(
             Class<T> responseType) throws
             Exception {
-        return handler.handleRequest(DefaultRequest
+        final DefaultRequest.Builder rq =
+                DefaultRequest
                 .fromMethod(responseType, request.method())
                 .addParameter(requestParameter)
-                .addPathParameter(requestParameter)
+                .addPathParameter(requestParameter);
+        for (Map.Entry<String, Object> entry : requestParameter.entrySet()) {
+            rq.addQueryParameter(entry.getKey(), entry.getValue().toString());
+        }
+        final DefaultRequest req = rq
                 .withRequestContent(request.bodyGenerator().newInstance()
                 .generateBody(
-                request, requestParameter)).build());
+                request, requestParameter)).build();
+        return handler.handleRequest(req);
     }
 
     private boolean executeQueries(String prefix, Query... queries) throws
