@@ -43,6 +43,7 @@ import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.api.Produces;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Writer;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -54,9 +55,28 @@ import javax.xml.stream.XMLStreamWriter;
  */
 public enum ExceptionXMLWriter implements ResponseWriter<Throwable> {
 
-    @Produces(contentType = Exception.class, mimeType = {"application/xml",
+    @Produces(contentType = Exception.class,
+              mimeType = {"text/plain"})
+    DEFAULT_PLAIN {
+        @Override
+        public void processElement(Throwable element, Writer writer,
+                MediaType mimetype) throws
+                IOException {
+            try (PrintWriter printWriter = new PrintWriter(writer)) {
+                element.printStackTrace(printWriter);
+            }
+        }
+
+        @Override
+        public int getContentLength(Throwable entity,
+                MediaType acceptedMediaType) {
+            return -1;
+        }
+    },
+    @Produces(contentType = Exception.class,
+              mimeType = {"application/xml",
         "text/xml"})
-    DEFAULT {
+    DEFAULT_XML {
         private void internalProcess(XMLStreamWriter writer, Throwable ex)
                 throws
                 XMLStreamException {
