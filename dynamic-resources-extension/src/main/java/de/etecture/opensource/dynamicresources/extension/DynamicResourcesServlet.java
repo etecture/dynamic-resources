@@ -39,6 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.extension;
 
+import de.etecture.opensource.dynamicresources.api.Method;
 import de.etecture.opensource.dynamicresources.api.Request;
 import de.etecture.opensource.dynamicresources.api.Resource;
 import de.etecture.opensource.dynamicresources.api.ResourceException;
@@ -143,6 +144,14 @@ public class DynamicResourcesServlet extends HttpServlet {
                     throw new IllegalArgumentException(
                             "no resource-method-handler defined for this method");
                 } catch (IllegalArgumentException ex) {
+                    StringBuilder sb = new StringBuilder();
+                    for (Method method : resource.methods()) {
+                        if (sb.length() > 0) {
+                            sb.append(", ");
+                        }
+                        sb.append(method.name());
+                    }
+                    resp.addHeader("Allow", sb.toString());
                     resp.sendError(StatusCodes.METHOD_NOT_ALLOWED,
                             "no such method: " + req.getMethod()
                             + " for resource: " + clazz.getSimpleName()
