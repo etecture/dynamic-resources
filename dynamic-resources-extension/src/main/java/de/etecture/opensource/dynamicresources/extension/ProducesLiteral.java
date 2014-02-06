@@ -54,12 +54,14 @@ public class ProducesLiteral extends AnnotationLiteral<Produces> implements
     private final String version;
     private final String[] mimeTypes;
     private final Class contentType;
+    private final int priority;
 
     public ProducesLiteral(Class contentType) {
         this.contentType = contentType;
         this.mimeTypes = new String[]{"text/plain"};
         this.version = String.format("%d.%d.%d", Integer.MAX_VALUE,
                 Integer.MAX_VALUE, Integer.MAX_VALUE);
+        this.priority = 0;
     }
 
     public ProducesLiteral(Object object) {
@@ -67,17 +69,20 @@ public class ProducesLiteral extends AnnotationLiteral<Produces> implements
         this.mimeTypes = new String[]{"text/plain"};
         this.version = String.format("%d.%d.%d", Integer.MAX_VALUE,
                 Integer.MAX_VALUE, System.identityHashCode(object));
+        this.priority = 0;
     }
 
     public ProducesLiteral(Produces produces) {
-        this(produces.contentType(), produces.mimeType(), produces.version());
+        this(produces.contentType(), produces.mimeType(), produces.version(),
+                produces.priority());
     }
 
     public ProducesLiteral(Class contentType, String[] mimeTypes,
-            String versionString) {
+            String versionString, int priority) {
         this.contentType = contentType;
         this.mimeTypes = mimeTypes;
         this.version = versionString;
+        this.priority = priority;
     }
 
     @Override
@@ -93,5 +98,10 @@ public class ProducesLiteral extends AnnotationLiteral<Produces> implements
     @Override
     public Class contentType() {
         return contentType;
+    }
+
+    @Override
+    public int priority() {
+        return priority;
     }
 }

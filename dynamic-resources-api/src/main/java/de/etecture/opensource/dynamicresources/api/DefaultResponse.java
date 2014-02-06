@@ -110,4 +110,17 @@ public class DefaultResponse<T> implements Response<T> {
     public Set<Map.Entry<String, List<Object>>> getHeaders() {
         return header.entrySet();
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getStatus()).append(" - ");
+        if (exception != null) {
+            sb.append(exception.getMessage());
+        } else {
+            sb.append(entity);
+        }
+        return sb.toString();
+
+    }
 }

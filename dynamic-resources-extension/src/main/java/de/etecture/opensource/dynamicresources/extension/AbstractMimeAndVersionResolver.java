@@ -45,11 +45,14 @@ import de.etecture.opensource.dynamicresources.api.VersionNumberRange;
 import de.etecture.opensource.dynamicresources.spi.VersionNumberResolver;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
@@ -64,6 +67,9 @@ import org.apache.commons.lang.StringUtils;
  * @author rhk
  */
 public abstract class AbstractMimeAndVersionResolver<T, A extends Annotation> {
+
+    private final static Logger LOG = Logger.getLogger(
+            AbstractMimeAndVersionResolver.class.getName());
 
     @Inject
     BeanManager beanManager;
@@ -84,8 +90,12 @@ public abstract class AbstractMimeAndVersionResolver<T, A extends Annotation> {
 
     protected abstract String getVersion(A annotation);
 
+    protected abstract int getPriority(A annotation);
+
     public Map<MediaType, List<Version>> getAvailableFormats(
             Class<?> resourceClass) {
+        LOG.fine(String.format("calculate available formats for %s",
+                resourceClass));
         Map<MediaType, List<Version>> formats = new HashMap<>();
         final Set<Bean<?>> beans = beanManager.getBeans(beanClass,
                 new AnnotationLiteral<Any>() {
@@ -127,6 +137,9 @@ public abstract class AbstractMimeAndVersionResolver<T, A extends Annotation> {
 
     public boolean exists(Class<?> type, MediaType expectedMimeType,
             VersionNumberRange expectedVersion) {
+        LOG.fine(String.format(
+                "check if mapper exists for %s in mediatype: %s and version: %s",
+                type, expectedMimeType, expectedVersion));
         final Set<Bean<?>> beans = beanManager.getBeans(beanClass,
                 new AnnotationLiteral<Any>() {
             private static final long serialVersionUID = 1L;
@@ -145,6 +158,10 @@ public abstract class AbstractMimeAndVersionResolver<T, A extends Annotation> {
                             MediaType mediaType = new MediaTypeExpression(
                                     mimeType);
                             if (expectedVersion.includes(getVersion(annotation))) {
+                                LOG.fine(String.format(
+                                        "found mapper %s to handle: %s in mediatype: %s and version: %s",
+                                        bean.getName(), type, expectedMimeType,
+                                        expectedVersion));
                                 return true;
                             }
                         }
@@ -153,24 +170,38 @@ public abstract class AbstractMimeAndVersionResolver<T, A extends Annotation> {
                 }
             }
         }
+        LOG.fine(String.format(
+                "did not found a mapper to handle: %s in mediatype: %s and version: %s",
+                type, expectedMimeType,
+                expectedVersion));
         return false;
     }
 
     public T resolve(Class<?> resourceClass,
             MediaType mimeType,
             VersionNumberRange versionMatcher) {
+        LOG.fine(String.format(
+                "search mapper to handle: %s in mediatype: %s and version: %s",
+                resourceClass, mimeType,
+                versionMatcher == null ? "<not specified>" : versionMatcher
+                .toString()));
         final Set<Bean<?>> beans = beanManager.getBeans(beanClass,
                 new AnnotationLiteral<Any>() {
             private static final long serialVersionUID = 1L;
         });
-        System.out.printf(
-                "selected mimetype: %s, selected version: %s, beans: %s, entity: %s%n",
-                mimeType,
-                versionMatcher == null ? "not specified" : versionMatcher
-                .toString(),
-                beans.size(), resourceClass.getName());
+        LOG.fine(String.format(
+                "found mappers: %s to handle: %s in mediatype: %s and version: %s",
+                new Object() {
+            @Override
+            public String toString() {
+                return Arrays.toString(beans.toArray());
+            }
+        },
+                resourceClass, mimeType,
+                versionMatcher == null ? "<not specified>" : versionMatcher
+                .toString()));
         // (1) Build the map of versioned beans.
-        TreeMap<Version, Bean<T>> versionedBeans =
+        final TreeMap<Version, Bean<T>> versionedBeans =
                 new TreeMap<>(new VersionComparator(false));
         outer:
         for (Bean<?> bean : beans) {
@@ -190,7 +221,8 @@ public abstract class AbstractMimeAndVersionResolver<T, A extends Annotation> {
                                         (Bean<T>) bean);
                             } else {
                                 versionedBeans.put(
-                                        new VersionExpression(bean),
+                                        new VersionExpression(bean, getPriority(
+                                        annotation)),
                                         (Bean<T>) bean);
                             }
                         }
@@ -203,14 +235,27 @@ public abstract class AbstractMimeAndVersionResolver<T, A extends Annotation> {
                     new VersionExpression(bean),
                     (Bean<T>) bean);
         }
-        System.out.println("Versions are: ");
-        for (Version v : versionedBeans.keySet()) {
-            System.out.println(v.toString());
-        }
+        LOG.fine(String.format("found mappers: %s to handle: %s", new Object() {
+            @Override
+            public String toString() {
+                StringBuilder sb = new StringBuilder();
+                for (Entry<Version, Bean<T>> v : versionedBeans.entrySet()) {
+                    if (sb.length() > 0) {
+                        sb.append(", ");
+                    }
+                    sb.append(v.getValue().getName()).append("<").append(v
+                            .getKey()).append(">");
+                }
+                return sb.toString();
+            }
+        }, resourceClass));
         // (2) now resolve the correct bean for the correct version
         Bean<T> resolved = versionNumberResolver.resolve(
                 versionedBeans, versionMatcher);
         if (resolved != null) {
+            LOG.fine(String.format(
+                    "resolved best matching mapper: %s to handle: %s",
+                    resolved.getName(), resourceClass));
             return resolved.create(beanManager
                     .createCreationalContext(resolved));
         }

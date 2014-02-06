@@ -66,6 +66,10 @@ public class VersionExpression implements Comparable<VersionExpression>, Version
                 object));
     }
 
+    public VersionExpression(Object object, int priority) {
+        this(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE - priority);
+    }
+
     public VersionExpression(int major, int minor) {
         this(major, minor, 0);
     }

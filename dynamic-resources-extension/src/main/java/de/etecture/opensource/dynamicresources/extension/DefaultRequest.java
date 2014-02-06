@@ -280,8 +280,7 @@ public class DefaultRequest<T> implements Request<T> {
                     range = new VersionNumberRangeExpression(contentVersion);
                 }
                 if (requestReaderResolver != null) {
-                    //Logger.getLogger("DefaultRequest").fine(
-                    System.out.println(
+                    Logger.getLogger("DefaultRequest").fine(
                             String.format(
                             "lookup reader for type: %s in mediatype: %s and version: %s",
                             getRequestType().getSimpleName(),
@@ -295,13 +294,13 @@ public class DefaultRequest<T> implements Request<T> {
                         requestContent = reader.processRequest(contentReader,
                                 contentMediaType.toString());
                     } else {
-                        Logger.getLogger("DefaultRequest").warning(
+                        Logger.getLogger("DefaultRequest").fine(
                                 "no requestReader found!, so request cannot be read from reader!");
 
                         requestContent = null;
                     }
                 } else {
-                    Logger.getLogger("DefaultRequest").warning(
+                    Logger.getLogger("DefaultRequest").fine(
                             "no requestReaderResolver provided, so request cannot be read from reader!");
                     requestContent = null;
                 }
@@ -332,6 +331,26 @@ public class DefaultRequest<T> implements Request<T> {
         String[] values = getQueryParameter().get(name);
         return (values != null && values.length > 0 && StringUtils.isNotBlank(
                 values[0]));
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder query = new StringBuilder();
+        for (Entry<String, String[]> e : queryParameter.entrySet()) {
+            for (String value : e.getValue()) {
+                if (query.length() > 0) {
+                    query.append("&");
+                } else {
+                    query.append("?");
+                }
+                query.append(e.getKey()).append("=").append(value);
+            }
+        }
+        return String.format("%S %s (%s%s), accept: %s %s", methodName,
+                resourceClass
+                .getSimpleName(),
+                PathParser.createURI(resource.uri(), pathParameter),
+                query, acceptedMediaType, acceptedVersionRange);
     }
 
     public static <X> Builder<X> fromHttpRequest(HttpServletRequest req,

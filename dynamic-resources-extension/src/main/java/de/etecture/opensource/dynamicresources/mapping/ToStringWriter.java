@@ -55,8 +55,8 @@ import java.io.Writer;
 public enum ToStringWriter implements ResponseWriter<Object> {
 
     @Produces(contentType = Object.class,
-              mimeType = {
-        "text/plain"})
+              mimeType = "text/plain",
+              priority = Integer.MAX_VALUE)
     DEFAULT {
         @Override
         public void processElement(Object element, Writer writer,

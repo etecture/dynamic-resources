@@ -67,6 +67,11 @@ public class RequestReaderResolver extends AbstractMimeAndVersionResolver<Reques
         return annotation.version();
     }
 
+    @Override
+    protected int getPriority(Consumes annotation) {
+        return annotation.priority();
+    }
+
     /**
      * returns true, if there is a request reader, that matches the given
      * consumes annotations.

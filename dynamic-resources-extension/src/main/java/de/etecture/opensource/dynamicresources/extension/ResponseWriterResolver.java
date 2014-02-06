@@ -66,6 +66,12 @@ public class ResponseWriterResolver extends AbstractMimeAndVersionResolver<Respo
     protected String getVersion(Produces annotation) {
         return annotation.version();
     }
+
+    @Override
+    protected int getPriority(Produces annotation) {
+        return annotation.priority();
+    }
+
     /**
      * returns true, if there is a response writer, that matches the given
      * consumes annotations.

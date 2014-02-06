@@ -292,7 +292,6 @@ public abstract class AbstractResourceMethodHandler implements
                     parameter);
         }
         Object requestObject = request.getContent();
-        System.out.println("request is: " + requestObject);
         if (requestObject != null) {
             parameter.put("request", requestObject);
         }

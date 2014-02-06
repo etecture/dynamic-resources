@@ -56,7 +56,8 @@ import javax.xml.stream.XMLStreamWriter;
 public enum ExceptionXMLWriter implements ResponseWriter<Throwable> {
 
     @Produces(contentType = Exception.class,
-              mimeType = {"text/plain"})
+              mimeType = "text/plain",
+              priority = ExceptionXMLWriter.PRIORITY)
     DEFAULT_PLAIN {
         @Override
         public void processElement(Throwable element, Writer writer,
@@ -75,7 +76,8 @@ public enum ExceptionXMLWriter implements ResponseWriter<Throwable> {
     },
     @Produces(contentType = Exception.class,
               mimeType = {"application/xml",
-        "text/xml"})
+        "text/xml"},
+              priority = ExceptionXMLWriter.PRIORITY)
     DEFAULT_XML {
         private void internalProcess(XMLStreamWriter writer, Throwable ex)
                 throws
@@ -134,6 +136,7 @@ public enum ExceptionXMLWriter implements ResponseWriter<Throwable> {
             return -1;
         }
     };
+    private static final int PRIORITY = Integer.MAX_VALUE - 1;
     private static final XMLOutputFactory XML_FACTORY = XMLOutputFactory
             .newFactory();
 }

@@ -54,12 +54,14 @@ public class ConsumesLiteral extends AnnotationLiteral<Consumes> implements
     private final String version;
     private final String[] mimeTypes;
     private final Class requestType;
+    private final int priority;
 
     public ConsumesLiteral(Class requestType) {
         this.requestType = requestType;
         this.mimeTypes = new String[]{"text/plain"};
         this.version = String.format("%d.%d.%d", Integer.MAX_VALUE,
                 Integer.MAX_VALUE, Integer.MAX_VALUE);
+        this.priority = 0;
     }
 
     public ConsumesLiteral(Object object) {
@@ -67,17 +69,20 @@ public class ConsumesLiteral extends AnnotationLiteral<Consumes> implements
         this.mimeTypes = new String[]{"text/plain"};
         this.version = String.format("%d.%d.%d", Integer.MAX_VALUE,
                 Integer.MAX_VALUE, System.identityHashCode(object));
+        this.priority = 0;
     }
 
     public ConsumesLiteral(Consumes consumes) {
-        this(consumes.requestType(), consumes.mimeType(), consumes.version());
+        this(consumes.requestType(), consumes.mimeType(), consumes.version(),
+                consumes.priority());
     }
 
     public ConsumesLiteral(Class requestType, String[] mimeTypes,
-            String versionString) {
+            String versionString, int priority) {
         this.requestType = requestType;
         this.mimeTypes = mimeTypes;
         this.version = versionString;
+        this.priority = priority;
     }
 
     @Override
@@ -93,5 +98,10 @@ public class ConsumesLiteral extends AnnotationLiteral<Consumes> implements
     @Override
     public Class requestType() {
         return requestType;
+    }
+
+    @Override
+    public int priority() {
+        return priority;
     }
 }

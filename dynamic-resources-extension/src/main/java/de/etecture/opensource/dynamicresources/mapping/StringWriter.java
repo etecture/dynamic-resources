@@ -54,15 +54,17 @@ import java.io.Writer;
  */
 public enum StringWriter implements ResponseWriter<String> {
 
-    @Produces(contentType = String.class, mimeType = {"application/xml",
+    @Produces(contentType = String.class,
+              mimeType = {"application/xml",
         "text/xml",
-        "text/plain"})
+        "text/plain"
+    },
+              priority = 5555)
     DEFAULT {
         @Override
         public void processElement(String element, Writer writer,
                 MediaType mimetype)
                 throws IOException {
-            System.out.println("write: " + element);
             writer.append(element);
             writer.flush();
         }

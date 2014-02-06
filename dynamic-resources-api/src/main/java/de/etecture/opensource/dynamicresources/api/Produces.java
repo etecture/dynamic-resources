@@ -67,4 +67,7 @@ public @interface Produces {
 
     @Nonbinding
     String version() default "";
+
+    @Nonbinding
+    int priority() default 0;
 }

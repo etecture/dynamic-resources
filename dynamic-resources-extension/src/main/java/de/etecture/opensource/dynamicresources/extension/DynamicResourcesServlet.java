@@ -53,6 +53,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Default;
 import javax.enterprise.inject.Instance;
@@ -69,7 +71,7 @@ import org.apache.commons.lang.StringUtils;
  * @author rhk
  */
 @WebServlet(urlPatterns = "/*")
-public class DynamicRestServlet extends HttpServlet {
+public class DynamicResourcesServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
     @Inject
@@ -117,9 +119,23 @@ public class DynamicRestServlet extends HttpServlet {
                     for (ResourceMethodHandler handler
                             : selectedResourceMethodHandlers) {
                         if (handler.isAvailable(clazz)) {
+                            Logger.getLogger("DynamicResourcesServlet").log(
+                                    Level.INFO,
+                                    "request ({0}) from user: {1} \n{2}",
+                                    new Object[]{
+                                req.hashCode(),
+                                req.getUserPrincipal(),
+                                request.toString()
+                            });
                             Response response = handler.handleRequest(request);
                             if (response != null) {
                                 writeResponse(request, resp, response);
+                                Logger.getLogger("DynamicResourcesServlet").log(
+                                        Level.INFO, "response ({0}): \n{1}",
+                                        new Object[]{
+                                    req.hashCode(),
+                                    response.toString()
+                                });
                                 return;
                             }
                         }
@@ -137,7 +153,14 @@ public class DynamicRestServlet extends HttpServlet {
         }
         if ("OPTIONS".equalsIgnoreCase(req.getMethod()) && ("/".equals(req
                 .getPathInfo()) || StringUtils.isEmpty(req.getPathInfo()))) {
-            resp.setStatus(StatusCodes.NOT_FOUND);
+            Logger.getLogger("DynamicResourcesServlet").log(
+                    Level.INFO,
+                    "request ({0}) options for module from user: {1}",
+                    new Object[]{
+                req.hashCode(),
+                req.getUserPrincipal()
+            });
+            resp.setStatus(StatusCodes.OK);
             resp.setContentType("text/plain");
             final PrintWriter writer = resp.getWriter();
 
@@ -150,11 +173,33 @@ public class DynamicRestServlet extends HttpServlet {
                         .build(clazz, null));
             }
             writer.println();
+            Logger.getLogger("DynamicResourcesServlet").log(
+                    Level.INFO, "responded ({0}) with options.",
+                    new Object[]{
+                req.hashCode()
+            });
 
         } else {
-            resp.sendError(StatusCodes.NOT_FOUND, String.format(
+            Logger.getLogger("DynamicResourcesServlet").log(
+                    Level.INFO, "request ({0}) from user: {1} \n{2} {3}",
+                    new Object[]{
+                req.hashCode(),
+                req.getUserPrincipal(),
+                req.getMethod(),
+                req.getPathInfo()
+            });
+            final String error =
+                    String.format(
                     "There is no resource matching the path %s",
-                    req.getPathInfo()));
+                    req.getPathInfo());
+            resp.sendError(StatusCodes.NOT_FOUND, error);
+            Logger.getLogger("DynamicResourcesServlet").log(
+                    Level.INFO, "response ({0}): \n{1}",
+                    new Object[]{
+                req.hashCode(),
+                error
+            });
+
         }
     }
 
@@ -164,9 +209,11 @@ public class DynamicRestServlet extends HttpServlet {
             for (Object o : e.getValue()) {
                 if (o == null) {
                     // do nothing here
-                } else if (Number.class.isAssignableFrom(o.getClass())) {
+                } else if (Number.class
+                        .isAssignableFrom(o.getClass())) {
                     resp.addIntHeader(e.getKey(), ((Number) o).intValue());
-                } else if (Date.class.isAssignableFrom(o.getClass())) {
+                } else if (Date.class
+                        .isAssignableFrom(o.getClass())) {
                     resp.addDateHeader(e.getKey(), ((Date) o).getTime());
                 } else {
                     resp.addHeader(e.getKey(), o.toString());
@@ -221,7 +268,6 @@ public class DynamicRestServlet extends HttpServlet {
     @Override
     protected void doHead(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        System.out.println("do the head");
         service(req, resp);
     }
 }

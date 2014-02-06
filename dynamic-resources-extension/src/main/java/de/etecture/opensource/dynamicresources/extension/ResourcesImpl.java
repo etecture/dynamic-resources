@@ -147,11 +147,9 @@ public class ResourcesImpl<T> implements Resources<T> {
         final Set<Bean<?>> beans =
                 bm.getBeans(ResourceMethodHandler.class,
                 new VerbLiteral(methodName));
-        System.out.println(methodName + " " + beans.size());
         Bean<ResourceMethodHandler> b = (Bean<ResourceMethodHandler>) bm
                 .resolve(
                 beans);
-        System.out.println(b);
         return b.create(bm
                 .createCreationalContext(b));
     }
