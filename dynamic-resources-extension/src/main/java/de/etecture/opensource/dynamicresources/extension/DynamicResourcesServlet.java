@@ -39,6 +39,8 @@
  */
 package de.etecture.opensource.dynamicresources.extension;
 
+import de.etecture.opensource.dynamicresources.api.Header;
+import de.etecture.opensource.dynamicresources.api.HeaderValueGenerator;
 import de.etecture.opensource.dynamicresources.api.Method;
 import de.etecture.opensource.dynamicresources.api.Request;
 import de.etecture.opensource.dynamicresources.api.Resource;
@@ -87,6 +89,9 @@ public class DynamicResourcesServlet extends HttpServlet {
     ResponseWriterResolver responseWriterResolver;
     @Inject
     RequestReaderResolver requestReaderResolver;
+    @Inject
+    @Any
+    Instance<HeaderValueGenerator> anyHeaderValueGenerator;
 
     private static String stripLastSlashIfExist(String whatever) {
         while (whatever.endsWith("/")) {
@@ -178,7 +183,14 @@ public class DynamicResourcesServlet extends HttpServlet {
             writer.println();
 
             for (Class<?> clazz : resext.resourcesInterfaces) {
-                writer.printf("\t%s --> %s%n", clazz.getSimpleName(), uriBuilder
+                String name;
+                if (!StringUtils.isBlank(clazz.getAnnotation(Resource.class)
+                        .name())) {
+                    name = clazz.getAnnotation(Resource.class).name();
+                } else {
+                    name = clazz.getSimpleName();
+                }
+                writer.printf("\t%s --> %s%n", name, uriBuilder
                         .build(clazz, null));
             }
             writer.println();
@@ -238,6 +250,14 @@ public class DynamicResourcesServlet extends HttpServlet {
             entity = ex;
         }
         if (entity != null) {
+            if (request.getResourceMethod() != null) {
+                for (Header header : request.getResourceMethod().headers()) {
+                    anyHeaderValueGenerator.select(header
+                            .generator()).get()
+                            .generateHeaderValue(header, resp,
+                            entity);
+                }
+            }
             ResponseWriter writer =
                     responseWriterResolver.resolve(entity.getClass(), request
                     .getAcceptedMediaType(),

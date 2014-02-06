@@ -39,56 +39,47 @@
  */
 package de.etecture.opensource.dynamicresources.api;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.servlet.http.HttpServletResponse;
+
 /**
- * defines a filter parameter
+ * generates a header value by using the default value given in the header
+ * definition.
  *
  * @author rhk
  * @version
  * @since
  */
-public @interface Filter {
+public class DefaultHeaderValueGenerator implements HeaderValueGenerator {
 
-    /**
-     * the (mandatory) name of the parameter
-     *
-     * @return
-     */
-    String name();
+    public static final DateFormat DATEFORMAT = DateFormat.getDateTimeInstance(
+            DateFormat.SHORT, DateFormat.SHORT);
 
-    /**
-     * the (optional) default value of the parameter
-     *
-     * @return
-     */
-    String defaultValue() default "";
-
-    /**
-     * the type of the parameter. If not specified, the type is String.
-     *
-     * @return
-     */
-    Class<?> type() default String.class;
-
-    /**
-     * the converter, that converts the query values to the type of this filter.
-     *
-     * @return
-     */
-    Class<? extends FilterConverter> converter() default DefaultFilterConverter.class;
-
-    /**
-     * the regex to check the given filter value.
-     *
-     * if not specified, any value is accepted.
-     *
-     * @return
-     */
-    String validationRegex() default "^.*$";
-
-    /**
-     * the description of this filter.
-     *
-     * @return
-     */
-    String description() default "";
+    @Override
+    public void generateHeaderValue(Header header, HttpServletResponse resp,
+            Object entity) {
+        switch (header.type()) {
+            case DATE:
+                try {
+                    resp.addDateHeader(header.name(), DATEFORMAT.parse(header
+                            .value()).getTime());
+                } catch (ParseException ex) {
+                    Logger
+                            .getLogger(DefaultHeaderValueGenerator.class
+                            .getName()).
+                            log(Level.SEVERE, "cannot parse the date: " + header
+                            .value(), ex);
+                }
+                break;
+            case INTEGER:
+                resp.addIntHeader(header.name(), Integer
+                        .parseInt(header.value()));
+                break;
+            default:
+                resp.addHeader(header.name(), header.value());
+        }
+    }
 }

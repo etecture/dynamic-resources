@@ -37,58 +37,43 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.api;
+package de.etecture.opensource.dynamicresources.api.metadata;
+
+import java.util.Map;
 
 /**
- * defines a filter parameter
  *
  * @author rhk
  * @version
  * @since
  */
-public @interface Filter {
+public interface Resource {
 
     /**
-     * the (mandatory) name of the parameter
+     * the name of the resource.
      *
      * @return
      */
-    String name();
+    String getName();
 
     /**
-     * the (optional) default value of the parameter
+     * the description of the resource;
      *
      * @return
      */
-    String defaultValue() default "";
+    String getDescription();
 
     /**
-     * the type of the parameter. If not specified, the type is String.
+     * the methods of the resource.
      *
      * @return
      */
-    Class<?> type() default String.class;
+    Map<String, ResourceMethod> getMethods();
 
     /**
-     * the converter, that converts the query values to the type of this filter.
+     * the uri template of this resource.
      *
      * @return
      */
-    Class<? extends FilterConverter> converter() default DefaultFilterConverter.class;
-
-    /**
-     * the regex to check the given filter value.
-     *
-     * if not specified, any value is accepted.
-     *
-     * @return
-     */
-    String validationRegex() default "^.*$";
-
-    /**
-     * the description of this filter.
-     *
-     * @return
-     */
-    String description() default "";
+    String getUriTemplate();
 }

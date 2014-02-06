@@ -133,4 +133,11 @@ public @interface Method {
      * @return
      */
     Filter[] filters() default {};
+
+    /**
+     * the optional header parameter.
+     *
+     * @return
+     */
+    Header[] headers() default {};
 }

@@ -40,25 +40,20 @@
 package de.etecture.opensource.dynamicresources.handler;
 
 import de.etecture.opensource.dynamicresources.api.DefaultResponse;
-import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.api.Request;
 import de.etecture.opensource.dynamicresources.api.ResourceException;
 import de.etecture.opensource.dynamicresources.api.Response;
-import de.etecture.opensource.dynamicresources.api.Version;
+import de.etecture.opensource.dynamicresources.api.StatusCodes;
 import de.etecture.opensource.dynamicresources.extension.Current;
+import de.etecture.opensource.dynamicresources.extension.RequestReaderResolver;
 import de.etecture.opensource.dynamicresources.extension.ResponseWriterResolver;
+import de.etecture.opensource.dynamicresources.metadata.AnnotatedResource;
 import de.etecture.opensource.dynamicresources.spi.ResourceMethodHandler;
 import de.etecture.opensource.dynamicresources.spi.Verb;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.List;
-import java.util.Map;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
-import org.apache.commons.lang.StringUtils;
 
 /**
  *
@@ -73,6 +68,8 @@ public class OptionsResourceHandler implements ResourceMethodHandler {
     @Inject
     ResponseWriterResolver responseWriters;
     @Inject
+    RequestReaderResolver requestReaders;
+    @Inject
     @Current
     HttpServletRequest req;
 
@@ -86,75 +83,9 @@ public class OptionsResourceHandler implements ResourceMethodHandler {
     public Response handleRequest(
             Request request) throws
             ResourceException {
-        try {
-            final StringWriter sw = new StringWriter();
-            final PrintWriter writer = new PrintWriter(sw);
-
-            writer.printf("Available Methods for Resource: %s\n", request
-                    .getResourceClass()
-                    .getSimpleName());
-            writer.println(StringUtils.repeat("-", request.getResourceClass()
-                    .getSimpleName()
-                    .length() + 32));
-            writer.println();
-
-            for (ResourceMethodHandler handler : resourceMethodHandlers) {
-                if (handler.isAvailable(request.getResourceClass())) {
-                    String verb = "";
-                    if (handler.getClass().isAnnotationPresent(Verb.class)) {
-                        verb = handler.getClass().getAnnotation(Verb.class)
-                                .value();
-                    }
-                    writer.printf("\t%s%n\t\t- %s%n", verb, handler
-                            .getDescription(request.getResourceClass()));
-                }
-            }
-            writer.println();
-            writer.printf("Available MediaTypes of Resource: %s\n",
-                    request.getResourceClass()
-                    .getSimpleName());
-            writer.println(StringUtils.repeat("-", request.getResourceClass()
-                    .getSimpleName()
-                    .length() + 34));
-            writer.println();
-
-            String exampleMediaType = null;
-            for (Map.Entry<MediaType, List<Version>> e : responseWriters
-                    .getAvailableFormats(request.getResourceClass()).entrySet()) {
-                writer.printf("\t%s%n", e.getKey().toString());
-                writer.print("\t\tVersions: ");
-                boolean first = true;
-                for (Version version : e.getValue()) {
-                    if (!first) {
-                        writer.print(", ");
-                    }
-                    writer.print(version.toString());
-                    first = false;
-                    if (exampleMediaType == null) {
-                        exampleMediaType = String
-                                .format("%s/%s.v%s; charset=%s", e
-                                .getKey()
-                                .category(), e.getKey().subType(), version
-                                .toString(), e.getKey().encoding());
-                    }
-                }
-                if (exampleMediaType == null) {
-                    exampleMediaType = e.getKey().toString();
-                }
-                writer.println();
-            }
-
-            writer.println();
-            writer.flush();
-            sw.flush();
-            writer.close();
-            sw.close();
-
-            return new DefaultResponse(sw.toString(), 200);
-        } catch (IOException ex) {
-            throw new ResourceException("cannot write the options-response: ",
-                    ex);
-        }
+        return new DefaultResponse(new AnnotatedResource(request
+                .getResourceClass(), responseWriters, requestReaders),
+                StatusCodes.OK);
     }
 
     @Override
@@ -164,5 +95,4 @@ public class OptionsResourceHandler implements ResourceMethodHandler {
                 "Returns the HTTP methods that the server supports for the resource: %s",
                 resourceClazz.getSimpleName());
     }
-
 }

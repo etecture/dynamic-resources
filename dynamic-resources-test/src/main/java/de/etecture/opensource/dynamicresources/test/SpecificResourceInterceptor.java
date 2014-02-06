@@ -53,7 +53,7 @@ public class SpecificResourceInterceptor extends AbstractResourceInterceptor {
     public Response before(Request request) {
         System.out.printf("BEFORE SPECIFIC: %s %s for: %s%n", request
                 .getMethodName(),
-                request.getResource().uri(), request.getResourceClass()
+                request.getResourceMetadata().uri(), request.getResourceClass()
                 .getSimpleName());
         return null;
     }
@@ -62,7 +62,7 @@ public class SpecificResourceInterceptor extends AbstractResourceInterceptor {
     public Response afterSuccess(Request request, Response response) {
         System.out.printf("AFTER SPECIFIC: %s %s for: %s%n", request
                 .getMethodName(),
-                request.getResource().uri(), request.getResourceClass()
+                request.getResourceMetadata().uri(), request.getResourceClass()
                 .getSimpleName());
         return response;
     }

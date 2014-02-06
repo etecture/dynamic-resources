@@ -254,7 +254,16 @@ public class DefaultRequest<T> implements Request<T> {
     }
 
     @Override
-    public Resource getResource() {
+    public String getResourceName() {
+        if (StringUtils.isBlank(resource.name())) {
+            return resourceClass.getSimpleName();
+        } else {
+            return resource.name();
+        }
+    }
+
+    @Override
+    public Resource getResourceMetadata() {
         return resource;
     }
 

@@ -40,53 +40,52 @@
 package de.etecture.opensource.dynamicresources.api;
 
 /**
- * defines a filter parameter
+ * defines a response-header field.
  *
  * @author rhk
  * @version
  * @since
  */
-public @interface Filter {
+public @interface Header {
+
+    public enum Type {
+
+        DEFAULT,
+        DATE,
+        INTEGER
+    }
 
     /**
-     * the (mandatory) name of the parameter
+     * the name of the header field.
      *
+     * @see HttpHeaders a list of common HTTP Headers.
      * @return
      */
     String name();
 
     /**
-     * the (optional) default value of the parameter
+     * defines a static value of the header field.
      *
      * @return
      */
-    String defaultValue() default "";
+    String value() default "";
 
     /**
-     * the type of the parameter. If not specified, the type is String.
+     * specifies the type of the header.
      *
      * @return
      */
-    Class<?> type() default String.class;
+    Type type() default Type.DEFAULT;
 
     /**
-     * the converter, that converts the query values to the type of this filter.
+     * defines a generator to produce the header field by using the entity.
      *
      * @return
      */
-    Class<? extends FilterConverter> converter() default DefaultFilterConverter.class;
+    Class<? extends HeaderValueGenerator> generator() default DefaultHeaderValueGenerator.class;
 
     /**
-     * the regex to check the given filter value.
-     *
-     * if not specified, any value is accepted.
-     *
-     * @return
-     */
-    String validationRegex() default "^.*$";
-
-    /**
-     * the description of this filter.
+     * the description of this header.
      *
      * @return
      */

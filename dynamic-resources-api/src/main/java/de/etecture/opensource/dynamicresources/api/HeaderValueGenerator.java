@@ -39,56 +39,25 @@
  */
 package de.etecture.opensource.dynamicresources.api;
 
+import javax.servlet.http.HttpServletResponse;
+
 /**
- * defines a filter parameter
+ * generates a header value.
  *
  * @author rhk
  * @version
  * @since
  */
-public @interface Filter {
+public interface HeaderValueGenerator {
 
     /**
-     * the (mandatory) name of the parameter
+     * generates a header value for the given header definition and the response
+     * entity. The header value has to be set to the response.
      *
-     * @return
+     * @param header
+     * @param resp
+     * @param entity
      */
-    String name();
-
-    /**
-     * the (optional) default value of the parameter
-     *
-     * @return
-     */
-    String defaultValue() default "";
-
-    /**
-     * the type of the parameter. If not specified, the type is String.
-     *
-     * @return
-     */
-    Class<?> type() default String.class;
-
-    /**
-     * the converter, that converts the query values to the type of this filter.
-     *
-     * @return
-     */
-    Class<? extends FilterConverter> converter() default DefaultFilterConverter.class;
-
-    /**
-     * the regex to check the given filter value.
-     *
-     * if not specified, any value is accepted.
-     *
-     * @return
-     */
-    String validationRegex() default "^.*$";
-
-    /**
-     * the description of this filter.
-     *
-     * @return
-     */
-    String description() default "";
+    void generateHeaderValue(Header header, HttpServletResponse resp,
+            Object entity);
 }

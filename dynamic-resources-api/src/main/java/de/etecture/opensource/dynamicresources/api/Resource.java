@@ -96,4 +96,18 @@ public @interface Resource {
      * @return
      */
     Method[] methods();
+
+    /**
+     * the name of the resource.
+     *
+     * @return
+     */
+    String name() default "";
+
+    /**
+     * the description of the resource.
+     *
+     * @return
+     */
+    String description() default "";
 }

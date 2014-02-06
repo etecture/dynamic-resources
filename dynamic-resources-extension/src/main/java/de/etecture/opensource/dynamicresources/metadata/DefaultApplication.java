@@ -37,58 +37,56 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.api;
+package de.etecture.opensource.dynamicresources.metadata;
+
+import de.etecture.opensource.dynamicresources.api.metadata.Application;
+import de.etecture.opensource.dynamicresources.api.metadata.Resource;
+import de.etecture.opensource.dynamicresources.extension.RequestReaderResolver;
+import de.etecture.opensource.dynamicresources.extension.ResponseWriterResolver;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * defines a filter parameter
  *
  * @author rhk
  * @version
  * @since
  */
-public @interface Filter {
+public class DefaultApplication implements Application {
 
-    /**
-     * the (mandatory) name of the parameter
-     *
-     * @return
-     */
-    String name();
+    private final String baseURI;
+    private final Map<String, Resource> resources = new HashMap<>();
 
-    /**
-     * the (optional) default value of the parameter
-     *
-     * @return
-     */
-    String defaultValue() default "";
+    public DefaultApplication(String baseURI) {
+        this.baseURI = baseURI;
+    }
 
-    /**
-     * the type of the parameter. If not specified, the type is String.
-     *
-     * @return
-     */
-    Class<?> type() default String.class;
+    @Override
+    public String getBaseURI() {
+        return baseURI;
+    }
 
-    /**
-     * the converter, that converts the query values to the type of this filter.
-     *
-     * @return
-     */
-    Class<? extends FilterConverter> converter() default DefaultFilterConverter.class;
+    @Override
+    public Map<String, Resource> getResources() {
+        return Collections.unmodifiableMap(resources);
+    }
 
-    /**
-     * the regex to check the given filter value.
-     *
-     * if not specified, any value is accepted.
-     *
-     * @return
-     */
-    String validationRegex() default "^.*$";
+    public void addResource(Resource resource) {
+        this.resources.put(resource.getUriTemplate(), resource);
+    }
 
-    /**
-     * the description of this filter.
-     *
-     * @return
-     */
-    String description() default "";
+    public boolean isResource(Class<?> resourceClass) {
+        return resourceClass.isAnnotationPresent(
+                de.etecture.opensource.dynamicresources.api.Resource.class);
+    }
+
+    public Resource addAsResource(Class<?> resourceClass,
+            ResponseWriterResolver writers,
+            RequestReaderResolver readers) {
+        Resource r = new AnnotatedResource(resourceClass, writers, readers);
+        addResource(r);
+        return r;
+    }
+
 }

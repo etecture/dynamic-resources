@@ -37,58 +37,19 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.api;
+package de.etecture.opensource.dynamicresources.api.metadata;
 
 /**
- * defines a filter parameter
  *
  * @author rhk
  * @version
  * @since
  */
-public @interface Filter {
+public interface ResourceMethodRequestFilter {
 
-    /**
-     * the (mandatory) name of the parameter
-     *
-     * @return
-     */
-    String name();
+    Class<?> getValueType();
 
-    /**
-     * the (optional) default value of the parameter
-     *
-     * @return
-     */
-    String defaultValue() default "";
+    String getName();
 
-    /**
-     * the type of the parameter. If not specified, the type is String.
-     *
-     * @return
-     */
-    Class<?> type() default String.class;
-
-    /**
-     * the converter, that converts the query values to the type of this filter.
-     *
-     * @return
-     */
-    Class<? extends FilterConverter> converter() default DefaultFilterConverter.class;
-
-    /**
-     * the regex to check the given filter value.
-     *
-     * if not specified, any value is accepted.
-     *
-     * @return
-     */
-    String validationRegex() default "^.*$";
-
-    /**
-     * the description of this filter.
-     *
-     * @return
-     */
-    String description() default "";
+    String getDescription();
 }

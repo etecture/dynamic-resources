@@ -39,6 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.api;
 
+import de.etecture.opensource.dynamicresources.api.Version;
 import java.nio.charset.Charset;
 
 /**

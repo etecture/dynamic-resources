@@ -37,58 +37,58 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.api;
+package de.etecture.opensource.dynamicresources.metadata;
+
+import de.etecture.opensource.dynamicresources.api.Consumes;
+import de.etecture.opensource.dynamicresources.api.Method;
+import de.etecture.opensource.dynamicresources.api.metadata.ResourceMethod;
+import de.etecture.opensource.dynamicresources.api.metadata.ResourceMethodRequest;
+import de.etecture.opensource.dynamicresources.extension.RequestReaderResolver;
+import de.etecture.opensource.dynamicresources.extension.ResponseWriterResolver;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * defines a filter parameter
  *
  * @author rhk
  * @version
  * @since
  */
-public @interface Filter {
+public class AnnotatedResourceMethod implements ResourceMethod {
 
-    /**
-     * the (mandatory) name of the parameter
-     *
-     * @return
-     */
-    String name();
+    private final String name, description;
+    private final Set<ResourceMethodRequest> requests = new HashSet<>();
 
-    /**
-     * the (optional) default value of the parameter
-     *
-     * @return
-     */
-    String defaultValue() default "";
+    public AnnotatedResourceMethod(Class<?> resourceClass, Method annotation,
+            ResponseWriterResolver writers,
+            RequestReaderResolver readers) {
+        this.name = annotation.name();
+        this.description = annotation.description();
+        if (annotation.consumes().length > 0) {
+            for (Consumes consumes : annotation.consumes()) {
+                this.requests.add(new AnnotatedResourceMethodRequest(
+                        resourceClass,
+                        annotation, consumes, writers, readers));
+            }
+        } else {
+            this.requests.add(new AnnotatedResourceMethodRequest(resourceClass,
+                    annotation, writers, readers));
+        }
+    }
 
-    /**
-     * the type of the parameter. If not specified, the type is String.
-     *
-     * @return
-     */
-    Class<?> type() default String.class;
+    @Override
+    public String getName() {
+        return name;
+    }
 
-    /**
-     * the converter, that converts the query values to the type of this filter.
-     *
-     * @return
-     */
-    Class<? extends FilterConverter> converter() default DefaultFilterConverter.class;
+    @Override
+    public String getDescription() {
+        return description;
+    }
 
-    /**
-     * the regex to check the given filter value.
-     *
-     * if not specified, any value is accepted.
-     *
-     * @return
-     */
-    String validationRegex() default "^.*$";
-
-    /**
-     * the description of this filter.
-     *
-     * @return
-     */
-    String description() default "";
+    @Override
+    public Set<ResourceMethodRequest> getRequests() {
+        return Collections.unmodifiableSet(requests);
+    }
 }

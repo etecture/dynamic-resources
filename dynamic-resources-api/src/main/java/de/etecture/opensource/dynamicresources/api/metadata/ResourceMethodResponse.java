@@ -37,58 +37,37 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.api;
+package de.etecture.opensource.dynamicresources.api.metadata;
+
+import de.etecture.opensource.dynamicresources.api.MediaType;
+import java.util.Set;
 
 /**
- * defines a filter parameter
  *
  * @author rhk
  * @version
  * @since
  */
-public @interface Filter {
+public interface ResourceMethodResponse {
 
     /**
-     * the (mandatory) name of the parameter
+     * the statusCode of this ResourceMethod response.
      *
      * @return
      */
-    String name();
+    int getStatusCode();
 
     /**
-     * the (optional) default value of the parameter
+     * the response headers that this method produces.
      *
      * @return
      */
-    String defaultValue() default "";
+    Set<ResourceMethodResponseHeader> getResponseHeaders();
 
     /**
-     * the type of the parameter. If not specified, the type is String.
+     * the mediatypes, this resource method response will produce.
      *
      * @return
      */
-    Class<?> type() default String.class;
-
-    /**
-     * the converter, that converts the query values to the type of this filter.
-     *
-     * @return
-     */
-    Class<? extends FilterConverter> converter() default DefaultFilterConverter.class;
-
-    /**
-     * the regex to check the given filter value.
-     *
-     * if not specified, any value is accepted.
-     *
-     * @return
-     */
-    String validationRegex() default "^.*$";
-
-    /**
-     * the description of this filter.
-     *
-     * @return
-     */
-    String description() default "";
+    Set<MediaType> getResponseMediaTypes();
 }

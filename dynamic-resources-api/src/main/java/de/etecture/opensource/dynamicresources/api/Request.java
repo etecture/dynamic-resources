@@ -37,7 +37,6 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
 package de.etecture.opensource.dynamicresources.api;
 
 import java.io.BufferedReader;
@@ -73,9 +72,11 @@ public interface Request<T> {
 
     Class<?> getRequestType();
 
-    Resource getResource();
+    Resource getResourceMetadata();
 
     Class<T> getResourceClass();
+
+    String getResourceName();
 
     Method getResourceMethod();
 

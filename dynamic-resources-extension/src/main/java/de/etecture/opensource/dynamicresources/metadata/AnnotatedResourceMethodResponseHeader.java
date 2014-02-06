@@ -37,58 +37,42 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.api;
+
+package de.etecture.opensource.dynamicresources.metadata;
+
+import de.etecture.opensource.dynamicresources.api.Header;
+import de.etecture.opensource.dynamicresources.api.metadata.ResourceMethodResponseHeader;
 
 /**
- * defines a filter parameter
  *
  * @author rhk
  * @version
  * @since
  */
-public @interface Filter {
+public class AnnotatedResourceMethodResponseHeader implements
+        ResourceMethodResponseHeader {
 
-    /**
-     * the (mandatory) name of the parameter
-     *
-     * @return
-     */
-    String name();
+    private final Header.Type type;
+    private final String name, description;
 
-    /**
-     * the (optional) default value of the parameter
-     *
-     * @return
-     */
-    String defaultValue() default "";
+    public AnnotatedResourceMethodResponseHeader(Header header) {
+        this.type = header.type();
+        this.name = header.name();
+        this.description = header.description();
+    }
 
-    /**
-     * the type of the parameter. If not specified, the type is String.
-     *
-     * @return
-     */
-    Class<?> type() default String.class;
+    @Override
+    public Header.Type getType() {
+        return this.type;
+    }
 
-    /**
-     * the converter, that converts the query values to the type of this filter.
-     *
-     * @return
-     */
-    Class<? extends FilterConverter> converter() default DefaultFilterConverter.class;
+    @Override
+    public String getName() {
+        return this.name;
+    }
 
-    /**
-     * the regex to check the given filter value.
-     *
-     * if not specified, any value is accepted.
-     *
-     * @return
-     */
-    String validationRegex() default "^.*$";
-
-    /**
-     * the description of this filter.
-     *
-     * @return
-     */
-    String description() default "";
+    @Override
+    public String getDescription() {
+        return this.description;
+    }
 }

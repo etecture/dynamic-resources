@@ -1,0 +1,62 @@
+
+import externalDataTypes;
+
+module TestProject {
+
+    datatype Modifiable {
+        property created : TimeStamp[0..1];
+        property updated : TimeStamp[0..1];
+    }
+
+    resource TestResources('/test-resources') {
+        
+        method GET {
+            description : 'receives all test-resources';
+                
+            filter limit : Integer default 100;
+            filter skip : Integer default 0;
+                
+            query<Neo4j, stage-server> {
+                match (t:TestResource) return t
+            }
+        }
+
+        method POST(body: TestResource) {
+            description : 'receives all test-resources';
+                
+            filter limit : Integer default 100;
+            filter skip : Integer default 0;
+                
+            query<Neo4j, stage-server> {
+                create (t:TestResource) skip {skip} limit {limit} return t
+            }
+
+            redirect TestResource;
+        }
+
+        property allTestResources : TestResource[0..*];
+        property count : Integer;
+    }
+
+    resource TestResource('/test-resources/{id}') extends Modifiable {
+
+        method GET {
+            description : 'receives the test-resource with the given id';
+
+            query<Neo4j, stage-server> {
+                match 
+                    (t:TestResource {id: {id}}) 
+                return 
+                    t.id AS id, 
+                    t.firstName AS firstName, 
+                    'Bla' AS lastName,
+                    t.`_created` AS created,
+                    t.`_updated` AS updated
+            }
+        }
+
+        property id : String[1];
+        property firstName : String;
+        property lastName : String;
+    }
+}
