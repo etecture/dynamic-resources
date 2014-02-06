@@ -5,11 +5,11 @@
     <parent>
         <groupId>de.etecture.opensource</groupId>
         <artifactId>dynamic-resources</artifactId>
-        <version>1.5.7</version>
+        <version>1.5.8-SNAPSHOT</version>
     </parent>
 
     <artifactId>dynamic-resources-extension</artifactId>
-    <version>1.5.7</version>
+    <version>1.5.8-SNAPSHOT</version>
     <packaging>jar</packaging>
 	
     <name>Dynamic CDI Resources - Extension</name>
@@ -24,7 +24,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>dynamic-resources-api</artifactId>
-            <version>1.5.7</version>
+            <version>1.5.8-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.googlecode.json-simple</groupId>
