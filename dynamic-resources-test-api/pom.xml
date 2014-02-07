@@ -92,13 +92,13 @@
         <dependency>
             <groupId>de.etecture.opensource</groupId>
             <artifactId>dynamic-repositories-api</artifactId>
-            <version>[1.5.0,)</version>
+            <version>[1.5.0,2.0.0-SNAPSHOT)</version>
             <type>jar</type>
         </dependency>
         <dependency>
             <groupId>de.etecture.opensource</groupId>
             <artifactId>dynamic-resources-api</artifactId>
-            <version>[1.1.5,)</version>
+            <version>${project.version}</version>
             <type>jar</type>
         </dependency>
         <dependency>
@@ -115,13 +115,13 @@
         <dependency>
             <groupId>de.etecture.opensource</groupId>
             <artifactId>dynamic-repositories-extension</artifactId>
-            <version>[1.5.0,)</version>
+            <version>[1.5.0,2.0.0-SNAPSHOT)</version>
             <type>jar</type>
         </dependency>
         <dependency>
             <groupId>de.etecture.opensource</groupId>
             <artifactId>dynamic-resources-extension</artifactId>
-            <version>[1.1.5,)</version>
+            <version>${project.version}</version>
             <type>jar</type>
         </dependency>
         <dependency>

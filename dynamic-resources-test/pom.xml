@@ -24,13 +24,13 @@
         <dependency>
             <groupId>de.etecture.opensource</groupId>
             <artifactId>dynamic-resources-api</artifactId>
-            <version>1.5.9-SNAPSHOT</version>
+            <version>${project.version}</version>
             <type>jar</type>
         </dependency>
         <dependency>
             <groupId>de.etecture.opensource</groupId>
             <artifactId>dynamic-resources-extension</artifactId>
-            <version>1.5.9-SNAPSHOT</version>
+            <version>${project.version}</version>
             <type>jar</type>
         </dependency>
         <dependency>
@@ -59,7 +59,7 @@
         <dependency>
             <groupId>de.etecture.opensource</groupId>
             <artifactId>dynamic-resources-test-api</artifactId>
-            <version>1.5.9-SNAPSHOT</version>
+            <version>${project.version}</version>
             <scope>test</scope>
             <type>jar</type>
         </dependency>
@@ -80,7 +80,7 @@
             <!-- the implementation of dynamic-repositories with neo4j remote access -->
             <groupId>de.etecture.opensource</groupId>
             <artifactId>dynamic-repositories-remote-neo4j</artifactId>
-            <version>[1.5.1,)</version>
+            <version>[1.5.1,2.0.0-SNAPSHOT)</version>
             <type>jar</type>
         </dependency>
         <dependency>
