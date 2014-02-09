@@ -52,21 +52,27 @@ public class ResourcesWithParametersImpl<T> extends ResourcesImpl<T> {
 
     public ResourcesWithParametersImpl(BeanManager bm,
             Class<T> resourceClass, Object body, int expectedStatus,
-            Map<String, Object> params) {
-        super(bm, resourceClass, body, expectedStatus, params);
+            Map<String, String> pathParams, Map<String, String[]> queryParams) {
+        super(bm, resourceClass, body, expectedStatus, pathParams, queryParams);
     }
 
     @Override
-    public Resources<T> select(
-            Map<String, Object> params) {
-        params.putAll(params);
+    public Resources<T> withPathParam(String paramName, String paramValue) {
+        this.pathParams.put(paramName, paramValue);
         return this;
     }
 
     @Override
-    public Resources<T> select(String paramName, Object paramValue) {
-        this.params.put(paramName, paramValue);
+    public Resources<T> withQueryParam(String paramName, String... paramValue) {
+        if (this.queryParams.containsKey(paramName)) {
+            String[] values = this.queryParams.get(paramName);
+            String[] newValues = new String[values.length + paramValue.length];
+            System.arraycopy(values, 0, newValues, 0, values.length);
+            System.arraycopy(paramValue, 0, newValues, values.length,
+                    paramValue.length);
+        } else {
+            this.queryParams.put(paramName, paramValue);
+        }
         return this;
     }
-
 }

@@ -1,7 +1,7 @@
 package de.etecture.opensource.dynamicresources.test;
 
-import de.etecture.opensource.dynamicrepositories.api.Generator;
-import de.etecture.opensource.dynamicrepositories.api.Param;
+import de.etecture.opensource.dynamicrepositories.api.ParamValueGenerator;
+import de.etecture.opensource.dynamicrepositories.api.annotations.Param;
 import org.apache.commons.beanutils.ConvertUtils;
 
 /**
@@ -11,7 +11,7 @@ import org.apache.commons.beanutils.ConvertUtils;
  * @version
  * @since
  */
-public final class RandomIdGenerator implements Generator {
+public final class RandomIdGenerator implements ParamValueGenerator {
 
     /** The Constant DIGITS. */
     private static final char[] DIGITS = new char[]{'0',
@@ -25,7 +25,8 @@ public final class RandomIdGenerator implements Generator {
         '8',
         '9'};
 
-    public Object generateValue(Param definition) {
+    @Override
+    public Object generate(Param definition) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 10; i++) {
             sb.append(DIGITS[((Double) (Math.random() * DIGITS.length))

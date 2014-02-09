@@ -37,53 +37,31 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.api;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+package de.etecture.opensource.dynamicresources.test;
+
+import de.etecture.opensource.dynamicrepositories.executor.NoResultException;
+import de.etecture.opensource.dynamicresources.api.AbstractExceptionHandler;
+import de.etecture.opensource.dynamicresources.api.DefaultResponse;
+import de.etecture.opensource.dynamicresources.api.Request;
+import de.etecture.opensource.dynamicresources.api.Response;
+import de.etecture.opensource.dynamicresources.api.StatusCodes;
 
 /**
- * is thrown, when the framework recognizes a filter value, that did not match
- * the specified regular expression.
  *
  * @author rhk
  * @version
  * @since
  */
-public class InvalidFilterValueException extends ResourceException {
-    private static final long serialVersionUID = 1L;
-    private final Request request;
-    private final Filter filter;
-    private final List<String> actualValues;
+public class TestResourceNotFoundHandler extends AbstractExceptionHandler<NoResultException> {
 
-    public InvalidFilterValueException(
-            Request request, Filter filter,
-            String... actualValues) {
-        this(request, filter, null, actualValues);
+    public TestResourceNotFoundHandler() {
+        super(NoResultException.class);
     }
 
-    public InvalidFilterValueException(
-            Request request, Filter filter, Throwable cause,
-            String... actualValues) {
-        super(String.format(
-                "The filter parameter: %s for resource-call: %S %s is not valid.",
-                filter.name(), request.getMethodName(), request
-                .getResourceClass().getSimpleName()), cause);
-        this.request = request;
-        this.filter = filter;
-        this.actualValues = Arrays.asList(actualValues);
-    }
-
-    public List<String> getActualValues() {
-        return Collections.unmodifiableList(actualValues);
-    }
-
-    public Request getRequest() {
-        return request;
-    }
-
-    public Filter getFilter() {
-        return filter;
+    @Override
+    protected <T> Response<T> buildErrorResponse(
+            Request<T> request, NoResultException exception) {
+        return new DefaultResponse(exception.getMessage(), StatusCodes.NOT_FOUND);
     }
 }

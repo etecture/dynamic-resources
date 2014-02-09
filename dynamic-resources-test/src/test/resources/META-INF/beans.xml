@@ -7,7 +7,6 @@
           http://jboss.org/schema/weld/beans http://jboss.org/schema/weld/beans_1_1.xsd">
 
     <alternatives>
-        <class>de.etecture.opensource.dynamicresources.test.SampleConnectionResolver</class>
         <class>de.etecture.opensource.dynamicresources.test.AlternativeSecurityContext</class>
     </alternatives>
 

@@ -39,8 +39,10 @@
  */
 package de.etecture.opensource.dynamicresources.api;
 
+import de.herschke.converters.api.ConvertException;
+import de.herschke.converters.api.Converters;
 import java.util.Map;
-import org.apache.commons.beanutils.ConvertUtils;
+import javax.inject.Inject;
 
 /**
  *
@@ -50,14 +52,22 @@ import org.apache.commons.beanutils.ConvertUtils;
  */
 public class DefaultFilterConverter implements FilterConverter {
 
+    @Inject
+    Converters converters;
+
     @Override
-    public <R> void convert(Filter filter, Request<R> request,
+    public <R> Object convert(Filter filter, Request<R> request,
             Map<String, Object> parameter) throws InvalidFilterValueException {
         final String value = request.getSingleQueryParameterValue(filter.name(),
                 filter.defaultValue());
         if (value != null && value.matches(filter.validationRegex())) {
-            parameter.put(filter.name(), ConvertUtils.convert(value, filter
-                    .type()));
+            try {
+                return converters.select(filter.type())
+                        .convert(value);
+            } catch (ConvertException ex) {
+                throw new InvalidFilterValueException(request, filter,
+                        ex, value);
+            }
         } else {
             throw new InvalidFilterValueException(request, filter, value);
         }

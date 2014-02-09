@@ -39,7 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.api;
 
-import de.etecture.opensource.dynamicrepositories.api.Query;
+import de.etecture.opensource.dynamicrepositories.api.annotations.Query;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

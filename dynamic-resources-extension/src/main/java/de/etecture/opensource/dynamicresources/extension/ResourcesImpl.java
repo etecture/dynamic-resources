@@ -62,7 +62,8 @@ public class ResourcesImpl<T> implements Resources<T> {
 
     private final BeanManager bm;
     private final Class<T> resourceClass;
-    protected final Map<String, Object> params;
+    protected final Map<String, String> pathParams;
+    protected final Map<String, String[]> queryParams;
     protected Object body;
     private int expectedStatus;
 
@@ -71,32 +72,36 @@ public class ResourcesImpl<T> implements Resources<T> {
             Class<T> resourceClass,
             Object body,
             int expectedStatus,
-            Map<String, Object> params) {
+            Map<String, String> pathParams, Map<String, String[]> queryParams) {
         this.bm = bm;
         this.body = body;
         this.expectedStatus = expectedStatus;
-        this.params = params;
+        this.pathParams = pathParams;
+        this.queryParams = queryParams;
         this.resourceClass = resourceClass;
     }
 
     public ResourcesImpl(
             BeanManager bm, Class<T> resourceClass) {
-        this(bm, resourceClass, null, -1, new HashMap<String, Object>());
+        this(bm, resourceClass, null, -1, new HashMap<String, String>(),
+                new HashMap<String, String[]>());
 
     }
 
     @Override
-    public Resources<T> select(
-            Map<String, Object> params) {
-        return new ResourcesWithParametersImpl(bm, resourceClass, body,
-                expectedStatus, params);
-    }
-
-    @Override
-    public Resources<T> select(String paramName, Object paramValue) {
-        Map<String, Object> parameters = new HashMap<>();
+    public Resources<T> withPathParam(String paramName, String paramValue) {
+        Map<String, String> parameters = new HashMap<>();
         parameters.put(paramName, paramValue);
-        return select(parameters);
+        return new ResourcesWithParametersImpl(bm, resourceClass, body,
+                expectedStatus, parameters, new HashMap<String, String[]>());
+    }
+
+    @Override
+    public Resources<T> withQueryParam(String paramName, String... paramValue) {
+        Map<String, String[]> parameters = new HashMap<>();
+        parameters.put(paramName, paramValue);
+        return new ResourcesWithParametersImpl(bm, resourceClass, body,
+                expectedStatus, new HashMap<String, String>(), parameters);
     }
 
     @Override
@@ -136,7 +141,8 @@ public class ResourcesImpl<T> implements Resources<T> {
         HttpContextProducer.setRequest(req);
         DefaultRequest.Builder<T> builder = DefaultRequest
                 .fromMethod(resourceClass, methodName)
-                .addParameter(params)
+                .addPathParameter(pathParams)
+                .addQueryParameter(queryParams)
                 .withRequestContent(body);
         return lookupExecutor(bm, methodName)
                 .handleRequest(builder.build());

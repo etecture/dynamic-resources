@@ -39,8 +39,6 @@
  */
 package de.etecture.opensource.dynamicresources.api;
 
-import java.util.Map;
-
 /**
  * This interface declares an injection point for Resources.
  * <p>
@@ -71,12 +69,13 @@ public interface Resources<T> {
 
     /**
      * selects a specific representation of this resource by using the given
-     * parameters.
+     * parameter.
      *
-     * @param params
+     * @param paramName
+     * @param paramValue
      * @return
      */
-    Resources<T> select(Map<String, Object> params);
+    Resources<T> withPathParam(String paramName, String paramValue);
 
     /**
      * selects a specific representation of this resource by using the given
@@ -86,7 +85,7 @@ public interface Resources<T> {
      * @param paramValue
      * @return
      */
-    Resources<T> select(String paramName, Object paramValue);
+    Resources<T> withQueryParam(String paramName, String... paramValue);
 
     /**
      * specifies the request body to be sent to the resource.

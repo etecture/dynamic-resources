@@ -39,7 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.test;
 
-import de.etecture.opensource.dynamicrepositories.api.Query;
+import de.etecture.opensource.dynamicrepositories.api.annotations.Query;
 import de.etecture.opensource.dynamicresources.api.HttpMethods;
 import de.etecture.opensource.dynamicresources.api.Method;
 import de.etecture.opensource.dynamicresources.api.Resource;
@@ -57,7 +57,8 @@ import de.etecture.opensource.dynamicresources.api.StatusCodes;
             query =
             @Query(
             technology = "Neo4j"),
-            interceptors = {SpecificResourceInterceptor.class}),
+            interceptors = {TestResourceNotFoundHandler.class,
+        SpecificResourceInterceptor.class}),
     @Method(
             name = HttpMethods.PUT,
             description = "updates a TestResource with the given id",
@@ -65,7 +66,7 @@ import de.etecture.opensource.dynamicresources.api.StatusCodes;
             query =
             @Query(
             technology = "Neo4j",
-            value = ""
+            statement = ""
             + "MERGE "
             + "  (t:Test {"
             + "    id: {id} "
@@ -90,7 +91,7 @@ import de.etecture.opensource.dynamicresources.api.StatusCodes;
             query =
             @Query(
             technology = "Neo4j",
-            value = ""
+            statement = ""
             + "MATCH "
             + "  (this:Test) "
             + "WHERE "
@@ -98,7 +99,7 @@ import de.etecture.opensource.dynamicresources.api.StatusCodes;
             + "DELETE "
             + "  this "
             + "RETURN "
-            + "  count(*)>=0"))})
+            + "  count(*)>=0 as result"))})
 public interface TestResource {
 
     String getId();

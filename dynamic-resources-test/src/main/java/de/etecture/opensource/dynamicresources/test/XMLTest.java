@@ -39,7 +39,6 @@
  */
 package de.etecture.opensource.dynamicresources.test;
 
-import de.etecture.opensource.dynamicrepositories.api.EntityNotFoundException;
 import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.api.Produces;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
@@ -58,7 +57,8 @@ import javax.xml.stream.XMLStreamWriter;
  */
 public enum XMLTest implements ResponseWriter {
 
-    @Produces(contentType = String.class, mimeType = {"application/xml",
+    @Produces(contentType = String.class,
+              mimeType = {"application/xml",
         "text/xml"})
     BLABLA {
         @Override
@@ -66,21 +66,6 @@ public enum XMLTest implements ResponseWriter {
                 throws XMLStreamException {
             writer.writeStartElement("test");
             writer.writeCData(element.toString());
-            writer.writeEndElement();
-        }
-    },
-    @Produces(contentType = EntityNotFoundException.class, mimeType = {
-        "application/xml",
-        "text/xml"})
-    NOT_FOUND {
-        @Override
-        protected void process(Object element, XMLStreamWriter writer) throws
-                XMLStreamException {
-            final EntityNotFoundException enfe =
-                    (EntityNotFoundException) element;
-            writer.writeStartElement("NotFoundException");
-            writer.writeAttribute("entity", enfe.getEntityClass()
-                    .getSimpleName());
             writer.writeEndElement();
         }
     },
@@ -105,8 +90,10 @@ public enum XMLTest implements ResponseWriter {
             writer.writeEndElement();
         }
     },
-    @Produces(contentType = TestResource.class, mimeType = {"application/xml",
-        "text/xml"}, version = "1.0")
+    @Produces(contentType = TestResource.class,
+              mimeType = {"application/xml",
+        "text/xml"},
+              version = "1.0")
     TEST1_0 {
         @Override
         protected void process(Object element, XMLStreamWriter writer) throws
@@ -124,8 +111,10 @@ public enum XMLTest implements ResponseWriter {
             writer.writeEndElement();
         }
     },
-    @Produces(contentType = TestResource.class, mimeType = {"application/xml",
-        "text/xml"}, version = "2.0")
+    @Produces(contentType = TestResource.class,
+              mimeType = {"application/xml",
+        "text/xml"},
+              version = "2.0")
     TEST2_0 {
         @Override
         protected void process(Object element, XMLStreamWriter writer) throws
@@ -143,8 +132,10 @@ public enum XMLTest implements ResponseWriter {
             writer.writeEndElement();
         }
     },
-    @Produces(contentType = TestResource.class, mimeType = {"application/xml",
-        "text/xml"}, version = "2.0.1")
+    @Produces(contentType = TestResource.class,
+              mimeType = {"application/xml",
+        "text/xml"},
+              version = "2.0.1")
     TEST2_0_1 {
         @Override
         protected void process(Object element, XMLStreamWriter writer) throws
@@ -162,7 +153,8 @@ public enum XMLTest implements ResponseWriter {
             writer.writeEndElement();
         }
     },
-    @Produces(contentType = TestResources.class, mimeType = {"application/xml",
+    @Produces(contentType = TestResources.class,
+              mimeType = {"application/xml",
         "text/xml"})
     TESTS {
         @Override

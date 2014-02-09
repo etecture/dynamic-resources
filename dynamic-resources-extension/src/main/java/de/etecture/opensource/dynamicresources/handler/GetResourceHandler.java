@@ -39,7 +39,6 @@
  */
 package de.etecture.opensource.dynamicresources.handler;
 
-import de.etecture.opensource.dynamicrepositories.spi.QueryMetaData;
 import de.etecture.opensource.dynamicresources.api.HttpMethods;
 import de.etecture.opensource.dynamicresources.spi.AbstractResourceMethodHandler;
 import de.etecture.opensource.dynamicresources.spi.Verb;
@@ -50,9 +49,5 @@ import de.etecture.opensource.dynamicresources.spi.Verb;
  */
 @Verb(HttpMethods.GET)
 public class GetResourceHandler extends AbstractResourceMethodHandler{
-
-    public GetResourceHandler() {
-        super(QueryMetaData.Kind.RETRIEVE);
-    }
 
 }

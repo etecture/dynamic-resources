@@ -40,13 +40,12 @@
 package de.etecture.opensource.dynamicresources.test.junit;
 
 import com.google.common.io.NullOutputStream;
-import de.etecture.opensource.dynamicrepositories.api.Param;
-import de.etecture.opensource.dynamicrepositories.api.Query;
-import de.etecture.opensource.dynamicrepositories.api.ResultConverter;
-import de.etecture.opensource.dynamicrepositories.spi.QueryExecutorResolver;
-import de.etecture.opensource.dynamicrepositories.spi.QueryMetaData;
-import de.etecture.opensource.dynamicrepositories.spi.Technology;
-import de.etecture.opensource.dynamicresources.extension.DefaultQueryMetaData;
+import de.etecture.opensource.dynamicrepositories.api.annotations.Hint;
+import de.etecture.opensource.dynamicrepositories.api.annotations.Param;
+import de.etecture.opensource.dynamicrepositories.api.annotations.Query;
+import de.etecture.opensource.dynamicrepositories.executor.Technology;
+import de.etecture.opensource.dynamicrepositories.extension.DefaultQuery;
+import de.etecture.opensource.dynamicrepositories.extension.QueryExecutors;
 import de.etecture.opensource.dynamicresources.extension.DefaultRequest;
 import de.etecture.opensource.dynamicresources.extension.VerbLiteral;
 import de.etecture.opensource.dynamicresources.spi.ResourceMethodHandler;
@@ -55,7 +54,9 @@ import de.etecture.opensource.dynamicresources.test.api.ParamSet;
 import de.etecture.opensource.dynamicresources.test.api.ParamSets;
 import de.etecture.opensource.dynamicresources.test.api.Request;
 import de.etecture.opensource.dynamicresources.test.api.Response;
+import de.etecture.opensource.dynamicresources.api.BooleanResult;
 import de.etecture.opensource.dynamicresources.test.utils.Nop;
+import de.herschke.converters.api.Converters;
 import de.herschke.testhelper.ConsoleWriter;
 import de.herschke.testhelper.ConsoleWriter.Color;
 import java.io.PrintStream;
@@ -67,11 +68,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Qualifier;
-import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jboss.weld.environment.se.WeldContainer;
 import org.junit.runners.model.FrameworkMethod;
@@ -87,7 +89,7 @@ public class ResourceTestMethod extends FrameworkMethod {
     public static final PrintStream newOut =
             new PrintStream(new NullOutputStream());
     private final Request request;
-    private final QueryExecutorResolver queryExecutors;
+    private final QueryExecutors executors;
     private final Map<String, Object> requestParameter;
     private final ResourceMethodHandler handler;
     private final Expect expect;
@@ -152,8 +154,8 @@ public class ResourceTestMethod extends FrameworkMethod {
     public ResourceTestMethod(WeldContainer container, Method method) {
         super(method);
         this.container = container;
-        this.queryExecutors = container.instance()
-                .select(QueryExecutorResolver.class).get();
+        this.executors = container.instance()
+                .select(QueryExecutors.class).get();
         request = method.getAnnotation(Request.class);
         expect = method.getAnnotation(Expect.class);
         try {
@@ -200,7 +202,11 @@ public class ResourceTestMethod extends FrameworkMethod {
                 status = Status.FAILED;
                 throw t;
             }
-            out.println("  --> Status: %d", response.getStatus());
+            if (response == null) {
+                out.println("  --> Status: <null>");
+            } else {
+                out.println("  --> Status: %d", response.getStatus());
+            }
             if (entity != null) {
                 out.println("  --> Type: %s", getEntityType(entity));
                 out.println("  --> Entity:");
@@ -237,12 +243,15 @@ public class ResourceTestMethod extends FrameworkMethod {
                             .annotationType())) {
                         Param param = (Param) parameterAnnotation;
                         if (requestParameter.containsKey(param.name())) {
-                            newParams[i] = ConvertUtils.convert(requestParameter
-                                    .get(param.name()), getMethod()
-                                    .getParameterTypes()[i]);
+                            newParams[i] = container.instance().select(
+                                    Converters.class).get().select(getMethod()
+                                    .getParameterTypes()[i]).convert(
+                                    requestParameter
+                                    .get(param.name()));
                         } else {
-                            newParams[i] = param.generator().newInstance()
-                                    .generateValue(param);
+                            newParams[i] = container.instance().select(param
+                                    .generator()).get()
+                                    .generate(param);
                         }
                     }
                 }
@@ -309,12 +318,12 @@ public class ResourceTestMethod extends FrameworkMethod {
             parameter.putAll(getParameterForSet(include));
         }
         for (Param param : set.pathParameter()) {
-            parameter.put(param.name(), param.generator()
-                    .newInstance().generateValue(param));
+            parameter.put(param.name(), container.instance().select(param
+                    .generator()).get().generate(param));
         }
         for (Param param : set.queryParameter()) {
-            parameter.put(param.name(), param.generator()
-                    .newInstance().generateValue(param));
+            parameter.put(param.name(), container.instance().select(param
+                    .generator()).get().generate(param));
         }
         return parameter;
     }
@@ -325,12 +334,12 @@ public class ResourceTestMethod extends FrameworkMethod {
             parameter.putAll(getParameterForSet(request.parameterSet()));
         }
         for (Param param : request.pathParameter()) {
-            parameter.put(param.name(), param.generator()
-                    .newInstance().generateValue(param));
+            parameter.put(param.name(), container.instance().select(param
+                    .generator()).get().generate(param));
         }
         for (Param param : request.queryParameter()) {
-            parameter.put(param.name(), param.generator()
-                    .newInstance().generateValue(param));
+            parameter.put(param.name(), container.instance().select(param
+                    .generator()).get().generate(param));
         }
         return parameter;
     }
@@ -341,10 +350,10 @@ public class ResourceTestMethod extends FrameworkMethod {
         final DefaultRequest.Builder rq =
                 DefaultRequest
                 .fromMethod(responseType, request.method())
-                .addParameter(requestParameter)
-                .addPathParameter(requestParameter);
+                .addPathParameter((Map) requestParameter);
         for (Map.Entry<String, Object> entry : requestParameter.entrySet()) {
-            rq.addQueryParameter(entry.getKey(), entry.getValue().toString());
+            rq.addQueryParameter(entry.getKey(), entry.getValue()
+                    .toString());
         }
         final DefaultRequest req = rq
                 .withRequestContent(request.bodyGenerator().newInstance()
@@ -357,8 +366,8 @@ public class ResourceTestMethod extends FrameworkMethod {
             Exception {
         if (queries.length > 0) {
             for (Query query : request.before()) {
-                if (!executeQuery(query.value(), prefix + getName(), query
-                        .technology(), query.connection())) {
+                if (!executeQuery(query.statement(), prefix + getName(), query
+                        .technology(), query.connection(), query.converter())) {
                     return false;
                 }
             }
@@ -377,40 +386,54 @@ public class ResourceTestMethod extends FrameworkMethod {
                 }
                 return executeQuery(bundle.getString(prefix + getName()), "",
                         technology,
-                        "default");
+                        "default", "");
             }
         }
         return true;
     }
 
-    private boolean executeQuery(String query, String queryName,
+    private boolean executeQuery(String statement, String queryName,
             String technology,
-            String connection) throws Exception {
-        final DefaultQueryMetaData qm =
-                new DefaultQueryMetaData(QueryMetaData.Type.SINGLE,
-                Boolean.class,
-                QueryMetaData.Kind.RETRIEVE, query, queryName,
+            String connection, String converter) throws Exception {
+        DefaultQuery<BooleanResult> query =
+                new DefaultQuery(BooleanResult.class,
                 technology,
                 connection,
-                requestParameter);
-        qm.addParameter("request", request.bodyGenerator()
+                StringUtils.defaultIfBlank(statement, queryName),
+                converter);
+        for (Entry<String, Object> e : requestParameter.entrySet()) {
+            query.addParameter(e.getKey(), e.getValue());
+        }
+        query.addParameter("request", request.bodyGenerator()
                 .newInstance().generateBody(
                 request, requestParameter));
-        qm.setRepositoryClass(super.getMethod().getDeclaringClass());
-        qm.setConverter(new ResultConverter() {
-            @Override
-            public Object convert(Class returnType, Object result) {
-                return result != null;
-            }
-        });
-        if (StringUtils.isBlank(technology) || "default".equalsIgnoreCase(
-                technology)) {
-            return ((Boolean) queryExecutors
-                    .getDefaultExecutor()
-                    .execute(qm));
-        } else {
-            return ((Boolean) queryExecutors.getQueryExecutorForTechnology(
-                    technology).execute(qm));
+        return ((BooleanResult) executors.execute(query)).getResult();
+    }
+
+    private String createStatement(Class<?> type, String name,
+            String statement) {
+        if (statement == null || statement.trim().isEmpty()) {
+            statement = name;
+        }
+        try {
+            return ResourceBundle.getBundle(type
+                    .getName()).getString(statement);
+        } catch (MissingResourceException e) {
+            return statement;
+        }
+    }
+
+    private void addHints(DefaultQuery query, Hint... hints) {
+        for (Hint hint : hints) {
+            query.addHint(hint.name(), container.instance().select(hint
+                    .generator()).get().generate(hint));
+        }
+    }
+
+    private void addParams(DefaultQuery query, Param... params) {
+        for (Param param : params) {
+            query.addParameter(param.name(), container.instance()
+                    .select(param.generator()).get().generate(param));
         }
     }
 

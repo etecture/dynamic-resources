@@ -39,13 +39,14 @@
  */
 package de.etecture.opensource.dynamicresources.handler;
 
-import de.etecture.opensource.dynamicrepositories.spi.QueryMetaData;
+import de.etecture.opensource.dynamicrepositories.executor.QueryHints;
+import de.etecture.opensource.dynamicrepositories.extension.DefaultQuery;
+import de.etecture.opensource.dynamicresources.api.BooleanResult;
 import de.etecture.opensource.dynamicresources.api.DefaultResponse;
 import de.etecture.opensource.dynamicresources.api.HttpMethods;
 import de.etecture.opensource.dynamicresources.api.Request;
 import de.etecture.opensource.dynamicresources.api.ResourceException;
 import de.etecture.opensource.dynamicresources.api.Response;
-import de.etecture.opensource.dynamicresources.extension.DefaultQueryMetaData;
 import de.etecture.opensource.dynamicresources.spi.AbstractResourceMethodHandler;
 import de.etecture.opensource.dynamicresources.spi.Verb;
 
@@ -56,19 +57,15 @@ import de.etecture.opensource.dynamicresources.spi.Verb;
 @Verb(HttpMethods.DELETE)
 public class DeleteResourceHandler extends AbstractResourceMethodHandler {
 
-    public DeleteResourceHandler() {
-        super(QueryMetaData.Kind.DELETE);
-    }
-
     @Override
     public <T> Response<T> handleRequest(Request<T> request) throws
             ResourceException {
         try {
-            final DefaultQueryMetaData qmd =
-                    buildMetaData(request, Boolean.class,
-                    QueryMetaData.Type.SINGLE);
-            executeQuery(request, qmd);
-            return new DefaultResponse(null,
+            final DefaultQuery<BooleanResult> query =
+                    buildQuery(request, BooleanResult.class);
+            query.addHint(QueryHints.LIMIT, 1);
+            BooleanResult result = (BooleanResult) executors.execute(query);
+            return new DefaultResponse(result.getResult(),
                     request.getResourceMethod().status());
         } catch (Exception ex) {
             return afterFailure(request, null, ex);

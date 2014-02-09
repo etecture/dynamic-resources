@@ -39,7 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.test;
 
-import de.etecture.opensource.dynamicrepositories.api.Query;
+import de.etecture.opensource.dynamicrepositories.api.annotations.Query;
 import de.etecture.opensource.dynamicresources.api.Consumes;
 import de.etecture.opensource.dynamicresources.api.Filter;
 import de.etecture.opensource.dynamicresources.api.HttpMethods;
@@ -62,7 +62,7 @@ import java.util.List;
             query =
             @Query(
             technology = "Neo4j",
-            value = ""
+            statement = ""
             + "start this=node:testIndex({query}) "
             + "WITH "
             + "  CASE WHEN HAS(this.id) THEN "
@@ -80,7 +80,7 @@ import java.util.List;
             query =
             @Query(
             technology = "Neo4j",
-            value = ""
+            statement = ""
             + "CREATE "
             + "  (this:Test { "
             + "    id: {request}.id, "
@@ -100,7 +100,7 @@ import java.util.List;
             query =
             @Query(
             technology = "Neo4j",
-            value = ""
+            statement = ""
             + "MATCH "
             + "  (this:Test) "
             + "DELETE "

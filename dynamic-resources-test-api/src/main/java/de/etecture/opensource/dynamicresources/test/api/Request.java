@@ -39,8 +39,8 @@
  */
 package de.etecture.opensource.dynamicresources.test.api;
 
-import de.etecture.opensource.dynamicrepositories.api.Param;
-import de.etecture.opensource.dynamicrepositories.api.Query;
+import de.etecture.opensource.dynamicrepositories.api.annotations.Param;
+import de.etecture.opensource.dynamicrepositories.api.annotations.Query;
 import de.etecture.opensource.dynamicresources.api.HttpMethods;
 import de.etecture.opensource.dynamicresources.test.junit.DefaultBodyGenerator;
 import de.etecture.opensource.dynamicresources.test.utils.Nop;

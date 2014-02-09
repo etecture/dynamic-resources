@@ -68,7 +68,7 @@ public interface Request<T> {
 
     Map<String, String[]> getQueryParameter();
 
-    Map<String, Object> getParameter();
+    Map<String, Object> getAllParameter();
 
     Class<?> getRequestType();
 

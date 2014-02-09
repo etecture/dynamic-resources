@@ -68,7 +68,8 @@ public class TestBean {
             TestResources trs = testResourcesList.get();
             System.out.println("result is: " + trs.getCount());
             System.out.println("lookup TestResource with id 1234567890");
-            TestResource tr = testResources.select("id", "1234567890").get();
+            TestResource tr = testResources.withPathParam("id", "1234567890")
+                    .get();
             System.out.println("result is: " + tr.getFirstName() + " " + tr
                     .getLastName());
             System.out.println("####################");
@@ -96,14 +97,14 @@ public class TestBean {
         TestResource testResource =
                 new TestResourceImpl(id, firstName, lastName);
 
-        return testResources.select("id", id).put(testResource);
+        return testResources.withPathParam("id", id).put(testResource);
     }
 
     public TestResource findTestResource(String id) throws Throwable {
-        return testResources.select("id", id).get();
+        return testResources.withPathParam("id", id).get();
     }
 
     public void deleteTestResource(String id) throws Throwable {
-        testResources.select("id", id).delete();
+        testResources.withPathParam("id", id).delete();
     }
 }

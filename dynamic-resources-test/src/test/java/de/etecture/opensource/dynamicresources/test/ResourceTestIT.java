@@ -39,8 +39,8 @@
  */
 package de.etecture.opensource.dynamicresources.test;
 
-import de.etecture.opensource.dynamicrepositories.api.Param;
-import de.etecture.opensource.dynamicrepositories.spi.Technology;
+import de.etecture.opensource.dynamicrepositories.api.annotations.Param;
+import de.etecture.opensource.dynamicrepositories.executor.Technology;
 import de.etecture.opensource.dynamicresources.api.HttpMethods;
 import de.etecture.opensource.dynamicresources.api.StatusCodes;
 import de.etecture.opensource.dynamicresources.test.api.BodyGenerator;
@@ -173,7 +173,7 @@ public class ResourceTestIT {
              resource = TestResource.class,
              parameterSet = PARAMETER_SET)
     public void testDeleteTestResource_testResourceDoesExists(
-            @Response de.etecture.opensource.dynamicresources.api.Response<TestResource> response,
+            @Response de.etecture.opensource.dynamicresources.api.Response<Boolean> response,
             @Param(name = "whatever",
                    value = "1234",
                    type = Long.class) long justForDemonstrationPurpose) {

@@ -80,7 +80,7 @@ public abstract class AbstractCompoundFilterConverter<F extends FilterPart>
     }
 
     @Override
-    public <R> void convert(Filter filter,
+    public <R> Object convert(Filter filter,
             Request<R> request,
             Map<String, Object> parameter) {
         if (!request.hasQueryParameterValue(filter.name())) {
@@ -88,11 +88,10 @@ public abstract class AbstractCompoundFilterConverter<F extends FilterPart>
             for (F part : parts) {
                 partValues[part.ordinal()] = part.value(request);
             }
-            parameter.put(filter.name(),
-                String.format(template, partValues));
+            return String.format(template, partValues);
         } else {
-            parameter.put(filter.name(), request.getSingleQueryParameterValue(
-                    filter.name(), filter.defaultValue()));
+            return request.getSingleQueryParameterValue(
+                    filter.name(), filter.defaultValue());
         }
     }
 }

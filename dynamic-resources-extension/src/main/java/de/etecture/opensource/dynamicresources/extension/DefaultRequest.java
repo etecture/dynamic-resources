@@ -52,9 +52,12 @@ import de.etecture.opensource.dynamicresources.api.Version;
 import de.etecture.opensource.dynamicresources.api.VersionNumberRange;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.AbstractMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang.StringUtils;
@@ -74,7 +77,6 @@ public class DefaultRequest<T> implements Request<T> {
     private final Version contentVersion;
     private final Map<String, String[]> queryParameter;
     private final Map<String, String> pathParameter;
-    private final Map<String, Object> parameter;
     private final Class<T> resourceClass;
     private final Resource resource;
     private final Method resourceMethod;
@@ -88,7 +90,6 @@ public class DefaultRequest<T> implements Request<T> {
             Version contentVersion,
             Map<String, String[]> queryParameter,
             Map<String, String> pathParameter,
-            Map<String, Object> parameter,
             Class<T> resourceClass, Resource resource, Method resourceMethod,
             RequestReaderResolver requestReaderResolver,
             BufferedReader contentReader) {
@@ -99,7 +100,6 @@ public class DefaultRequest<T> implements Request<T> {
         this.contentVersion = contentVersion;
         this.queryParameter = queryParameter;
         this.pathParameter = pathParameter;
-        this.parameter = parameter;
         this.resourceClass = resourceClass;
         this.resource = resource;
         this.resourceMethod = resourceMethod;
@@ -112,7 +112,6 @@ public class DefaultRequest<T> implements Request<T> {
             Version contentVersion,
             Map<String, String[]> queryParameter,
             Map<String, String> pathParameter,
-            Map<String, Object> parameter,
             Class<T> resourceClass, Resource resource, Method resourceMethod,
             Object content) {
         this.methodName = methodName;
@@ -122,7 +121,6 @@ public class DefaultRequest<T> implements Request<T> {
         this.contentVersion = contentVersion;
         this.queryParameter = queryParameter;
         this.pathParameter = pathParameter;
-        this.parameter = parameter;
         this.resourceClass = resourceClass;
         this.resource = resource;
         this.resourceMethod = resourceMethod;
@@ -244,8 +242,16 @@ public class DefaultRequest<T> implements Request<T> {
     }
 
     @Override
-    public Map<String, Object> getParameter() {
-        return parameter;
+    public Map<String, Object> getAllParameter() {
+        return new AbstractMap() {
+            @Override
+            public Set entrySet() {
+                Set entries = new HashSet();
+                entries.addAll(queryParameter.entrySet());
+                entries.addAll(pathParameter.entrySet());
+                return entries;
+            }
+        };
     }
 
     @Override
@@ -384,7 +390,6 @@ public class DefaultRequest<T> implements Request<T> {
         private final Method resourceMethod;
         private final Map<String, String[]> queryParameter = new HashMap<>();
         private final Map<String, String> pathParameter = new HashMap<>();
-        private final Map<String, Object> parameter = new HashMap<>();
         private final BufferedReader contentReader;
         private RequestReaderResolver requestReaderResolver;
         private Object requestContent;
@@ -560,18 +565,6 @@ public class DefaultRequest<T> implements Request<T> {
             return this;
         }
 
-        public Builder addParameter(
-                String name, Object value) {
-            this.parameter.put(name, value);
-            return this;
-        }
-
-        public Builder addParameter(
-                Map<String, Object> params) {
-            this.parameter.putAll(params);
-            return this;
-        }
-
         public Builder withRequestReaderResolver(
                 final RequestReaderResolver requestReaderResolver) {
             this.requestReaderResolver = requestReaderResolver;
@@ -587,13 +580,13 @@ public class DefaultRequest<T> implements Request<T> {
             if (this.requestContent != null) {
                 return new DefaultRequest(methodName, acceptedMediaType,
                         contentMediaType, acceptedVersionRange, contentVersion,
-                        queryParameter, pathParameter, parameter, resourceClass,
+                        queryParameter, pathParameter, resourceClass,
                         resource,
                         resourceMethod, requestContent);
             } else {
                 return new DefaultRequest(methodName, acceptedMediaType,
                         contentMediaType, acceptedVersionRange, contentVersion,
-                        queryParameter, pathParameter, parameter, resourceClass,
+                        queryParameter, pathParameter, resourceClass,
                         resource,
                         resourceMethod, requestReaderResolver, contentReader);
             }

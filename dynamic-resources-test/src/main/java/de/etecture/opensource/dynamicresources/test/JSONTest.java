@@ -39,7 +39,6 @@
  */
 package de.etecture.opensource.dynamicresources.test;
 
-import de.etecture.opensource.dynamicrepositories.api.EntityNotFoundException;
 import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.api.Produces;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
@@ -64,19 +63,8 @@ public enum JSONTest implements ResponseWriter {
                     .writeEnd();
         }
     },
-    @Produces(contentType = EntityNotFoundException.class, mimeType =
-            "application/json")
-    NOT_FOUND {
-        @Override
-        protected void process(Object element, JsonGenerator generator) {
-            final EntityNotFoundException enfe =
-                    (EntityNotFoundException) element;
-            generator.writeStartObject()
-                    .write("entity", enfe.getEntityClass().getSimpleName())
-                    .writeEnd();
-        }
-    },
-    @Produces(contentType = TestResources.class, mimeType = "application/json")
+    @Produces(contentType = TestResources.class,
+              mimeType = "application/json")
     TESTS {
         @Override
         protected void process(Object element, JsonGenerator generator) {

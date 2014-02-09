@@ -39,11 +39,16 @@
  */
 package de.etecture.opensource.dynamicresources.spi;
 
-import de.etecture.opensource.dynamicrepositories.api.Param;
-import de.etecture.opensource.dynamicrepositories.api.Params;
-import de.etecture.opensource.dynamicrepositories.spi.QueryExecutor;
-import de.etecture.opensource.dynamicrepositories.spi.QueryExecutorResolver;
-import de.etecture.opensource.dynamicrepositories.spi.QueryMetaData;
+import de.etecture.opensource.dynamicrepositories.api.HintValueGenerator;
+import de.etecture.opensource.dynamicrepositories.api.ParamValueGenerator;
+import de.etecture.opensource.dynamicrepositories.api.annotations.Hint;
+import de.etecture.opensource.dynamicrepositories.api.annotations.Hints;
+import de.etecture.opensource.dynamicrepositories.api.annotations.Param;
+import de.etecture.opensource.dynamicrepositories.api.annotations.Params;
+import de.etecture.opensource.dynamicrepositories.executor.Query;
+import de.etecture.opensource.dynamicrepositories.executor.QueryHints;
+import de.etecture.opensource.dynamicrepositories.extension.DefaultQuery;
+import de.etecture.opensource.dynamicrepositories.extension.QueryExecutors;
 import de.etecture.opensource.dynamicresources.api.DefaultResponse;
 import de.etecture.opensource.dynamicresources.api.Filter;
 import de.etecture.opensource.dynamicresources.api.FilterConverter;
@@ -57,17 +62,18 @@ import de.etecture.opensource.dynamicresources.api.ResourceInterceptor;
 import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.api.StatusCodes;
 import de.etecture.opensource.dynamicresources.api.UriBuilder;
-import de.etecture.opensource.dynamicresources.extension.DefaultQueryMetaData;
 import de.etecture.opensource.dynamicresources.extension.RequestReaderResolver;
 import de.etecture.opensource.dynamicresources.extension.ResponseWriterResolver;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Default;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import org.apache.commons.lang.StringUtils;
 
 /**
  *
@@ -90,16 +96,16 @@ public abstract class AbstractResourceMethodHandler implements
     @Any
     Instance<FilterConverter> anyFilterConverters;
     @Inject
-    QueryExecutorResolver queryExecutors;
+    protected QueryExecutors executors;
     @Inject
     @Default
     UriBuilder uriBuilder;
-    private final QueryMetaData.Kind kind;
-
-    protected AbstractResourceMethodHandler(
-            QueryMetaData.Kind kind) {
-        this.kind = kind;
-    }
+    @Inject
+    Instance<HintValueGenerator> hintValueGenerators;
+    @Inject
+    Instance<ParamValueGenerator> paramValueGenerators;
+    @Inject
+    Instance<Object> instances;
 
     protected Response before(Request request) {
         Response response = null;
@@ -194,10 +200,11 @@ public abstract class AbstractResourceMethodHandler implements
             final Class<?> seeOther = request.getResourceMethod().seeOther();
             if (seeOther == Class.class || seeOther == null) {
                 try {
-                    QueryMetaData qmd = buildMetaData(request, request
-                            .getResourceClass(), QueryMetaData.Type.SINGLE);
+                    DefaultQuery<T> query = buildQuery(request, request
+                            .getResourceClass());
+                    query.addHint(QueryHints.LIMIT, 1);
                     response =
-                            executeQuery(request, qmd);
+                            executeQuery(request, query);
                 } catch (Throwable t) {
                     return afterFailure(request, new DefaultResponse(request
                             .getResourceClass(), t),
@@ -207,12 +214,13 @@ public abstract class AbstractResourceMethodHandler implements
             } else {
                 if (seeOther.isAnnotationPresent(Resource.class)) {
                     try {
-                        DefaultQueryMetaData qmd = buildMetaData(request,
-                                PathParamSubstitution.class,
-                                QueryMetaData.Type.LIST);
+                        DefaultQuery<PathParamSubstitution> query =
+                                buildQuery(request,
+                                PathParamSubstitution.class);
+                        query.addHint(QueryHints.LIMIT, -1);
                         final List<PathParamSubstitution> substitutions =
-                                (List<PathParamSubstitution>) getExecutorByTechnology(
-                                qmd.getQueryTechnology()).execute(qmd);
+                                (List<PathParamSubstitution>) executors.execute(
+                                query);
                         Map<String, String> pathValues = new HashMap<>();
                         for (PathParamSubstitution substitution : substitutions) {
                             pathValues.put(substitution.getParamName(),
@@ -237,65 +245,98 @@ public abstract class AbstractResourceMethodHandler implements
         return response;
     }
 
-    protected <T> DefaultQueryMetaData<T> buildMetaData(Request<?> request,
-            Class<T> queryType, QueryMetaData.Type type) throws
+    protected <T> DefaultQuery<T> buildQuery(Request<?> request,
+            Class<T> queryType) throws
             ResourceException {
+        final de.etecture.opensource.dynamicrepositories.api.annotations.Query qa =
+                request.getResourceMethod().query();
 
-        Map<String, Object> parameter = buildParameterMap(request);
-        DefaultQueryMetaData<T> queryMetaData = new DefaultQueryMetaData(
-                request.getResourceMethod().query(),
-                request.getResourceMethod().name(),
-                queryType,
-                type,
-                kind,
-                parameter);
+        DefaultQuery<T> query = new DefaultQuery(queryType,
+                qa.technology(),
+                qa.connection(),
+                createStatement(request.getRequestType(), request
+                .getMethodName(), qa.statement()),
+                qa.converter());
 
         if (request.getResourceClass().isAnnotationPresent(Param.class)) {
-            Param param = request.getResourceClass().getAnnotation(Param.class);
-
-            queryMetaData.addParameter(param);
+            addParams(query, request.getResourceClass().getAnnotation(
+                    Param.class));
         } else if (request.getResourceClass().isAnnotationPresent(Params.class)) {
-            for (Param param : request.getResourceClass().getAnnotation(
-                    Params.class).value()) {
-                queryMetaData.addParameter(param);
+            addParams(query, request.getResourceClass().getAnnotation(
+                    Params.class).value());
+        }
+        if (request.getResourceClass().isAnnotationPresent(Hint.class)) {
+            addHints(query, request.getResourceClass().getAnnotation(
+                    Hint.class));
+        } else if (request.getResourceClass().isAnnotationPresent(Hints.class)) {
+            addHints(query, request.getResourceClass().getAnnotation(
+                    Hints.class).value());
+        }
+        addParams(query, qa.params());
+        addHints(query, qa.hints());
+        for (Entry<String, String> e : request.getPathParameter().entrySet()) {
+            query.addParameter(e.getKey(), e.getValue());
+        }
+        for (Entry<String, String[]> e : request.getQueryParameter().entrySet()) {
+            if (e.getValue() != null && e.getValue().length == 1) {
+                query.addParameter(e.getKey(), e.getValue()[0]);
+            } else {
+                query.addParameter(e.getKey(), e.getValue());
             }
         }
-        return queryMetaData;
+        for (Filter filter : request.getResourceMethod().filters()) {
+            query.addParameter(filter.name(), anyFilterConverters.select(filter
+                    .converter()).get().convert(filter, request, request
+                    .getAllParameter()));
+        }
+        Object requestObject = request.getContent();
+        if (requestObject != null) {
+            query.addParameter("request", requestObject);
+        }
+
+        return query;
+    }
+
+    private String createStatement(Class<?> type, String name,
+            String statement) {
+        if (statement == null || statement.trim().isEmpty()) {
+            statement = name;
+        }
+        try {
+            return ResourceBundle.getBundle(type
+                    .getName()).getString(statement);
+        } catch (MissingResourceException e) {
+            return statement;
+        }
+    }
+
+    private void addHints(DefaultQuery query, Hint... hints) {
+        for (Hint hint : hints) {
+            if (hintValueGenerators == null) {
+                query.addHint(hint.name(), hint.value());
+            } else {
+                query.addHint(hint.name(), hintValueGenerators.select(hint
+                        .generator()).get().generate(hint));
+            }
+        }
+    }
+
+    private void addParams(DefaultQuery query, Param... params) {
+        for (Param param : params) {
+            if (paramValueGenerators == null) {
+                query.addParameter(param.name(), param.value());
+            } else {
+                query.addParameter(param.name(), paramValueGenerators
+                        .select(param.generator()).get().generate(param));
+            }
+        }
     }
 
     protected <T> Response<T> executeQuery(
             Request<T> request,
-            QueryMetaData<T> queryMetaData) throws Exception {
+            Query<T> query) throws Exception {
         return new DefaultResponse(
-                getExecutorByTechnology(queryMetaData
-                .getQueryTechnology()).execute(queryMetaData),
+                executors.execute(query),
                 request.getResourceMethod().status());
-    }
-
-    protected QueryExecutor getExecutorByTechnology(String technology) {
-        if (StringUtils.isBlank(technology) || "default".equalsIgnoreCase(
-                technology)) {
-            return queryExecutors.getDefaultExecutor();
-        } else {
-            return queryExecutors.getQueryExecutorForTechnology(technology);
-        }
-    }
-
-    protected Map<String, Object> buildParameterMap(Request<?> request) throws
-            ResourceException {
-        Map<String, Object> parameter = new HashMap<>();
-        parameter.putAll(request.getParameter());
-        parameter.putAll(request.getPathParameter());
-        for (Filter filter : request.getResourceMethod().filters()) {
-            anyFilterConverters.select(filter.converter()).get().convert(filter,
-                    request,
-                    parameter);
-        }
-        Object requestObject = request.getContent();
-        if (requestObject != null) {
-            parameter.put("request", requestObject);
-        }
-        request.getParameter().putAll(parameter);
-        return parameter;
     }
 }
