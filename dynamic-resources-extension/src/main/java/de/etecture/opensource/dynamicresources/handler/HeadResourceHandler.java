@@ -41,7 +41,7 @@ package de.etecture.opensource.dynamicresources.handler;
 
 import de.etecture.opensource.dynamicresources.api.HttpMethods;
 import de.etecture.opensource.dynamicresources.spi.AbstractResourceMethodHandler;
-import de.etecture.opensource.dynamicresources.spi.Verb;
+import de.etecture.opensource.dynamicresources.annotations.accessing.Verb;
 
 /**
  *

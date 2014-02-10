@@ -39,7 +39,8 @@
  */
 package de.etecture.opensource.dynamicresources.test;
 
-import de.etecture.opensource.dynamicresources.api.Resources;
+import de.etecture.opensource.dynamicresources.api.accesspoints.ResourceAccessor;
+import de.etecture.opensource.dynamicresources.api.accesspoints.Resources;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.Singleton;
@@ -55,9 +56,9 @@ import javax.inject.Inject;
 public class TestBean {
 
     @Inject
-    Resources<TestResources> testResourcesList;
+    ResourceAccessor<TestResource> testResources;
     @Inject
-    Resources<TestResource> testResources;
+    Resources allResources;
 
     @PostConstruct
     public void init(){
@@ -65,10 +66,10 @@ public class TestBean {
             createTestResource("1234567890", "blibla", "blubb");
             System.out.println("####################");
             System.out.println("lookup TestResources");
-            TestResources trs = testResourcesList.get();
+            TestResources trs = allResources.select(TestResources.class).get();
             System.out.println("result is: " + trs.getCount());
             System.out.println("lookup TestResource with id 1234567890");
-            TestResource tr = testResources.withPathParam("id", "1234567890")
+            TestResource tr = testResources.pathParam("id", "1234567890")
                     .get();
             System.out.println("result is: " + tr.getFirstName() + " " + tr
                     .getLastName());
@@ -97,14 +98,14 @@ public class TestBean {
         TestResource testResource =
                 new TestResourceImpl(id, firstName, lastName);
 
-        return testResources.withPathParam("id", id).put(testResource);
+        return testResources.pathParam("id", id).put(testResource);
     }
 
     public TestResource findTestResource(String id) throws Throwable {
-        return testResources.withPathParam("id", id).get();
+        return testResources.pathParam("id", id).get();
     }
 
     public void deleteTestResource(String id) throws Throwable {
-        testResources.withPathParam("id", id).delete();
+        testResources.pathParam("id", id).delete();
     }
 }

@@ -47,7 +47,7 @@ import de.etecture.opensource.dynamicrepositories.executor.Technology;
 import de.etecture.opensource.dynamicrepositories.extension.DefaultQuery;
 import de.etecture.opensource.dynamicrepositories.extension.QueryExecutors;
 import de.etecture.opensource.dynamicresources.extension.DefaultRequest;
-import de.etecture.opensource.dynamicresources.extension.VerbLiteral;
+import de.etecture.opensource.dynamicresources.utils.VerbLiteral;
 import de.etecture.opensource.dynamicresources.spi.ResourceMethodHandler;
 import de.etecture.opensource.dynamicresources.test.api.Expect;
 import de.etecture.opensource.dynamicresources.test.api.ParamSet;

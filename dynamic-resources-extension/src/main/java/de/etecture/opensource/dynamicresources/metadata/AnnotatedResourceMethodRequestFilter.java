@@ -40,8 +40,7 @@
 
 package de.etecture.opensource.dynamicresources.metadata;
 
-import de.etecture.opensource.dynamicresources.api.Filter;
-import de.etecture.opensource.dynamicresources.api.metadata.ResourceMethodRequestFilter;
+import de.etecture.opensource.dynamicresources.annotations.declaration.Filter;
 
 /**
  *

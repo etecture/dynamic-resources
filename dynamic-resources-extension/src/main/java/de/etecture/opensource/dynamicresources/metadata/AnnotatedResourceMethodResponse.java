@@ -39,12 +39,10 @@
  */
 package de.etecture.opensource.dynamicresources.metadata;
 
-import de.etecture.opensource.dynamicresources.api.Header;
-import de.etecture.opensource.dynamicresources.api.Method;
-import de.etecture.opensource.dynamicresources.api.Produces;
+import de.etecture.opensource.dynamicresources.annotations.declaration.Header;
+import de.etecture.opensource.dynamicresources.annotations.declaration.Method;
+import de.etecture.opensource.dynamicresources.annotations.declaration.Produces;
 import de.etecture.opensource.dynamicresources.api.MediaType;
-import de.etecture.opensource.dynamicresources.api.metadata.ResourceMethodResponse;
-import de.etecture.opensource.dynamicresources.api.metadata.ResourceMethodResponseHeader;
 import de.etecture.opensource.dynamicresources.extension.MediaTypeExpression;
 import de.etecture.opensource.dynamicresources.extension.ResponseWriterResolver;
 import java.util.Collections;

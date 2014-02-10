@@ -40,6 +40,7 @@
 
 package de.etecture.opensource.dynamicresources.api;
 
+import de.etecture.opensource.dynamicresources.annotations.declaration.Filter;
 import java.util.Map;
 
 /**
@@ -60,6 +61,6 @@ public interface FilterConverter {
      * @return
      * @throws InvalidFilterValueException
      */
-    <R> Object convert(Filter filter, Request<R> request,
+    <R> Object convert(Filter filter, OldRequest<R> request,
             Map<String, Object> parameter) throws InvalidFilterValueException;
 }

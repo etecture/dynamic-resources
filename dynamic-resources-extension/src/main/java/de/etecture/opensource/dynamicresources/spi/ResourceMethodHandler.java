@@ -39,7 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.spi;
 
-import de.etecture.opensource.dynamicresources.api.Request;
+import de.etecture.opensource.dynamicresources.api.OldRequest;
 import de.etecture.opensource.dynamicresources.api.ResourceException;
 import de.etecture.opensource.dynamicresources.api.Response;
 
@@ -74,6 +74,6 @@ public interface ResourceMethodHandler {
      * @return the response for this request
      * @throws ResourceException
      */
-    <T> Response<T> handleRequest(Request<T> request) throws ResourceException;
+    <T> Response<T> handleRequest(OldRequest<T> request) throws ResourceException;
 
 }

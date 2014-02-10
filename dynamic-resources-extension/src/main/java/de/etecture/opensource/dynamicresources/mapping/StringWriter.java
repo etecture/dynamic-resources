@@ -40,7 +40,7 @@
 package de.etecture.opensource.dynamicresources.mapping;
 
 import de.etecture.opensource.dynamicresources.api.MediaType;
-import de.etecture.opensource.dynamicresources.api.Produces;
+import de.etecture.opensource.dynamicresources.annotations.declaration.Produces;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
 import java.io.IOException;
 import java.io.Writer;

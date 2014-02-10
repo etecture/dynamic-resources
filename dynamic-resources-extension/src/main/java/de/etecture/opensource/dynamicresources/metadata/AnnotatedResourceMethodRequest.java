@@ -39,14 +39,11 @@
  */
 package de.etecture.opensource.dynamicresources.metadata;
 
-import de.etecture.opensource.dynamicresources.api.Consumes;
-import de.etecture.opensource.dynamicresources.api.Filter;
-import de.etecture.opensource.dynamicresources.api.Method;
-import de.etecture.opensource.dynamicresources.api.Produces;
+import de.etecture.opensource.dynamicresources.annotations.declaration.Consumes;
+import de.etecture.opensource.dynamicresources.annotations.declaration.Filter;
+import de.etecture.opensource.dynamicresources.annotations.declaration.Method;
+import de.etecture.opensource.dynamicresources.annotations.declaration.Produces;
 import de.etecture.opensource.dynamicresources.api.MediaType;
-import de.etecture.opensource.dynamicresources.api.metadata.ResourceMethodRequest;
-import de.etecture.opensource.dynamicresources.api.metadata.ResourceMethodRequestFilter;
-import de.etecture.opensource.dynamicresources.api.metadata.ResourceMethodResponse;
 import de.etecture.opensource.dynamicresources.extension.MediaTypeExpression;
 import de.etecture.opensource.dynamicresources.extension.RequestReaderResolver;
 import de.etecture.opensource.dynamicresources.extension.ResponseWriterResolver;

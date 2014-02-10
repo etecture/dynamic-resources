@@ -39,7 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.extension;
 
-import de.etecture.opensource.dynamicresources.api.Resource;
+import de.etecture.opensource.dynamicresources.annotations.declaration.Resource;
 import de.etecture.opensource.dynamicresources.api.UriBuilder;
 import java.util.Map;
 import javax.enterprise.context.ApplicationScoped;

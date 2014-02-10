@@ -39,7 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.extension;
 
-import de.etecture.opensource.dynamicresources.api.Resources;
+import de.etecture.opensource.dynamicresources.api.OldResources;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -58,16 +58,16 @@ import javax.enterprise.util.AnnotationLiteral;
  * @param <T>
  * @author rhk
  */
-public class ResourcesBean<T> implements Bean<Resources<T>> {
+public class ResourcesBean<T> implements Bean<OldResources<T>> {
 
     private final Type resourcesType;
-    private final Class<Resources<T>> resourcesClass;
-    private final Resources<T> resourcesImpl;
+    private final Class<OldResources<T>> resourcesClass;
+    private final OldResources<T> resourcesImpl;
 
-    public ResourcesBean(Type resourcesType, Resources<T> resourcesImpl) {
+    public ResourcesBean(Type resourcesType, OldResources<T> resourcesImpl) {
         this.resourcesType = resourcesType;
         this.resourcesImpl = resourcesImpl;
-        this.resourcesClass = (Class<Resources<T>>) resourcesImpl.getClass();
+        this.resourcesClass = (Class<OldResources<T>>) resourcesImpl.getClass();
     }
 
     @Override
@@ -126,15 +126,15 @@ public class ResourcesBean<T> implements Bean<Resources<T>> {
     }
 
     @Override
-    public Resources<T> create(
-            CreationalContext<Resources<T>> creationalContext) {
+    public OldResources<T> create(
+            CreationalContext<OldResources<T>> creationalContext) {
         return resourcesImpl;
     }
 
     @Override
     public void destroy(
-            Resources<T> instance,
-            CreationalContext<Resources<T>> creationalContext) {
+            OldResources<T> instance,
+            CreationalContext<OldResources<T>> creationalContext) {
         creationalContext.release();
     }
 

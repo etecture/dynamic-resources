@@ -44,11 +44,11 @@ import de.etecture.opensource.dynamicrepositories.extension.DefaultQuery;
 import de.etecture.opensource.dynamicresources.api.BooleanResult;
 import de.etecture.opensource.dynamicresources.api.DefaultResponse;
 import de.etecture.opensource.dynamicresources.api.HttpMethods;
-import de.etecture.opensource.dynamicresources.api.Request;
+import de.etecture.opensource.dynamicresources.api.OldRequest;
 import de.etecture.opensource.dynamicresources.api.ResourceException;
 import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.spi.AbstractResourceMethodHandler;
-import de.etecture.opensource.dynamicresources.spi.Verb;
+import de.etecture.opensource.dynamicresources.annotations.accessing.Verb;
 
 /**
  *
@@ -58,7 +58,7 @@ import de.etecture.opensource.dynamicresources.spi.Verb;
 public class DeleteResourceHandler extends AbstractResourceMethodHandler {
 
     @Override
-    public <T> Response<T> handleRequest(Request<T> request) throws
+    public <T> Response<T> handleRequest(OldRequest<T> request) throws
             ResourceException {
         try {
             final DefaultQuery<BooleanResult> query =

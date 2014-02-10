@@ -40,8 +40,7 @@
 
 package de.etecture.opensource.dynamicresources.metadata;
 
-import de.etecture.opensource.dynamicresources.api.Header;
-import de.etecture.opensource.dynamicresources.api.metadata.ResourceMethodResponseHeader;
+import de.etecture.opensource.dynamicresources.annotations.declaration.Header;
 
 /**
  *

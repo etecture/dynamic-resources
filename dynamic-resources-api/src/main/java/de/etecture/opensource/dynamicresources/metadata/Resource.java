@@ -1,0 +1,125 @@
+/*
+ *  This file is part of the ETECTURE Open Source Community Projects.
+ *
+ *  Copyright (c) 2013 by:
+ *
+ *  ETECTURE GmbH
+ *  Darmstädter Landstraße 112
+ *  60598 Frankfurt
+ *  Germany
+ *
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *
+ *  1. Redistributions of source code must retain the above copyright notice,
+ *     this list of conditions and the following disclaimer.
+ *
+ *  2. Redistributions in binary form must reproduce the above copyright notice,
+ *     this list of conditions and the following disclaimer in the documentation
+ *     and/or other materials provided with the distribution.
+ *
+ *  3. Neither the name of the author nor the names of its contributors may be
+ *     used to endorse or promote products derived from this software without
+ *     specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ *  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ *  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+package de.etecture.opensource.dynamicresources.metadata;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ *
+ * @author rhk
+ * @version
+ * @since
+ */
+public interface Resource {
+
+    /**
+     * returns the application for this resource.
+     *
+     * @return
+     */
+    Application getApplication();
+
+    /**
+     * the name of the resource.
+     *
+     * @return
+     */
+    String getName();
+
+    /**
+     * the description of the resource;
+     *
+     * @return
+     */
+    String getDescription();
+
+    /**
+     * the methods of the resource.
+     *
+     * @return
+     */
+    Map<String, ResourceMethod> getMethods();
+
+    /**
+     * returns the method description for the given method.
+     *
+     * if the method is not defined, a ResourceMethodNotFoundException is
+     * thrown.
+     *
+     * @param methodName
+     * @return
+     * @throws ResourceMethodNotFoundException
+     */
+    ResourceMethod getMethod(String methodName) throws
+            ResourceMethodNotFoundException;
+
+    /**
+     * the uri template of this resource.
+     *
+     * @return
+     */
+    String getUriTemplate();
+
+    /**
+     * returns all the path parameter names that are defined in the uri-template
+     * of this resource in the same order they appear in the uri-template.
+     *
+     * @return
+     */
+    List<String> getPathParameterNames();
+
+    /**
+     * builds a complete URI for the given pathParameters.
+     *
+     * @param pathParameter
+     * @return
+     */
+    String buildUri(Map<String, String> pathParameter);
+
+    /**
+     * scans the complete URI and returns the pathParameters that match the uri
+     * template of this resource.
+     *
+     * @param uri
+     * @return
+     */
+    Map<String, String> scanUri(String uri);
+}

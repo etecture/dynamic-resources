@@ -41,9 +41,9 @@
 package de.etecture.opensource.dynamicresources.test;
 
 import de.etecture.opensource.dynamicrepositories.executor.NoResultException;
-import de.etecture.opensource.dynamicresources.api.AbstractExceptionHandler;
+import de.etecture.opensource.dynamicresources.defaults.AbstractExceptionHandler;
 import de.etecture.opensource.dynamicresources.api.DefaultResponse;
-import de.etecture.opensource.dynamicresources.api.Request;
+import de.etecture.opensource.dynamicresources.api.OldRequest;
 import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.api.StatusCodes;
 
@@ -61,7 +61,7 @@ public class TestResourceNotFoundHandler extends AbstractExceptionHandler<NoResu
 
     @Override
     protected <T> Response<T> buildErrorResponse(
-            Request<T> request, NoResultException exception) {
+            OldRequest<T> request, NoResultException exception) {
         return new DefaultResponse(exception.getMessage(), StatusCodes.NOT_FOUND);
     }
 }

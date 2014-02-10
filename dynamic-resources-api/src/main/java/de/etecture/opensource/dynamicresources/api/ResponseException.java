@@ -50,6 +50,10 @@ public class ResponseException extends ResourceException {
 
     private static final long serialVersionUID = 1L;
 
+    public ResponseException(String msg) {
+        super(msg);
+    }
+
     /**
      *
      * @param cause

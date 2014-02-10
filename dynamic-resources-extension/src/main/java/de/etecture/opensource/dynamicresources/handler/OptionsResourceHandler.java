@@ -40,7 +40,7 @@
 package de.etecture.opensource.dynamicresources.handler;
 
 import de.etecture.opensource.dynamicresources.api.DefaultResponse;
-import de.etecture.opensource.dynamicresources.api.Request;
+import de.etecture.opensource.dynamicresources.api.OldRequest;
 import de.etecture.opensource.dynamicresources.api.ResourceException;
 import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.api.StatusCodes;
@@ -49,7 +49,7 @@ import de.etecture.opensource.dynamicresources.extension.RequestReaderResolver;
 import de.etecture.opensource.dynamicresources.extension.ResponseWriterResolver;
 import de.etecture.opensource.dynamicresources.metadata.AnnotatedResource;
 import de.etecture.opensource.dynamicresources.spi.ResourceMethodHandler;
-import de.etecture.opensource.dynamicresources.spi.Verb;
+import de.etecture.opensource.dynamicresources.annotations.accessing.Verb;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
@@ -81,7 +81,7 @@ public class OptionsResourceHandler implements ResourceMethodHandler {
 
     @Override
     public Response handleRequest(
-            Request request) throws
+            OldRequest request) throws
             ResourceException {
         return new DefaultResponse(new AnnotatedResource(request
                 .getResourceClass(), responseWriters, requestReaders),

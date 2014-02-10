@@ -40,9 +40,9 @@
 
 package de.etecture.opensource.dynamicresources.test;
 
-import de.etecture.opensource.dynamicresources.api.AbstractResourceInterceptor;
+import de.etecture.opensource.dynamicresources.defaults.AbstractResourceInterceptor;
 import de.etecture.opensource.dynamicresources.api.DefaultResponse;
-import de.etecture.opensource.dynamicresources.api.Request;
+import de.etecture.opensource.dynamicresources.api.OldRequest;
 import de.etecture.opensource.dynamicresources.api.Response;
 
 /**
@@ -55,7 +55,7 @@ public class TestExceptionInterceptor extends AbstractResourceInterceptor {
 
     @Override
     public <T> Response<T> afterFailure(
-            Request<T> request,
+            OldRequest<T> request,
             Response<T> originalResponse, Throwable exception) {
         exception.printStackTrace();
         return new DefaultResponse(request.getRequestType(), exception);

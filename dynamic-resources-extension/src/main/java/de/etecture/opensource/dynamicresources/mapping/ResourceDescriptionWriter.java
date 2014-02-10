@@ -39,14 +39,14 @@
  */
 package de.etecture.opensource.dynamicresources.mapping;
 
-import de.etecture.opensource.dynamicresources.api.Produces;
+import de.etecture.opensource.dynamicresources.annotations.declaration.Produces;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
 import de.etecture.opensource.dynamicresources.api.MediaType;
-import de.etecture.opensource.dynamicresources.api.metadata.Resource;
-import de.etecture.opensource.dynamicresources.api.metadata.ResourceMethod;
-import de.etecture.opensource.dynamicresources.api.metadata.ResourceMethodRequest;
-import de.etecture.opensource.dynamicresources.api.metadata.ResourceMethodRequestFilter;
-import de.etecture.opensource.dynamicresources.api.metadata.ResourceMethodResponse;
+import de.etecture.opensource.dynamicresources.metadata.Resource;
+import de.etecture.opensource.dynamicresources.metadata.ResourceMethod;
+import de.etecture.opensource.dynamicresources.metadata.ResourceMethodRequest;
+import de.etecture.opensource.dynamicresources.metadata.ResourceMethodRequestFilter;
+import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;

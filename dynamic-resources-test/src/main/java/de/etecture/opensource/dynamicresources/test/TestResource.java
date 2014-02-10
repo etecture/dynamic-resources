@@ -41,8 +41,8 @@ package de.etecture.opensource.dynamicresources.test;
 
 import de.etecture.opensource.dynamicrepositories.api.annotations.Query;
 import de.etecture.opensource.dynamicresources.api.HttpMethods;
-import de.etecture.opensource.dynamicresources.api.Method;
-import de.etecture.opensource.dynamicresources.api.Resource;
+import de.etecture.opensource.dynamicresources.annotations.declaration.Method;
+import de.etecture.opensource.dynamicresources.annotations.declaration.Resource;
 import de.etecture.opensource.dynamicresources.api.StatusCodes;
 
 /**

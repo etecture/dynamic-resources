@@ -39,48 +39,48 @@
  */
 package de.etecture.opensource.dynamicresources.api;
 
-import java.io.BufferedReader;
+import de.etecture.opensource.dynamicresources.metadata.ResourceMethod;
+import java.util.List;
 import java.util.Map;
 
 /**
+ * This interface represents a concrete request.
+ *
+ * A concrete request is a Resource-Method-Execution-Request filled with
+ * concrete path parameters, query parameters and a request body.
  *
  * @author rhk
  * @version
  * @since
  */
-public interface Request<T> {
+public interface Request {
 
-    MediaType getAcceptedMediaType();
+    /**
+     * returns the metadata for the resource method associated with this
+     * request.
+     *
+     * @return
+     */
+    ResourceMethod getMetadata();
 
-    VersionNumberRange getAcceptedVersionRange();
+    /**
+     * returns the path parameters associated with this request.
+     *
+     * @return
+     */
+    Map<String, String> getPathParameters();
 
-    Object getContent() throws ResourceException;
+    /**
+     * returns the query parameters associated with this request.
+     *
+     * @return
+     */
+    Map<String, List<Object>> getQueryParameters();
 
-    MediaType getContentMediaType();
-
-    BufferedReader getContentReader();
-
-    Version getContentVersion();
-
-    String getMethodName();
-
-    Map<String, String> getPathParameter();
-
-    Map<String, String[]> getQueryParameter();
-
-    Map<String, Object> getAllParameter();
-
-    Class<?> getRequestType();
-
-    Resource getResourceMetadata();
-
-    Class<T> getResourceClass();
-
-    String getResourceName();
-
-    Method getResourceMethod();
-
-    String getSingleQueryParameterValue(String name, String defaultValue);
-
-    boolean hasQueryParameterValue(String name);
+    /**
+     * returns the request body.
+     *
+     * @return
+     */
+    Object getBody();
 }

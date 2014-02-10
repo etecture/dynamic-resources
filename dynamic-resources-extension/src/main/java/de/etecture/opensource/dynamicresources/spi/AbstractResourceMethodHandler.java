@@ -39,6 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.spi;
 
+import de.etecture.opensource.dynamicresources.annotations.accessing.Verb;
 import de.etecture.opensource.dynamicrepositories.api.HintValueGenerator;
 import de.etecture.opensource.dynamicrepositories.api.ParamValueGenerator;
 import de.etecture.opensource.dynamicrepositories.api.annotations.Hint;
@@ -50,15 +51,15 @@ import de.etecture.opensource.dynamicrepositories.executor.QueryHints;
 import de.etecture.opensource.dynamicrepositories.extension.DefaultQuery;
 import de.etecture.opensource.dynamicrepositories.extension.QueryExecutors;
 import de.etecture.opensource.dynamicresources.api.DefaultResponse;
-import de.etecture.opensource.dynamicresources.api.Filter;
+import de.etecture.opensource.dynamicresources.annotations.declaration.Filter;
 import de.etecture.opensource.dynamicresources.api.FilterConverter;
-import de.etecture.opensource.dynamicresources.api.Global;
-import de.etecture.opensource.dynamicresources.api.Method;
+import de.etecture.opensource.dynamicresources.annotations.declaration.Global;
+import de.etecture.opensource.dynamicresources.annotations.declaration.Method;
 import de.etecture.opensource.dynamicresources.api.PathParamSubstitution;
-import de.etecture.opensource.dynamicresources.api.Request;
-import de.etecture.opensource.dynamicresources.api.Resource;
+import de.etecture.opensource.dynamicresources.api.OldRequest;
+import de.etecture.opensource.dynamicresources.annotations.declaration.Resource;
 import de.etecture.opensource.dynamicresources.api.ResourceException;
-import de.etecture.opensource.dynamicresources.api.ResourceInterceptor;
+import de.etecture.opensource.dynamicresources.api.OldResourceInterceptor;
 import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.api.StatusCodes;
 import de.etecture.opensource.dynamicresources.api.UriBuilder;
@@ -88,10 +89,10 @@ public abstract class AbstractResourceMethodHandler implements
     ResponseWriterResolver responseWriterResolver;
     @Inject
     @Global
-    Instance<ResourceInterceptor> globalInterceptors;
+    Instance<OldResourceInterceptor> globalInterceptors;
     @Inject
     @Any
-    Instance<ResourceInterceptor> anyInterceptors;
+    Instance<OldResourceInterceptor> anyInterceptors;
     @Inject
     @Any
     Instance<FilterConverter> anyFilterConverters;
@@ -107,9 +108,9 @@ public abstract class AbstractResourceMethodHandler implements
     @Inject
     Instance<Object> instances;
 
-    protected Response before(Request request) {
+    protected Response before(OldRequest request) {
         Response response = null;
-        for (Class<? extends ResourceInterceptor> ric : request
+        for (Class<? extends OldResourceInterceptor> ric : request
                 .getResourceMethod()
                 .interceptors()) {
             response = anyInterceptors.select(ric).get().before(request);
@@ -118,7 +119,7 @@ public abstract class AbstractResourceMethodHandler implements
             }
         }
         if (response == null) {
-            for (ResourceInterceptor ri : globalInterceptors) {
+            for (OldResourceInterceptor ri : globalInterceptors) {
                 response = ri.before(request);
                 if (response != null) {
                     break;
@@ -128,27 +129,27 @@ public abstract class AbstractResourceMethodHandler implements
         return response;
     }
 
-    protected Response afterSuccess(Request request, Response response) {
-        for (Class<? extends ResourceInterceptor> ric : request
+    protected Response afterSuccess(OldRequest request, Response response) {
+        for (Class<? extends OldResourceInterceptor> ric : request
                 .getResourceMethod().interceptors()) {
             response = anyInterceptors.select(ric).get().afterSuccess(
                     request, response);
         }
-        for (ResourceInterceptor ri : globalInterceptors) {
+        for (OldResourceInterceptor ri : globalInterceptors) {
             response = ri.afterSuccess(request,
                     response);
         }
         return response;
     }
 
-    protected Response afterFailure(Request request, Response response,
+    protected Response afterFailure(OldRequest request, Response response,
             Throwable exception) {
-        for (Class<? extends ResourceInterceptor> ric : request
+        for (Class<? extends OldResourceInterceptor> ric : request
                 .getResourceMethod().interceptors()) {
             response = anyInterceptors.select(ric).get().afterFailure(
                     request, response, exception);
         }
-        for (ResourceInterceptor ri : globalInterceptors) {
+        for (OldResourceInterceptor ri : globalInterceptors) {
             response = ri.afterSuccess(request,
                     response);
         }
@@ -192,7 +193,7 @@ public abstract class AbstractResourceMethodHandler implements
     }
 
     @Override
-    public <T> Response<T> handleRequest(Request<T> request) throws
+    public <T> Response<T> handleRequest(OldRequest<T> request) throws
             ResourceException {
         Response<T> response;
         response = before(request);
@@ -245,7 +246,7 @@ public abstract class AbstractResourceMethodHandler implements
         return response;
     }
 
-    protected <T> DefaultQuery<T> buildQuery(Request<?> request,
+    protected <T> DefaultQuery<T> buildQuery(OldRequest<?> request,
             Class<T> queryType) throws
             ResourceException {
         final de.etecture.opensource.dynamicrepositories.api.annotations.Query qa =
@@ -333,7 +334,7 @@ public abstract class AbstractResourceMethodHandler implements
     }
 
     protected <T> Response<T> executeQuery(
-            Request<T> request,
+            OldRequest<T> request,
             Query<T> query) throws Exception {
         return new DefaultResponse(
                 executors.execute(query),

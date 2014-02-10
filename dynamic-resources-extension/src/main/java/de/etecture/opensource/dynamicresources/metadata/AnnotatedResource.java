@@ -39,9 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.metadata;
 
-import de.etecture.opensource.dynamicresources.api.Method;
-import de.etecture.opensource.dynamicresources.api.metadata.Resource;
-import de.etecture.opensource.dynamicresources.api.metadata.ResourceMethod;
+import de.etecture.opensource.dynamicresources.annotations.declaration.Method;
 import de.etecture.opensource.dynamicresources.extension.RequestReaderResolver;
 import de.etecture.opensource.dynamicresources.extension.ResponseWriterResolver;
 import java.util.Collections;
@@ -57,20 +55,21 @@ import org.apache.commons.lang.StringUtils;
  */
 public class AnnotatedResource implements Resource {
 
+    private final Application application;
     private final String name, description, uri;
     private final Map<String, ResourceMethod> methods = new HashMap<>();
 
-    public AnnotatedResource(Class<?> resourceClass,
+    public AnnotatedResource(Application application, Class<?> resourceClass,
             ResponseWriterResolver writers,
             RequestReaderResolver readers) {
         if (!resourceClass.isAnnotationPresent(
-                de.etecture.opensource.dynamicresources.api.Resource.class)) {
+                de.etecture.opensource.dynamicresources.annotations.declaration.Resource.class)) {
             throw new IllegalArgumentException(resourceClass.toString()
                     + " is not a resource class. It is not annotated with @Resource");
         }
-        de.etecture.opensource.dynamicresources.api.Resource annotation =
+        de.etecture.opensource.dynamicresources.annotations.declaration.Resource annotation =
                 resourceClass.getAnnotation(
-                de.etecture.opensource.dynamicresources.api.Resource.class);
+                de.etecture.opensource.dynamicresources.annotations.declaration.Resource.class);
         this.uri = annotation.uri();
         if (StringUtils.isBlank(annotation.name())) {
             this.name = resourceClass.getSimpleName();
@@ -83,6 +82,11 @@ public class AnnotatedResource implements Resource {
                     new AnnotatedResourceMethod(resourceClass, method, writers,
                     readers));
         }
+    }
+
+    @Override
+    public Application getApplication() {
+        return application;
     }
 
     @Override

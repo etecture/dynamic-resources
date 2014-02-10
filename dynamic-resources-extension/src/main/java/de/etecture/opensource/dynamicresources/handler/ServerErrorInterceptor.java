@@ -39,10 +39,10 @@
  */
 package de.etecture.opensource.dynamicresources.handler;
 
-import de.etecture.opensource.dynamicresources.api.AbstractResourceInterceptor;
+import de.etecture.opensource.dynamicresources.defaults.AbstractResourceInterceptor;
 import de.etecture.opensource.dynamicresources.api.DefaultResponse;
-import de.etecture.opensource.dynamicresources.api.Global;
-import de.etecture.opensource.dynamicresources.api.Request;
+import de.etecture.opensource.dynamicresources.annotations.declaration.Global;
+import de.etecture.opensource.dynamicresources.api.OldRequest;
 import de.etecture.opensource.dynamicresources.api.Response;
 import de.herschke.neo4j.uplink.api.Neo4jServerException;
 import java.util.logging.Level;
@@ -60,7 +60,7 @@ public class ServerErrorInterceptor extends AbstractResourceInterceptor {
 
     @Override
     public <T> Response<T> afterFailure(
-            Request<T> request,
+            OldRequest<T> request,
             Response<T> originalResponse, Throwable exception) {
         if (Neo4jServerException.class.isInstance(exception)) {
             Logger.getLogger(ServerErrorInterceptor.class.getSimpleName()).log(

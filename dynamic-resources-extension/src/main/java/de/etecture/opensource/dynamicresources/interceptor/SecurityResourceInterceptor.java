@@ -40,9 +40,9 @@
 package de.etecture.opensource.dynamicresources.interceptor;
 
 import de.etecture.opensource.dynamicresources.api.DefaultResponse;
-import de.etecture.opensource.dynamicresources.api.Global;
-import de.etecture.opensource.dynamicresources.api.Request;
-import de.etecture.opensource.dynamicresources.api.ResourceInterceptor;
+import de.etecture.opensource.dynamicresources.annotations.declaration.Global;
+import de.etecture.opensource.dynamicresources.api.OldRequest;
+import de.etecture.opensource.dynamicresources.api.OldResourceInterceptor;
 import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.api.SecurityContext;
 import de.etecture.opensource.dynamicresources.api.StatusCodes;
@@ -56,13 +56,13 @@ import javax.inject.Inject;
  * @since
  */
 @Global
-public class SecurityResourceInterceptor implements ResourceInterceptor {
+public class SecurityResourceInterceptor implements OldResourceInterceptor {
 
     @Inject
     SecurityContext security;
 
     @Override
-    public Response before(Request request) {
+    public Response before(OldRequest request) {
         String[] allowedRoles = request.getResourceMethod().rolesAllowed();
         if (allowedRoles != null && allowedRoles.length > 0) {
             boolean trust = false;
@@ -81,13 +81,13 @@ public class SecurityResourceInterceptor implements ResourceInterceptor {
     }
 
     @Override
-    public Response afterSuccess(Request request, Response response) {
+    public Response afterSuccess(OldRequest request, Response response) {
         return response;
     }
 
     @Override
     public <T> Response<T> afterFailure(
-            Request<T> request,
+            OldRequest<T> request,
             Response<T> originalResponse, Throwable exception) {
         return originalResponse;
     }

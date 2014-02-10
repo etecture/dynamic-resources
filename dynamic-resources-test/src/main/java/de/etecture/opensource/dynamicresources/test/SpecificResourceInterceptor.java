@@ -39,8 +39,8 @@
  */
 package de.etecture.opensource.dynamicresources.test;
 
-import de.etecture.opensource.dynamicresources.api.AbstractResourceInterceptor;
-import de.etecture.opensource.dynamicresources.api.Request;
+import de.etecture.opensource.dynamicresources.defaults.AbstractResourceInterceptor;
+import de.etecture.opensource.dynamicresources.api.OldRequest;
 import de.etecture.opensource.dynamicresources.api.Response;
 
 /**
@@ -50,7 +50,7 @@ import de.etecture.opensource.dynamicresources.api.Response;
 public class SpecificResourceInterceptor extends AbstractResourceInterceptor {
 
     @Override
-    public Response before(Request request) {
+    public Response before(OldRequest request) {
         System.out.printf("BEFORE SPECIFIC: %s %s for: %s%n", request
                 .getMethodName(),
                 request.getResourceMetadata().uri(), request.getResourceClass()
@@ -59,7 +59,7 @@ public class SpecificResourceInterceptor extends AbstractResourceInterceptor {
     }
 
     @Override
-    public Response afterSuccess(Request request, Response response) {
+    public Response afterSuccess(OldRequest request, Response response) {
         System.out.printf("AFTER SPECIFIC: %s %s for: %s%n", request
                 .getMethodName(),
                 request.getResourceMetadata().uri(), request.getResourceClass()

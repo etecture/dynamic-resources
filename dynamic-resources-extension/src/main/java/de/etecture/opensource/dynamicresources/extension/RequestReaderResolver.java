@@ -39,7 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.extension;
 
-import de.etecture.opensource.dynamicresources.api.Consumes;
+import de.etecture.opensource.dynamicresources.annotations.declaration.Consumes;
 import de.etecture.opensource.dynamicresources.api.RequestReader;
 
 /**

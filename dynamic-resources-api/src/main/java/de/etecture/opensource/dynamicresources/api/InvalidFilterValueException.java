@@ -39,6 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.api;
 
+import de.etecture.opensource.dynamicresources.annotations.declaration.Filter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -53,18 +54,18 @@ import java.util.List;
  */
 public class InvalidFilterValueException extends ResourceException {
     private static final long serialVersionUID = 1L;
-    private final Request request;
+    private final OldRequest request;
     private final Filter filter;
     private final List<String> actualValues;
 
     public InvalidFilterValueException(
-            Request request, Filter filter,
+            OldRequest request, Filter filter,
             String... actualValues) {
         this(request, filter, null, actualValues);
     }
 
     public InvalidFilterValueException(
-            Request request, Filter filter, Throwable cause,
+            OldRequest request, Filter filter, Throwable cause,
             String... actualValues) {
         super(String.format(
                 "The filter parameter: %s for resource-call: %S %s is not valid.",
@@ -79,7 +80,7 @@ public class InvalidFilterValueException extends ResourceException {
         return Collections.unmodifiableList(actualValues);
     }
 
-    public Request getRequest() {
+    public OldRequest getRequest() {
         return request;
     }
 

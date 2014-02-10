@@ -1,1 +1,3 @@
-de.etecture.opensource.dynamicresources.extension.DynamicResourcesExtension
+de.etecture.opensource.dynamicresources.scanner.RequestReaderScanner
+de.etecture.opensource.dynamicresources.scanner.ResponseWriterScanner
+de.etecture.opensource.dynamicresources.scanner.ResourceMetadataScanner

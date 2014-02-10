@@ -39,8 +39,6 @@
  */
 package de.etecture.opensource.dynamicresources.metadata;
 
-import de.etecture.opensource.dynamicresources.api.metadata.Application;
-import de.etecture.opensource.dynamicresources.api.metadata.Resource;
 import de.etecture.opensource.dynamicresources.extension.RequestReaderResolver;
 import de.etecture.opensource.dynamicresources.extension.ResponseWriterResolver;
 import java.util.Collections;
@@ -78,13 +76,14 @@ public class DefaultApplication implements Application {
 
     public boolean isResource(Class<?> resourceClass) {
         return resourceClass.isAnnotationPresent(
-                de.etecture.opensource.dynamicresources.api.Resource.class);
+                de.etecture.opensource.dynamicresources.annotations.declaration.Resource.class);
     }
 
     public Resource addAsResource(Class<?> resourceClass,
             ResponseWriterResolver writers,
             RequestReaderResolver readers) {
-        Resource r = new AnnotatedResource(resourceClass, writers, readers);
+        Resource r =
+                new AnnotatedResource(this, resourceClass, writers, readers);
         addResource(r);
         return r;
     }
