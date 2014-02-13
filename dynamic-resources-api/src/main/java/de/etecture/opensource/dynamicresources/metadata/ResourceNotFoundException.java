@@ -42,7 +42,7 @@ package de.etecture.opensource.dynamicresources.metadata;
 import de.etecture.opensource.dynamicresources.api.ResourceException;
 
 /**
- * thrown, when a method is searched that does not exists for this resource.
+ * thrown, when a resource is searched that does not exists
  *
  * @author rhk
  * @version
@@ -50,21 +50,17 @@ import de.etecture.opensource.dynamicresources.api.ResourceException;
  */
 public class ResourceNotFoundException extends ResourceException {
 
+    public ResourceNotFoundException(String msg) {
+        super(msg);
+    }
+
+    public ResourceNotFoundException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public ResourceNotFoundException(Throwable cause) {
+        super(cause);
+    }
     private static final long serialVersionUID = 1L;
 
-    public ResourceNotFoundException(String uri) {
-        this(uri, null);
-    }
-
-    public ResourceNotFoundException(String uri, Throwable cause) {
-        super("There is no resource found that matches the uri: " + uri, cause);
-    }
-
-    public ResourceNotFoundException(Class<?> resourceType) {
-        this(resourceType, null);
-    }
-
-    public ResourceNotFoundException(Class<?> resourceType, Throwable cause) {
-        super("There is no resource with class: " + resourceType, cause);
-    }
 }

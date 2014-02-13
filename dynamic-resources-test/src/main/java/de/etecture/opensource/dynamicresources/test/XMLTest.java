@@ -40,7 +40,7 @@
 package de.etecture.opensource.dynamicresources.test;
 
 import de.etecture.opensource.dynamicresources.api.MediaType;
-import de.etecture.opensource.dynamicresources.annotations.declaration.Produces;
+import de.etecture.opensource.dynamicresources.annotations.Produces;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
 import de.etecture.opensource.dynamicresources.api.UriBuilder;
 import java.io.IOException;

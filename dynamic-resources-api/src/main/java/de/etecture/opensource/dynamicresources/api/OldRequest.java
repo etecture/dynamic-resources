@@ -39,8 +39,8 @@
  */
 package de.etecture.opensource.dynamicresources.api;
 
-import de.etecture.opensource.dynamicresources.annotations.declaration.Method;
-import de.etecture.opensource.dynamicresources.annotations.declaration.Resource;
+import de.etecture.opensource.dynamicresources.annotations.Method;
+import de.etecture.opensource.dynamicresources.annotations.Resource;
 import java.io.BufferedReader;
 import java.util.Map;
 

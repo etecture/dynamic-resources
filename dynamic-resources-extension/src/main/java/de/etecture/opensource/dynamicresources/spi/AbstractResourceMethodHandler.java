@@ -39,32 +39,32 @@
  */
 package de.etecture.opensource.dynamicresources.spi;
 
-import de.etecture.opensource.dynamicresources.annotations.accessing.Verb;
 import de.etecture.opensource.dynamicrepositories.api.HintValueGenerator;
 import de.etecture.opensource.dynamicrepositories.api.ParamValueGenerator;
 import de.etecture.opensource.dynamicrepositories.api.annotations.Hint;
 import de.etecture.opensource.dynamicrepositories.api.annotations.Hints;
 import de.etecture.opensource.dynamicrepositories.api.annotations.Param;
 import de.etecture.opensource.dynamicrepositories.api.annotations.Params;
-import de.etecture.opensource.dynamicrepositories.executor.Query;
-import de.etecture.opensource.dynamicrepositories.executor.QueryHints;
-import de.etecture.opensource.dynamicrepositories.extension.DefaultQuery;
+import de.etecture.opensource.dynamicrepositories.executor.QueryExecutionContext;
+import de.etecture.opensource.dynamicrepositories.api.DefaultQueryHints;
+import de.etecture.opensource.dynamicrepositories.extension.DefaultQueryExecutionContext;
 import de.etecture.opensource.dynamicrepositories.extension.QueryExecutors;
+import de.etecture.opensource.dynamicresources.annotations.accessing.Verb;
+import de.etecture.opensource.dynamicresources.annotations.Filter;
+import de.etecture.opensource.dynamicresources.annotations.Global;
+import de.etecture.opensource.dynamicresources.annotations.Method;
+import de.etecture.opensource.dynamicresources.annotations.Resource;
 import de.etecture.opensource.dynamicresources.api.DefaultResponse;
-import de.etecture.opensource.dynamicresources.annotations.declaration.Filter;
 import de.etecture.opensource.dynamicresources.api.FilterConverter;
-import de.etecture.opensource.dynamicresources.annotations.declaration.Global;
-import de.etecture.opensource.dynamicresources.annotations.declaration.Method;
-import de.etecture.opensource.dynamicresources.api.PathParamSubstitution;
 import de.etecture.opensource.dynamicresources.api.OldRequest;
-import de.etecture.opensource.dynamicresources.annotations.declaration.Resource;
-import de.etecture.opensource.dynamicresources.api.ResourceException;
 import de.etecture.opensource.dynamicresources.api.OldResourceInterceptor;
+import de.etecture.opensource.dynamicresources.api.PathParamSubstitution;
+import de.etecture.opensource.dynamicresources.api.ResourceException;
 import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.api.StatusCodes;
 import de.etecture.opensource.dynamicresources.api.UriBuilder;
-import de.etecture.opensource.dynamicresources.extension.RequestReaderResolver;
-import de.etecture.opensource.dynamicresources.extension.ResponseWriterResolver;
+import de.etecture.opensource.dynamicresources.core.mapping.RequestReaderResolver;
+import de.etecture.opensource.dynamicresources.core.mapping.ResponseWriterResolver;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,6 +80,7 @@ import javax.inject.Inject;
  *
  * @author rhk
  */
+@Deprecated
 public abstract class AbstractResourceMethodHandler implements
         ResourceMethodHandler {
 
@@ -201,9 +202,9 @@ public abstract class AbstractResourceMethodHandler implements
             final Class<?> seeOther = request.getResourceMethod().seeOther();
             if (seeOther == Class.class || seeOther == null) {
                 try {
-                    DefaultQuery<T> query = buildQuery(request, request
+                    DefaultQueryExecutionContext<T> query = buildQuery(request, request
                             .getResourceClass());
-                    query.addHint(QueryHints.LIMIT, 1);
+                    query.addHint(DefaultQueryHints.LIMIT, 1);
                     response =
                             executeQuery(request, query);
                 } catch (Throwable t) {
@@ -215,10 +216,10 @@ public abstract class AbstractResourceMethodHandler implements
             } else {
                 if (seeOther.isAnnotationPresent(Resource.class)) {
                     try {
-                        DefaultQuery<PathParamSubstitution> query =
+                        DefaultQueryExecutionContext<PathParamSubstitution> query =
                                 buildQuery(request,
                                 PathParamSubstitution.class);
-                        query.addHint(QueryHints.LIMIT, -1);
+                        query.addHint(DefaultQueryHints.LIMIT, -1);
                         final List<PathParamSubstitution> substitutions =
                                 (List<PathParamSubstitution>) executors.execute(
                                 query);
@@ -246,13 +247,13 @@ public abstract class AbstractResourceMethodHandler implements
         return response;
     }
 
-    protected <T> DefaultQuery<T> buildQuery(OldRequest<?> request,
+    protected <T> DefaultQueryExecutionContext<T> buildQuery(OldRequest<?> request,
             Class<T> queryType) throws
             ResourceException {
         final de.etecture.opensource.dynamicrepositories.api.annotations.Query qa =
                 request.getResourceMethod().query();
 
-        DefaultQuery<T> query = new DefaultQuery(queryType,
+        DefaultQueryExecutionContext<T> query = new DefaultQueryExecutionContext(queryType,
                 qa.technology(),
                 qa.connection(),
                 createStatement(request.getRequestType(), request
@@ -311,7 +312,7 @@ public abstract class AbstractResourceMethodHandler implements
         }
     }
 
-    private void addHints(DefaultQuery query, Hint... hints) {
+    private void addHints(DefaultQueryExecutionContext query, Hint... hints) {
         for (Hint hint : hints) {
             if (hintValueGenerators == null) {
                 query.addHint(hint.name(), hint.value());
@@ -322,7 +323,7 @@ public abstract class AbstractResourceMethodHandler implements
         }
     }
 
-    private void addParams(DefaultQuery query, Param... params) {
+    private void addParams(DefaultQueryExecutionContext query, Param... params) {
         for (Param param : params) {
             if (paramValueGenerators == null) {
                 query.addParameter(param.name(), param.value());
@@ -335,7 +336,7 @@ public abstract class AbstractResourceMethodHandler implements
 
     protected <T> Response<T> executeQuery(
             OldRequest<T> request,
-            Query<T> query) throws Exception {
+            QueryExecutionContext<T> query) throws Exception {
         return new DefaultResponse(
                 executors.execute(query),
                 request.getResourceMethod().status());

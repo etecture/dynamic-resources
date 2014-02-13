@@ -40,8 +40,9 @@
 package de.etecture.opensource.dynamicresources.utils;
 
 import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.inject.CreationException;
 import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanManager;
+import javax.enterprise.inject.spi.InjectionTarget;
 
 /**
  *
@@ -51,16 +52,16 @@ import javax.enterprise.inject.spi.Bean;
  */
 public class ReflectionBeanCreator implements BeanCreator {
 
-    @Override
     public <T> T create(
+            BeanManager beanManager,
             Bean<T> bean,
             CreationalContext<T> creationalContext) {
-        try {
-            return (T) bean.getBeanClass().newInstance();
-
-        } catch (InstantiationException | IllegalAccessException ex) {
-            throw new CreationException("the bean " + bean
-                    + " cannot be created with Reflection", ex);
-        }
+        InjectionTarget<T> it = (InjectionTarget<T>) beanManager
+                .createInjectionTarget(beanManager.createAnnotatedType(bean
+                .getBeanClass()));
+        T instance = (T) it.produce(creationalContext);
+        it.inject(instance, creationalContext);
+        it.postConstruct(instance);
+        return instance;
     }
 }

@@ -37,11 +37,12 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
 package de.etecture.opensource.dynamicresources.utils;
 
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanManager;
+import javax.enterprise.inject.spi.InjectionTarget;
 
 /**
  *
@@ -53,8 +54,14 @@ public class DefaultBeanDestroyer implements BeanDestroyer {
 
     @Override
     public <T> void destroy(
+            BeanManager beanManager,
             Bean<T> bean, T instance,
             CreationalContext<T> creationalContext) {
-        // conceptionally do nothing here
+        if (instance != null) {
+            InjectionTarget<T> it = (InjectionTarget<T>) beanManager
+                    .createInjectionTarget(beanManager.createAnnotatedType(bean
+                    .getBeanClass()));
+            it.preDestroy(instance);
+        }
     }
 }

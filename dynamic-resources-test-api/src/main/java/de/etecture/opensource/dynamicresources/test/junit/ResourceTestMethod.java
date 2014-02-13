@@ -44,10 +44,10 @@ import de.etecture.opensource.dynamicrepositories.api.annotations.Hint;
 import de.etecture.opensource.dynamicrepositories.api.annotations.Param;
 import de.etecture.opensource.dynamicrepositories.api.annotations.Query;
 import de.etecture.opensource.dynamicrepositories.executor.Technology;
-import de.etecture.opensource.dynamicrepositories.extension.DefaultQuery;
+import de.etecture.opensource.dynamicrepositories.extension.DefaultQueryExecutionContext;
 import de.etecture.opensource.dynamicrepositories.extension.QueryExecutors;
 import de.etecture.opensource.dynamicresources.extension.DefaultRequest;
-import de.etecture.opensource.dynamicresources.utils.VerbLiteral;
+import de.etecture.opensource.dynamicresources.utils.MethodLiteral;
 import de.etecture.opensource.dynamicresources.spi.ResourceMethodHandler;
 import de.etecture.opensource.dynamicresources.test.api.Expect;
 import de.etecture.opensource.dynamicresources.test.api.ParamSet;
@@ -164,7 +164,7 @@ public class ResourceTestMethod extends FrameworkMethod {
             throw new IllegalStateException("cannot build the parameters:", ex);
         }
         this.handler = container.instance().select(ResourceMethodHandler.class,
-                new VerbLiteral(request.method())).get();
+                new MethodLiteral(request.method())).get();
     }
 
     @Override
@@ -395,8 +395,8 @@ public class ResourceTestMethod extends FrameworkMethod {
     private boolean executeQuery(String statement, String queryName,
             String technology,
             String connection, String converter) throws Exception {
-        DefaultQuery<BooleanResult> query =
-                new DefaultQuery(BooleanResult.class,
+        DefaultQueryExecutionContext<BooleanResult> query =
+                new DefaultQueryExecutionContext(BooleanResult.class,
                 technology,
                 connection,
                 StringUtils.defaultIfBlank(statement, queryName),
@@ -423,14 +423,14 @@ public class ResourceTestMethod extends FrameworkMethod {
         }
     }
 
-    private void addHints(DefaultQuery query, Hint... hints) {
+    private void addHints(DefaultQueryExecutionContext query, Hint... hints) {
         for (Hint hint : hints) {
             query.addHint(hint.name(), container.instance().select(hint
                     .generator()).get().generate(hint));
         }
     }
 
-    private void addParams(DefaultQuery query, Param... params) {
+    private void addParams(DefaultQueryExecutionContext query, Param... params) {
         for (Param param : params) {
             query.addParameter(param.name(), container.instance()
                     .select(param.generator()).get().generate(param));

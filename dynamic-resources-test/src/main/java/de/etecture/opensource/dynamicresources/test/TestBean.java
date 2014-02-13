@@ -39,7 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.test;
 
-import de.etecture.opensource.dynamicresources.api.accesspoints.ResourceAccessor;
+import de.etecture.opensource.dynamicresources.api.accesspoints.MethodsForResponse;
 import de.etecture.opensource.dynamicresources.api.accesspoints.Resources;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -56,7 +56,7 @@ import javax.inject.Inject;
 public class TestBean {
 
     @Inject
-    ResourceAccessor<TestResource> testResources;
+    MethodsForResponse<TestResource> testResources;
     @Inject
     Resources allResources;
 

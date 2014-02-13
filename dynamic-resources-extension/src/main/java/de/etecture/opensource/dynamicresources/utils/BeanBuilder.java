@@ -37,10 +37,10 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
 package de.etecture.opensource.dynamicresources.utils;
 
 import de.etecture.opensource.dynamicrepositories.utils.DefaultLiteral;
+import de.etecture.opensource.dynamicrepositories.utils.NamedLiteral;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Arrays;
@@ -63,6 +63,7 @@ import javax.enterprise.inject.spi.BeanManager;
  */
 public class BeanBuilder<T> {
 
+    private final BeanManager beanManager;
     private final Class<T> beanClass;
     private String name;
     private Set<Type> beanTypes;
@@ -74,56 +75,68 @@ public class BeanBuilder<T> {
     private BeanCreator creator = new NullBeanCreator();
     private BeanDestroyer destroyer = new DefaultBeanDestroyer();
 
-    private BeanBuilder(Class<T> beanClass) {
+    private BeanBuilder(BeanManager beanManager, Class<T> beanClass) {
+        this.beanManager = beanManager;
         this.beanClass = beanClass;
         this.name = beanClass.getSimpleName();
         this.alternative = false;
         this.nullable = false;
     }
 
-    public static <X> BeanBuilder<X> forClass(Class<X> beanClass) {
-        return new BeanBuilder(beanClass);
+    public static <X> BeanBuilder<X> forClass(BeanManager beanManager,
+            Class<X> beanClass) {
+        return new BeanBuilder(beanManager, beanClass);
     }
 
-    public static <X> BeanBuilder<X> forInstance(X beanInstance) {
-        final BeanBuilder beanBuilder = forClass(beanInstance.getClass());
-        beanBuilder.creator = new SingletonBeanCreator(beanInstance);
-        return beanBuilder;
-    }
-
-    public static <X> BeanBuilder<X> forInstanceWithName(X beanInstance,
-            String name) {
-        final BeanBuilder beanBuilder = forClassAndName(beanInstance.getClass(),
-                name);
-        beanBuilder.creator = new SingletonBeanCreator(beanInstance);
-        return beanBuilder;
-    }
-
-    public static <X> BeanBuilder<X> forInstance(Class<X> beanClass,
+    public static <X> BeanBuilder<X> forInstance(BeanManager beanManager,
             X beanInstance) {
-        final BeanBuilder beanBuilder = forClass(beanClass);
+        final BeanBuilder beanBuilder = forClass(beanManager, beanInstance
+                .getClass());
         beanBuilder.creator = new SingletonBeanCreator(beanInstance);
         return beanBuilder;
     }
 
-    public static <X> BeanBuilder<X> forInstanceWithName(Class<X> beanClass,
+    public static <X> BeanBuilder<X> forInstanceWithName(BeanManager beanManager,
             X beanInstance,
             String name) {
-        final BeanBuilder beanBuilder = forClassAndName(beanClass,
+        final BeanBuilder beanBuilder = forClassAndName(beanManager,
+                beanInstance.getClass(),
                 name);
+        beanBuilder.qualifiers.add(new NamedLiteral(name));
         beanBuilder.creator = new SingletonBeanCreator(beanInstance);
         return beanBuilder;
     }
 
-    public static <X> BeanBuilder<X> forClassAndName(Class<X> beanClass,
+    public static <X> BeanBuilder<X> forInstance(BeanManager beanManager,
+            Class<X> beanClass,
+            X beanInstance) {
+        final BeanBuilder beanBuilder = forClass(beanManager, beanClass);
+        beanBuilder.creator = new SingletonBeanCreator(beanInstance);
+        return beanBuilder;
+    }
+
+    public static <X> BeanBuilder<X> forInstanceWithName(BeanManager beanManager,
+            Class<X> beanClass,
+            X beanInstance,
             String name) {
-        final BeanBuilder beanBuilder = new BeanBuilder(beanClass);
+        final BeanBuilder beanBuilder = forClassAndName(beanManager, beanClass,
+                name);
+        beanBuilder.qualifiers.add(new NamedLiteral(name));
+        beanBuilder.creator = new SingletonBeanCreator(beanInstance);
+        return beanBuilder;
+    }
+
+    public static <X> BeanBuilder<X> forClassAndName(BeanManager beanManager,
+            Class<X> beanClass,
+            String name) {
+        final BeanBuilder beanBuilder = new BeanBuilder(beanManager, beanClass);
         beanBuilder.name = name;
         return beanBuilder;
     }
 
     public BeanBuilder<T> withName(String name) {
         this.name = name;
+        this.qualifiers.add(new NamedLiteral(name));
         return this;
     }
 
@@ -183,12 +196,6 @@ public class BeanBuilder<T> {
         return this;
     }
 
-    public BeanBuilder<T> createdByReflectionAndInjection(
-            BeanManager beanManager) {
-        this.creator = new ReflectionAndInjectionBeanCreator(beanManager);
-        return this;
-    }
-
     public BeanBuilder<T> createdBy(BeanCreator creator) {
         this.creator = creator;
         return this;
@@ -211,14 +218,16 @@ public class BeanBuilder<T> {
     }
 
     public Bean<T> build() {
-        AbstractBean<T> bean = new AbstractBean<T>(beanClass, name, scope,
+        AbstractBean<T> bean = new AbstractBean<T>(beanManager, beanClass, name,
+                scope,
                 alternative, nullable, beanTypes.toArray(new Type[beanTypes
                 .size()])) {
             @Override
             public T create(
                     CreationalContext<T> creationalContext) {
                 final T instance =
-                        BeanBuilder.this.creator.create(this, creationalContext);
+                        BeanBuilder.this.creator.create(beanManager, this,
+                        creationalContext);
                 creationalContext.push(instance);
                 return instance;
             }
@@ -226,7 +235,7 @@ public class BeanBuilder<T> {
             @Override
             public void destroy(T instance,
                     CreationalContext<T> creationalContext) {
-                BeanBuilder.this.destroyer.destroy(this, instance,
+                BeanBuilder.this.destroyer.destroy(beanManager, this, instance,
                         creationalContext);
                 creationalContext.release();
             }

@@ -40,8 +40,9 @@
 package de.etecture.opensource.dynamicresources.utils;
 
 import java.lang.annotation.Annotation;
-import java.util.HashSet;
-import java.util.Set;
+import java.lang.reflect.ParameterizedType;
+import java.util.LinkedList;
+import java.util.List;
 import javax.enterprise.inject.InjectionException;
 import javax.enterprise.inject.spi.InjectionPoint;
 
@@ -81,18 +82,34 @@ public final class InjectionPointHelper {
                 + " must be qualified with @" + annotationClass.getSimpleName());
     }
 
-    public static <A extends Annotation> Set<A> findQualifiers(
-            Class<A> annotationClass,
-            InjectionPoint ip) {
-        Set<A> qualifiers = new HashSet<>();
-        if (ip.getAnnotated().isAnnotationPresent(annotationClass)) {
-            qualifiers.add(ip.getAnnotated().getAnnotation(annotationClass));
-        }
-        for (Annotation annotation : ip.getQualifiers()) {
-            if (annotationClass.isInstance(annotation)) {
-                qualifiers.add(annotationClass.cast(annotation));
+    public static Annotation[] findQualifiers(InjectionPoint ip,
+            Class<? extends Annotation>... annotationClasses) {
+        List<Annotation> qualifiers = new LinkedList<>();
+        for (Class<? extends Annotation> annotationClass : annotationClasses) {
+            if (ip.getAnnotated().isAnnotationPresent(annotationClass)) {
+                qualifiers.add(ip.getAnnotated().getAnnotation(annotationClass));
+            }
+            for (Annotation annotation : ip.getQualifiers()) {
+                if (qualifiers.contains(annotation)) {
+                    continue;
+                }
+                if (annotationClass.isInstance(annotation)) {
+                    qualifiers.add(annotationClass.cast(annotation));
+                }
             }
         }
-        return qualifiers;
+        return qualifiers.toArray(new Annotation[qualifiers.size()]);
+    }
+
+    public static <T> Class<T> getGenericTypeOfInjectionPoint(InjectionPoint ip,
+            int number) {
+        // try to get the type from the injection point
+        if (ip.getType() instanceof ParameterizedType) {
+            return (Class<T>) ((ParameterizedType) ip.getType())
+                    .getActualTypeArguments()[number];
+        } else {
+            // not specified, so it is Object.class
+            return null;
+        }
     }
 }

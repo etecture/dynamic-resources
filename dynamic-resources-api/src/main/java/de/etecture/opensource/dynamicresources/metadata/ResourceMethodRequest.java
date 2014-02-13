@@ -40,7 +40,6 @@
 package de.etecture.opensource.dynamicresources.metadata;
 
 import de.etecture.opensource.dynamicresources.api.MediaType;
-import de.etecture.opensource.dynamicresources.api.RequestReader;
 import java.util.Set;
 
 /**
@@ -53,18 +52,18 @@ import java.util.Set;
 public interface ResourceMethodRequest<B> {
 
     /**
+     * returns the method to which this request belongs to.
+     *
+     * @return
+     */
+    ResourceMethod getMethod();
+
+    /**
      * the request-type of the method.
      *
      * @return
      */
     Class<B> getRequestType();
-
-    /**
-     * the filters for this method.
-     *
-     * @return
-     */
-    Set<ResourceMethodRequestFilter> getFilters();
 
     /**
      * the mediatypes, this resource method request will consume.
@@ -73,44 +72,4 @@ public interface ResourceMethodRequest<B> {
      */
     Set<MediaType> getAcceptedRequestMediaTypes();
 
-    /**
-     * the responses, this resource method request will produce.
-     *
-     * @return
-     */
-    Set<ResourceMethodResponse<?>> getResponses();
-
-    /**
-     * returns the request reader, that is responsible to read this request.
-     *
-     * @return
-     */
-    RequestReader<B> getRequestReader();
-
-    /**
-     * returns the ResourceMethodResponse that produces the given mediaType.
-     *
-     * if there is no ResourceMethodResponse defined for this mediaType, a
-     * MediaTypeNotAllowedException will be thrown.
-     *
-     * @param mediaType
-     * @return
-     * @throws MediaTypeNotAllowedException
-     */
-    ResourceMethodResponse<?> getResponse(MediaType mediaType) throws
-            MediaTypeNotAllowedException;
-
-    /**
-     * returns the response for the given responseType type.
-     *
-     * if the responseType is not supported by this resourcemethod, a
-     * ResponseTypeNotSupportedException is thrown.
-     *
-     * @param <R> the type of the response
-     * @param responseType
-     * @return
-     * @throws ResponseTypeNotSupportedException
-     */
-    <R> ResourceMethodResponse<R> getResponse(Class<R> responseType) throws
-            ResponseTypeNotSupportedException;
 }

@@ -51,11 +51,22 @@ import java.util.Map;
 public interface Application {
 
     /**
-     * the base uri, under which all resources are located.
+     * the name of the application.
      *
      * @return
      */
-    String getBaseURI();
+    String getName();
+
+    /**
+     * the base path, under which all resources are located.
+     * <p>
+     * Hint: the base path of this application is started AFTER the
+     * context-root. So a '/' means that this application is located directly
+     * under the context-root of this webapp.
+     *
+     * @return
+     */
+    String getBase();
 
     /**
      * returns the resources defined in this application. the key is the
@@ -66,27 +77,18 @@ public interface Application {
     Map<String, Resource> getResources();
 
     /**
-     * returns the resource where it's uritemplate matches the given uri.
+     * returns the resource where it's uritemplate matches the given path. The
+     * path is the complete path starting after the context-root of the webapp.
+     * So the context-root must not be part of the given path.
      *
-     * If no resource found for this uri, a ResourceNotFoundException is thrown.
-     *
-     * @param uri
-     * @return
-     * @throws ResourceNotFoundException
-     */
-    Resource findResource(String uri) throws ResourceNotFoundException;
-
-    /**
-     * returns the resource that is defined for the given resourceType.
-     *
-     * If no resource found for this class, a ResourceNotFoundException is
+     * If no resource found for this path, a ResourceNotFoundException is
      * thrown.
      *
-     * @param resourceType
+     * @param path
      * @return
      * @throws ResourceNotFoundException
      */
-    Resource getResource(Class<?> resourceType) throws ResourceNotFoundException;
+    Resource findResource(String path) throws ResourceNotFoundException;
 
     /**
      * returns the description of this application.

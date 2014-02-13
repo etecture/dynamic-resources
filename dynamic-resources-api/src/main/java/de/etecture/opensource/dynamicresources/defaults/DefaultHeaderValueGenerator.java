@@ -39,7 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.defaults;
 
-import de.etecture.opensource.dynamicresources.annotations.declaration.Header;
+import de.etecture.opensource.dynamicresources.annotations.Header;
 import de.etecture.opensource.dynamicresources.api.HeaderValueGenerator;
 import java.text.DateFormat;
 import java.text.ParseException;

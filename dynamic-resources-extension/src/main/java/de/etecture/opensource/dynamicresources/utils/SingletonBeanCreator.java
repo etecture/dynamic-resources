@@ -42,6 +42,8 @@ package de.etecture.opensource.dynamicresources.utils;
 
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanManager;
+import javax.enterprise.inject.spi.InjectionTarget;
 
 /**
  *
@@ -59,8 +61,14 @@ public class SingletonBeanCreator implements BeanCreator {
 
     @Override
     public <T> T create(
+            BeanManager beanManager,
             Bean<T> bean,
             CreationalContext<T> creationalContext) {
+        InjectionTarget<T> it = (InjectionTarget<T>) beanManager
+                .createInjectionTarget(beanManager.createAnnotatedType(bean
+                .getBeanClass()));
+        it.inject((T) instance, creationalContext);
+        it.postConstruct((T) instance);
         return (T) instance;
     }
 }

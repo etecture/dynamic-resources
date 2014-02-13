@@ -39,9 +39,9 @@
  */
 package de.etecture.opensource.dynamicresources.api;
 
-import de.etecture.opensource.dynamicresources.metadata.ResourceMethod;
-import java.util.List;
-import java.util.Map;
+import de.etecture.opensource.dynamicresources.metadata.ResourceMethodRequest;
+import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponse;
+import java.util.Set;
 
 /**
  * This interface represents a concrete request.
@@ -49,38 +49,93 @@ import java.util.Map;
  * A concrete request is a Resource-Method-Execution-Request filled with
  * concrete path parameters, query parameters and a request body.
  *
+ * @param <R> the expected type of the response.
+ * @param <B> the type of the body of this request.
  * @author rhk
  * @version
  * @since
  */
-public interface Request {
+public interface Request<R, B> {
 
     /**
-     * returns the metadata for the resource method associated with this
+     * returns the metadata request that represents the body of this request.
+     * <p>
+     * N.B. if the body of this request is null, which means, that no body is
+     * associated with this request, then this method may also return null.
+     *
+     * @return
+     */
+    ResourceMethodRequest<B> getRequestMetadata();
+
+    /**
+     * returns the metadata for the resource method response associated with
+     * this request.
+     *
+     * @return
+     */
+    ResourceMethodResponse<R> getResponseMetadata();
+
+    /**
+     * returns all the names of the parameters for this request.
+     *
+     * @return
+     */
+    Set<String> getParameterNames();
+
+    /**
+     * returns the value for the parameter with the given name defined for this
      * request.
      *
+     * If no parameter with the given name was defined, the defaultValue is
+     * returned.
+     *
+     * @param <T>
+     * @param name
+     * @param defaultValue
      * @return
      */
-    ResourceMethod getMetadata();
+    <T> T getParameterValue(String name, T defaultValue);
 
     /**
-     * returns the path parameters associated with this request.
+     * returns the value for the parameter with the given name defined for this
+     * request.
      *
+     * If no parameter with the given name was defined, null is returned.
+     *
+     * @param name
      * @return
      */
-    Map<String, String> getPathParameters();
+    Object getParameterValue(String name);
 
     /**
-     * returns the query parameters associated with this request.
+     * defines a new value for the parameter with the specified name of this
+     * request.
      *
+     * @param name
+     * @param value
+     */
+    void setParameterValue(String name, Object value);
+
+    /**
+     * returns true, if a parameter with the given name was defined for this
+     * request.
+     *
+     * @param name
      * @return
      */
-    Map<String, List<Object>> getQueryParameters();
+    boolean hasParameter(String name);
+
+    /**
+     * removes a parameter with the specified name from this request.
+     *
+     * @param name
+     */
+    void removeParameter(String name);
 
     /**
      * returns the request body.
      *
      * @return
      */
-    Object getBody();
+    B getBody();
 }

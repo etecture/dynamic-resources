@@ -41,7 +41,7 @@ package de.etecture.opensource.dynamicresources.handler;
 
 import de.etecture.opensource.dynamicresources.defaults.AbstractResourceInterceptor;
 import de.etecture.opensource.dynamicresources.api.DefaultResponse;
-import de.etecture.opensource.dynamicresources.annotations.declaration.Global;
+import de.etecture.opensource.dynamicresources.annotations.Global;
 import de.etecture.opensource.dynamicresources.api.OldRequest;
 import de.etecture.opensource.dynamicresources.api.Response;
 import de.herschke.neo4j.uplink.api.Neo4jServerException;

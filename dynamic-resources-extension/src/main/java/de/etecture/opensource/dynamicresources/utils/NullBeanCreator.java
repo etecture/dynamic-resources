@@ -42,6 +42,7 @@ package de.etecture.opensource.dynamicresources.utils;
 
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanManager;
 
 /**
  *
@@ -53,6 +54,7 @@ public class NullBeanCreator implements BeanCreator {
 
     @Override
     public <T> T create(
+            BeanManager beanManager,
             Bean<T> bean,
             CreationalContext<T> creationalContext) {
         return null;

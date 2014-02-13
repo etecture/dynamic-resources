@@ -37,7 +37,6 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
 package de.etecture.opensource.dynamicresources.metadata;
 
 import de.etecture.opensource.dynamicresources.api.MediaType;
@@ -52,7 +51,6 @@ import de.etecture.opensource.dynamicresources.api.ResourceException;
 public class MediaTypeNotAllowedException extends ResourceException {
 
     private static final long serialVersionUID = 1L;
-    private final ResourceMethod resourceMethod;
     private final MediaType mediaType;
 
     public MediaTypeNotAllowedException(ResourceMethod resourceMethod,
@@ -61,12 +59,14 @@ public class MediaTypeNotAllowedException extends ResourceException {
                 + " is not provided by resourceMethod: " + resourceMethod
                 .getName() + " for resource: " + resourceMethod.getResource()
                 .getName());
-        this.resourceMethod = resourceMethod;
         this.mediaType = mediaType;
     }
 
-    public ResourceMethod getResourceMethod() {
-        return resourceMethod;
+    public MediaTypeNotAllowedException(Resource resource,
+            MediaType mediaType) {
+        super("The requested response-mediaType: " + mediaType
+                + " is not supported for resource: " + resource.getName());
+        this.mediaType = mediaType;
     }
 
     public MediaType getMediaType() {

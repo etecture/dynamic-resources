@@ -39,15 +39,18 @@
  */
 package de.etecture.opensource.dynamicresources.defaults;
 
-import de.etecture.opensource.dynamicresources.annotations.declaration.Filter;
+import de.etecture.opensource.dynamicresources.api.FilterValueGenerator;
+import de.etecture.opensource.dynamicresources.api.InvalidFilterValueException;
+import de.etecture.opensource.dynamicresources.api.Request;
 import de.etecture.opensource.dynamicresources.defaults.AbstractCompoundFilterConverter.FilterPart;
-import de.etecture.opensource.dynamicresources.api.FilterConverter;
-import de.etecture.opensource.dynamicresources.api.OldRequest;
+import de.etecture.opensource.dynamicresources.metadata.ResourceMethodFilter;
+import de.herschke.converters.api.ConvertException;
+import de.herschke.converters.api.Converters;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
+import javax.inject.Inject;
 
 /**
  *
@@ -57,7 +60,7 @@ import java.util.Set;
  * @since
  */
 public abstract class AbstractCompoundFilterConverter<F extends FilterPart>
-        implements FilterConverter {
+        implements FilterValueGenerator {
 
     public interface FilterPart {
 
@@ -65,10 +68,12 @@ public abstract class AbstractCompoundFilterConverter<F extends FilterPart>
 
         int ordinal();
 
-        String value(OldRequest<?> request);
+        Object value(Request request);
     }
     private final Set<F> parts = new HashSet<>();
     private final String template;
+    @Inject
+    Converters converters;
 
     protected AbstractCompoundFilterConverter(String template, F... parts) {
         this(template, Arrays.asList(parts));
@@ -83,18 +88,23 @@ public abstract class AbstractCompoundFilterConverter<F extends FilterPart>
     }
 
     @Override
-    public <R> Object convert(Filter filter,
-            OldRequest<R> request,
-            Map<String, Object> parameter) {
-        if (!request.hasQueryParameterValue(filter.name())) {
+    public <T> T generate(
+            ResourceMethodFilter<T> filter, Request<?, ?> request) throws
+            InvalidFilterValueException {
+        try {
+            if (!request.hasParameter(filter.getName())) {
             Object[] partValues = new Object[parts.size()];
             for (F part : parts) {
                 partValues[part.ordinal()] = part.value(request);
             }
-            return String.format(template, partValues);
+            return converters.select(filter.getType()).convert(String.format(
+                    template, partValues));
         } else {
-            return request.getSingleQueryParameterValue(
-                    filter.name(), filter.defaultValue());
+            return converters.select(filter.getType()).convert(request
+                    .getParameterValue(filter.getName()));
+            }
+        } catch (ConvertException ex) {
+            throw new InvalidFilterValueException(request, filter, ex);
         }
     }
 }

@@ -42,6 +42,7 @@ package de.etecture.opensource.dynamicresources.utils;
 
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanManager;
 
 /**
  *
@@ -51,6 +52,6 @@ import javax.enterprise.inject.spi.Bean;
  */
 public interface BeanCreator {
 
-    <T> T create(Bean<T> bean,
+    <T> T create(BeanManager beanManager, Bean<T> bean,
             CreationalContext<T> creationalContext);
 }

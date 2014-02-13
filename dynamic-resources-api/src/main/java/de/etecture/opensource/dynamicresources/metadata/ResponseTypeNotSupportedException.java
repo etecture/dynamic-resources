@@ -37,7 +37,6 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
 package de.etecture.opensource.dynamicresources.metadata;
 
 import de.etecture.opensource.dynamicresources.api.ResourceException;
@@ -51,6 +50,7 @@ import de.etecture.opensource.dynamicresources.api.ResourceException;
 public class ResponseTypeNotSupportedException extends ResourceException {
 
     private static final long serialVersionUID = 1L;
+    private final Resource resource;
     private final ResourceMethod resourceMethod;
     private final Class<?> responseType;
 
@@ -61,6 +61,18 @@ public class ResponseTypeNotSupportedException extends ResourceException {
                 .getName() + " for resource: " + resourceMethod.getResource()
                 .getName());
         this.resourceMethod = resourceMethod;
+        this.resource = resourceMethod.getResource();
+        this.responseType = responseType;
+    }
+
+    public ResponseTypeNotSupportedException(Resource resource,
+            Class<?> responseType) {
+        super("The requested response-type: " + responseType
+                + " is not provided by any resourceMethods of resource: "
+                + resource
+                .getName());
+        this.resource = resource;
+        this.resourceMethod = null;
         this.responseType = responseType;
     }
 
@@ -70,5 +82,9 @@ public class ResponseTypeNotSupportedException extends ResourceException {
 
     public Class<?> getResponseType() {
         return responseType;
+    }
+
+    public Resource getResource() {
+        return resource;
     }
 }

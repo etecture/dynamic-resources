@@ -39,7 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.api;
 
-import de.etecture.opensource.dynamicresources.annotations.declaration.Filter;
+import de.etecture.opensource.dynamicresources.metadata.ResourceMethodFilter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -54,37 +54,39 @@ import java.util.List;
  */
 public class InvalidFilterValueException extends ResourceException {
     private static final long serialVersionUID = 1L;
-    private final OldRequest request;
-    private final Filter filter;
-    private final List<String> actualValues;
+    private final Request request;
+    private final ResourceMethodFilter<?> filter;
+    private final List<Object> actualValues;
 
     public InvalidFilterValueException(
-            OldRequest request, Filter filter,
-            String... actualValues) {
+            Request<?, ?> request, ResourceMethodFilter<?> filter,
+            Object... actualValues) {
         this(request, filter, null, actualValues);
     }
 
     public InvalidFilterValueException(
-            OldRequest request, Filter filter, Throwable cause,
-            String... actualValues) {
+            Request<?, ?> request, ResourceMethodFilter<?> filter,
+            Throwable cause,
+            Object... actualValues) {
         super(String.format(
                 "The filter parameter: %s for resource-call: %S %s is not valid.",
-                filter.name(), request.getMethodName(), request
-                .getResourceClass().getSimpleName()), cause);
+                filter.getName(), filter.getResourceMethod()
+                .getName(), filter.getResourceMethod()
+                .getResource().getName()), cause);
         this.request = request;
         this.filter = filter;
         this.actualValues = Arrays.asList(actualValues);
     }
 
-    public List<String> getActualValues() {
+    public List<Object> getActualValues() {
         return Collections.unmodifiableList(actualValues);
     }
 
-    public OldRequest getRequest() {
+    public Request getRequest() {
         return request;
     }
 
-    public Filter getFilter() {
+    public ResourceMethodFilter<?> getFilter() {
         return filter;
     }
 }

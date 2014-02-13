@@ -39,8 +39,10 @@
  */
 package de.etecture.opensource.dynamicresources.extension;
 
+import de.etecture.opensource.dynamicresources.core.mapping.versions.DefaultVersionNumberResolver;
+import de.etecture.opensource.dynamicresources.core.mapping.versions.VersionExpression;
 import de.etecture.opensource.dynamicresources.api.Version;
-import de.etecture.opensource.dynamicresources.spi.VersionNumberResolver;
+import de.etecture.opensource.dynamicresources.core.mapping.versions.VersionNumberResolver;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;

@@ -40,7 +40,7 @@
 
 package de.etecture.opensource.dynamicresources.utils;
 
-import de.etecture.opensource.dynamicresources.annotations.declaration.Global;
+import de.etecture.opensource.dynamicresources.annotations.Global;
 import javax.enterprise.util.AnnotationLiteral;
 
 /**

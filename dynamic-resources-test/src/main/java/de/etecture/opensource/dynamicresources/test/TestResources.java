@@ -40,11 +40,11 @@
 package de.etecture.opensource.dynamicresources.test;
 
 import de.etecture.opensource.dynamicrepositories.api.annotations.Query;
-import de.etecture.opensource.dynamicresources.annotations.declaration.Consumes;
-import de.etecture.opensource.dynamicresources.annotations.declaration.Filter;
+import de.etecture.opensource.dynamicresources.annotations.Consumes;
+import de.etecture.opensource.dynamicresources.annotations.Filter;
 import de.etecture.opensource.dynamicresources.api.HttpMethods;
-import de.etecture.opensource.dynamicresources.annotations.declaration.Method;
-import de.etecture.opensource.dynamicresources.annotations.declaration.Resource;
+import de.etecture.opensource.dynamicresources.annotations.Method;
+import de.etecture.opensource.dynamicresources.annotations.Resource;
 import java.util.List;
 
 /**

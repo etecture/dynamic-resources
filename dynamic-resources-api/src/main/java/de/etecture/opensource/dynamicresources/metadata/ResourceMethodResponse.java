@@ -40,7 +40,7 @@
 package de.etecture.opensource.dynamicresources.metadata;
 
 import de.etecture.opensource.dynamicresources.api.MediaType;
-import de.etecture.opensource.dynamicresources.api.ResponseWriter;
+import de.etecture.opensource.dynamicresources.contexts.ExecutionContext;
 import java.util.Set;
 
 /**
@@ -51,6 +51,13 @@ import java.util.Set;
  * @since
  */
 public interface ResourceMethodResponse<R> {
+
+    /**
+     * returns the method to which this response belongs to.
+     *
+     * @return
+     */
+    ResourceMethod getMethod();
 
     /**
      * returns the type of the expected response.
@@ -78,12 +85,13 @@ public interface ResourceMethodResponse<R> {
      *
      * @return
      */
-    Set<MediaType> getResponseMediaTypes();
+    Set<MediaType> getSupportedResponseMediaTypes();
 
     /**
-     * returns the responsewriter that is associated with this response.
+     * returns the ExecutionContexts that produces this response.
      *
+     * @param <EC> the type of the execution context
      * @return
      */
-    ResponseWriter<R> getResponseWriter();
+    <EC extends ExecutionContext<R>> EC getExecutionContext();
 }

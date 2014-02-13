@@ -42,6 +42,7 @@ package de.etecture.opensource.dynamicresources.utils;
 
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanManager;
 
 /**
  *
@@ -51,6 +52,6 @@ import javax.enterprise.inject.spi.Bean;
  */
 public interface BeanDestroyer {
 
-    <T> void destroy(Bean<T> bean, T instance,
+    <T> void destroy(BeanManager beanManager, Bean<T> bean, T instance,
             CreationalContext<T> creationalContext);
 }

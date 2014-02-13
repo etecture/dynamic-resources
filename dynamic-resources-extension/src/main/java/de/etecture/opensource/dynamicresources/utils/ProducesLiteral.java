@@ -39,7 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.utils;
 
-import de.etecture.opensource.dynamicresources.annotations.declaration.Produces;
+import de.etecture.opensource.dynamicresources.annotations.Produces;
 import javax.enterprise.util.AnnotationLiteral;
 
 /**
@@ -51,7 +51,6 @@ public class ProducesLiteral extends AnnotationLiteral<Produces> implements
         Produces {
 
     private static final long serialVersionUID = 1L;
-    private final String version;
     private final String[] mimeTypes;
     private final Class contentType;
     private final int priority;
@@ -59,35 +58,24 @@ public class ProducesLiteral extends AnnotationLiteral<Produces> implements
     public ProducesLiteral(Class contentType) {
         this.contentType = contentType;
         this.mimeTypes = new String[]{"text/plain"};
-        this.version = String.format("%d.%d.%d", Integer.MAX_VALUE,
-                Integer.MAX_VALUE, Integer.MAX_VALUE);
         this.priority = 0;
     }
 
     public ProducesLiteral(Object object) {
         this.contentType = object.getClass();
         this.mimeTypes = new String[]{"text/plain"};
-        this.version = String.format("%d.%d.%d", Integer.MAX_VALUE,
-                Integer.MAX_VALUE, System.identityHashCode(object));
         this.priority = 0;
     }
 
     public ProducesLiteral(Produces produces) {
-        this(produces.contentType(), produces.mimeType(), produces.version(),
+        this(produces.contentType(), produces.mimeType(),
                 produces.priority());
     }
 
-    public ProducesLiteral(Class contentType, String[] mimeTypes,
-            String versionString, int priority) {
+    public ProducesLiteral(Class contentType, String[] mimeTypes, int priority) {
         this.contentType = contentType;
         this.mimeTypes = mimeTypes;
-        this.version = versionString;
         this.priority = priority;
-    }
-
-    @Override
-    public String version() {
-        return version;
     }
 
     @Override

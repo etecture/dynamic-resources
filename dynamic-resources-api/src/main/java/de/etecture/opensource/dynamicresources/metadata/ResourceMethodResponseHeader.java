@@ -39,7 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.metadata;
 
-import de.etecture.opensource.dynamicresources.annotations.declaration.Header;
+import de.etecture.opensource.dynamicresources.annotations.Header;
 
 /**
  *

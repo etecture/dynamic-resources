@@ -39,7 +39,6 @@
  */
 package de.etecture.opensource.dynamicresources.metadata;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -92,34 +91,10 @@ public interface Resource {
             ResourceMethodNotFoundException;
 
     /**
-     * the uri template of this resource.
+     * the path of this resource.
      *
      * @return
      */
-    String getUriTemplate();
+    ResourcePath getPath();
 
-    /**
-     * returns all the path parameter names that are defined in the uri-template
-     * of this resource in the same order they appear in the uri-template.
-     *
-     * @return
-     */
-    List<String> getPathParameterNames();
-
-    /**
-     * builds a complete URI for the given pathParameters.
-     *
-     * @param pathParameter
-     * @return
-     */
-    String buildUri(Map<String, String> pathParameter);
-
-    /**
-     * scans the complete URI and returns the pathParameters that match the uri
-     * template of this resource.
-     *
-     * @param uri
-     * @return
-     */
-    Map<String, String> scanUri(String uri);
 }

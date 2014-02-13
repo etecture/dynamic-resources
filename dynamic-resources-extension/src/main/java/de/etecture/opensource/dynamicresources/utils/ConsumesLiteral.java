@@ -39,7 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.utils;
 
-import de.etecture.opensource.dynamicresources.annotations.declaration.Consumes;
+import de.etecture.opensource.dynamicresources.annotations.Consumes;
 import javax.enterprise.util.AnnotationLiteral;
 
 /**
@@ -51,7 +51,6 @@ public class ConsumesLiteral extends AnnotationLiteral<Consumes> implements
         Consumes {
 
     private static final long serialVersionUID = 1L;
-    private final String version;
     private final String[] mimeTypes;
     private final Class requestType;
     private final int priority;
@@ -59,35 +58,24 @@ public class ConsumesLiteral extends AnnotationLiteral<Consumes> implements
     public ConsumesLiteral(Class requestType) {
         this.requestType = requestType;
         this.mimeTypes = new String[]{"text/plain"};
-        this.version = String.format("%d.%d.%d", Integer.MAX_VALUE,
-                Integer.MAX_VALUE, Integer.MAX_VALUE);
         this.priority = 0;
     }
 
     public ConsumesLiteral(Object object) {
         this.requestType = object.getClass();
         this.mimeTypes = new String[]{"text/plain"};
-        this.version = String.format("%d.%d.%d", Integer.MAX_VALUE,
-                Integer.MAX_VALUE, System.identityHashCode(object));
         this.priority = 0;
     }
 
     public ConsumesLiteral(Consumes consumes) {
-        this(consumes.requestType(), consumes.mimeType(), consumes.version(),
+        this(consumes.requestType(), consumes.mimeType(),
                 consumes.priority());
     }
 
-    public ConsumesLiteral(Class requestType, String[] mimeTypes,
-            String versionString, int priority) {
+    public ConsumesLiteral(Class requestType, String[] mimeTypes,int priority) {
         this.requestType = requestType;
         this.mimeTypes = mimeTypes;
-        this.version = versionString;
         this.priority = priority;
-    }
-
-    @Override
-    public String version() {
-        return version;
     }
 
     @Override

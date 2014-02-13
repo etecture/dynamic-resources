@@ -39,9 +39,12 @@
  */
 package de.etecture.opensource.dynamicresources.api.accesspoints;
 
+import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.metadata.Application;
+import de.etecture.opensource.dynamicresources.metadata.MediaTypeNotAllowedException;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodNotFoundException;
 import de.etecture.opensource.dynamicresources.metadata.ResourceNotFoundException;
+import de.etecture.opensource.dynamicresources.metadata.ResponseTypeNotSupportedException;
 import java.util.Map;
 
 /**
@@ -54,11 +57,12 @@ import java.util.Map;
  * public class MyBean {
  *
  *   &#64;Inject
+ *   &#64;Named("MyApplication")
  *   Resources myresources;
  *
  *   public String getInformation() {
  *     MyResource myresource = myresources
- *         .select(MyResource.class)
+ *         .select("MyResource", MyResource.class)
  *         .pathParam("id", "1234567890")
  *         .method(HttpMethods.GET)
  *         .invoke().getEntity();
@@ -67,7 +71,7 @@ import java.util.Map;
  *
  *   public String getSimplifiedInformation() {
  *     MyResource myresource = myresources
- *         .select("/resources/my/1234567890", HttpMethods.GET)
+ *         .select(URI.create("/resources/my/1234567890"), HttpMethods.GET, MyResource.class)
  *         .expectStatusCode(StatusCodes.OK)
  *         .invokeAndCheck();
  *     return myresource.getInformation();
@@ -95,60 +99,203 @@ public interface Resources {
     Application getMetadata();
 
     /**
-     * select a specific resource for a given resourceClass.
+     * select a specific resource for the given name and the responseType.
      * <p>
      * Example:
      * <pre>
      * public class MyBean {
      *   &#64;Inject
+     *   &#64;Named("MyApplication")
      *   Resources resources;
      *
      *   public void someMethod() {
-     *     ResourceAccessor&lt;Customers&gt; customersAccessor =
-     *       resources.select(Customers.class);
+     *     MethodsForResponse&lt;Customers&gt; customersAccessor =
+     *       resources.selectByName("Customers", Customers.class);
      *     // ...
      *   }
      * }
      * </pre>
      *
      * @param <X>
-     * @param resourceClass
+     * @param name the name of the resource to select
+     * @param responseType the expected responsetype
      * @return
      * @throws ResourceNotFoundException
+     * @throws ResponseTypeNotSupportedException
      */
-    <X> ResourceAccessor<X> select(Class<X> resourceClass) throws
-            ResourceNotFoundException;
+    <X> MethodsForResponse<X> selectByName(String name,
+            Class<X> responseType)
+            throws
+            ResourceNotFoundException, ResponseTypeNotSupportedException;
 
     /**
-     * select a specific resource for a given URI.
+     * select a specific resource for a given path.
+     * <p>
+     * N.B. the path-parameter extracted from the given path are automatically
+     * set in the returned MethodsForResponse.
+     * <p>
+     * The path is the directly decendant of the applications path.
+     * <p>
+     * Example:
+     * <pre>
+     * public class MyBean {
+     *   &#64;Inject
+     *   &#64;Named("MyApplication")
+     *   Resources resources;
      *
-     * N.B. the path-parameter extracted from the given uri are automatically
-     * set in the returned ResourceAccessor.
+     *   public void someMethod() {
+     *     MethodsForResponse&lt;Customer&gt; customerAccessor =
+     *       resources.selectByPath(
+     *         "/resources/customers/1234567890",
+     *         Customer.class);
+     *     // ...
+     *   }
+     * }
+     * </pre>
+     *
+     * @param <X>
+     * @param path
+     * @param responseType
+     * @return
+     * @throws ResourceNotFoundException
+     * @throws ResponseTypeNotSupportedException
+     */
+    <X> MethodsForResponse<X> selectByPath(String path,
+            Class<X> responseType)
+            throws
+            ResourceNotFoundException, ResponseTypeNotSupportedException;
+
+    /**
+     * selects a specific resource with the given name.
      *
      * <p>
      * Example:
      * <pre>
      * public class MyBean {
      *   &#64;Inject
+     *   &#64;Named("MyApplication")
      *   Resources resources;
      *
      *   public void someMethod() {
-     *     ResourceAccessor customerAccessor =
-     *       resources.select("/resources/customers/1234567890");
+     *     Methods customerAccessor =
+     *       resources.selectByName("Customer");
      *     // ...
      *   }
      * }
      * </pre>
      *
-     * @param uri
+     * @param name
      * @return
      * @throws ResourceNotFoundException
      */
-    ResourceAccessor<?> select(String uri) throws ResourceNotFoundException;
+    Methods selectByName(String name) throws ResourceNotFoundException;
 
     /**
-     * selects the specific resource for a given class and it's method.
+     * selects a specific resource with the given path.
      *
+     * <p>
+     * Example:
+     * <pre>
+     * public class MyBean {
+     *   &#64;Inject
+     *   &#64;Named("MyApplication")
+     *   Resources resources;
+     *
+     *   public void someMethod() {
+     *     Methods customerAccessor =
+     *       resources.selectByPath("/customers/1234567890");
+     *     // ...
+     *   }
+     * }
+     * </pre>
+     *
+     * @param path
+     * @return
+     * @throws ResourceNotFoundException
+     */
+    Methods selectByPath(String path) throws ResourceNotFoundException;
+
+    /**
+     * selects the specific resource for a given path, the specified
+     * response-type and it's method.
+     * <p>
+     * N.B.the path-parameter extracted from the given path are automatically
+     * set in the returned Responses.
+     * <p>
+     * Example:
+     * <pre>
+     * public class MyBean {
+     *   &#64;Inject
+     *   &#64;Named("MyApplication")
+     *   Resources resources;
+     *
+     *   public void someMethod() {
+     *     Responses&lt;CustomerAddress&gt; addCustomerAddressAccessor =
+     *       resources.selectByPath(
+     *         "/customer/1234567890/addresses/address1"
+     *         HttpMethods.PUT,
+     *         CustomerAddress.class);
+     *     // ...
+     *   }
+     * }
+     * </pre>
+     *
+     * @param <X>
+     * @param path
+     * @param responseType
+     * @param method
+     * @return
+     * @throws ResourceMethodNotFoundException
+     * @throws ResourceNotFoundException
+     * @throws ResponseTypeNotSupportedException
+     */
+    <X> Responses<X> selectByPath(String path, String method,
+            Class<X> responseType)
+            throws ResourceMethodNotFoundException, ResourceNotFoundException,
+            ResponseTypeNotSupportedException;
+
+    /**
+     * selects the specific resource for a given path, the specified
+     * response-type and it's method.
+     * <p>
+     * N.B.the path-parameter extracted from the given path are automatically
+     * set in the returned Responses.
+     * <p>
+     * Example:
+     * <pre>
+     * public class MyBean {
+     *   &#64;Inject
+     *   &#64;Named("MyApplication")
+     *   Resources resources;
+     *
+     *   public void someMethod() {
+     *     Responses&lt;CustomerAddress&gt; addCustomerAddressAccessor =
+     *       resources.selectByPath(
+     *         "/customer/1234567890/addresses/address1"
+     *         HttpMethods.PUT,
+     *         CustomerAddress.class);
+     *     // ...
+     *   }
+     * }
+     * </pre>
+     *
+     * @param <X>
+     * @param path
+     * @param acceptedMediaType
+     * @param method
+     * @return
+     * @throws ResourceMethodNotFoundException
+     * @throws ResourceNotFoundException
+     * @throws MediaTypeNotAllowedException
+     */
+    <X> Responses<X> selectByPathAndMime(String path, String method,
+            MediaType acceptedMediaType)
+            throws ResourceMethodNotFoundException, ResourceNotFoundException,
+            MediaTypeNotAllowedException;
+
+    /**
+     * selects the specific resource for a given response-type and it's method.
+     * <p>
      * N.B. the pathParamValues must be specified in the order they appear in
      * the uri template of the resource.
      *
@@ -157,88 +304,75 @@ public interface Resources {
      * <pre>
      * public class MyBean {
      *   &#64;Inject
+     *   &#64;Named("MyApplication")
      *   Resources resources;
      *
      *   public void someMethod() {
-     *     ResourceMethodAccessor&lt;Customer&gt; addCustomerAccessor =
-     *       resources.select(Customer.class, HttpMethods.PUT, "1234567890");
+     *     Responses&lt;CustomerAddress&gt; addCustomerAddressAccessor =
+     *       resources.select(
+     *         "CustomerAddress"
+     *         HttpMethods.PUT,
+     *         CustomerAddress.class, "1234567890", "address1");
      *     // ...
      *   }
      * }
      * </pre>
      *
      * @param <X>
-     * @param resourceClass
+     * @param name
+     * @param responseType
      * @param method
      * @param pathParamValues
      * @return
      * @throws ResourceMethodNotFoundException
      * @throws ResourceNotFoundException
+     * @throws ResponseTypeNotSupportedException
      */
-    <X> ResourceMethodAccessor<X> select(Class<X> resourceClass, String method,
+    <X> Responses<X> selectByName(String name, String method,
+            Class<X> responseType,
             String... pathParamValues)
-            throws ResourceMethodNotFoundException, ResourceNotFoundException;
+            throws ResourceMethodNotFoundException, ResourceNotFoundException,
+            ResponseTypeNotSupportedException;
 
     /**
-     * selects the specific resource for a given class and it's method.
-     *
-     * N.B. the pathParams are applied to the ResourceMethodAccessor.
+     * selects the specific resource for a given name, the specified
+     * response-type and it's method.
+     * <p>
+     * N.B. the pathParams are applied to the Responses.
      *
      * <p>
      * Example:
      * <pre>
      * public class MyBean {
      *   &#64;Inject
+     *   &#64;Named("MyApplication")
      *   Resources resources;
      *
      *   public void someMethod() {
-     *     ResourceMethodAccessor&lt;Customer&gt; addCustomerAccessor =
-     *       resources.select(Customer.class, HttpMethods.PUT,
-     *           Collections.singletonMap("id", "1234567890"));
+     *     Responses&lt;Customer&gt; addCustomerAccessor =
+     *       resources.selectByName(
+     *         "Customer",
+     *         HttpMethods.PUT,
+     *         Customer.class,
+     *         Collections.singletonMap("id", "1234567890"));
      *     // ...
      *   }
      * }
      * </pre>
      *
      * @param <X>
-     * @param resourceClass
+     * @param name
+     * @param responseType
      * @param method
      * @param pathParams
      * @return
      * @throws ResourceMethodNotFoundException
      * @throws ResourceNotFoundException
+     * @throws ResponseTypeNotSupportedException
      */
-    <X> ResourceMethodAccessor<X> select(Class<X> resourceClass, String method,
+    <X> Responses<X> selectByName(String name, String method,
+            Class<X> responseType,
             Map<String, String> pathParams)
-            throws ResourceMethodNotFoundException, ResourceNotFoundException;
-
-    /**
-     * selects the specific resource for a given class and it's method.
-     *
-     * N.B. the path-parameter extracted from the given uri are automatically
-     * set in the returned ResourceMethodAccessor.
-     *
-     * <p>
-     * Example:
-     * <pre>
-     * public class MyBean {
-     *   &#64;Inject
-     *   Resources resources;
-     *
-     *   public void someMethod() {
-     *     ResourceMethodAccessor removeCustomerAccessor =
-     *       resources.select("/resources/customers/1234567890", HttpMethods.DELETE);
-     *     // ...
-     *   }
-     * }
-     * </pre>
-     *
-     * @param uri
-     * @param method
-     * @return
-     * @throws ResourceMethodNotFoundException
-     * @throws ResourceNotFoundException
-     */
-    ResourceMethodAccessor<?> select(String uri, String method) throws
-            ResourceMethodNotFoundException, ResourceNotFoundException;
+            throws ResourceMethodNotFoundException, ResourceNotFoundException,
+            ResponseTypeNotSupportedException;
 }

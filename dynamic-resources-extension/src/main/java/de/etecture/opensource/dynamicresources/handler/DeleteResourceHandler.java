@@ -39,8 +39,8 @@
  */
 package de.etecture.opensource.dynamicresources.handler;
 
-import de.etecture.opensource.dynamicrepositories.executor.QueryHints;
-import de.etecture.opensource.dynamicrepositories.extension.DefaultQuery;
+import de.etecture.opensource.dynamicrepositories.api.DefaultQueryHints;
+import de.etecture.opensource.dynamicrepositories.extension.DefaultQueryExecutionContext;
 import de.etecture.opensource.dynamicresources.api.BooleanResult;
 import de.etecture.opensource.dynamicresources.api.DefaultResponse;
 import de.etecture.opensource.dynamicresources.api.HttpMethods;
@@ -61,9 +61,9 @@ public class DeleteResourceHandler extends AbstractResourceMethodHandler {
     public <T> Response<T> handleRequest(OldRequest<T> request) throws
             ResourceException {
         try {
-            final DefaultQuery<BooleanResult> query =
+            final DefaultQueryExecutionContext<BooleanResult> query =
                     buildQuery(request, BooleanResult.class);
-            query.addHint(QueryHints.LIMIT, 1);
+            query.addHint(DefaultQueryHints.LIMIT, 1);
             BooleanResult result = (BooleanResult) executors.execute(query);
             return new DefaultResponse(result.getResult(),
                     request.getResourceMethod().status());

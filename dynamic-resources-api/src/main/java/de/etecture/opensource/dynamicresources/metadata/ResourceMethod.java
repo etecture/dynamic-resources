@@ -39,9 +39,10 @@
  */
 package de.etecture.opensource.dynamicresources.metadata;
 
-import de.etecture.opensource.dynamicrepositories.executor.Query;
 import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.api.ResourceMethodInterceptor;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -74,67 +75,122 @@ public interface ResourceMethod {
     String getDescription();
 
     /**
-     * returns the queries associated with this request.
-     *
-     * @return
-     */
-    Set<Query> getQueries();
-
-    /**
      * returns the resourceinterceptors associated with this request;
      *
      * @return
      */
-    Set<Class<? extends ResourceMethodInterceptor>> getInterceptors();
+    List<Class<? extends ResourceMethodInterceptor>> getInterceptors();
 
     /**
-     * returns true, if the role is allowed to execute this resource.
+     * returns the allowed roles names for this method.
      *
-     * @param role
      * @return
      */
-    boolean isAllowed(String role);
+    Set<String> getAllowedRoleNames();
 
     /**
      * the requests, this resource-method will consume.
+     * <p>
+     * Hint: see the description for {@linkplain #getResponses()}. The described
+     * possibilities of the returned map do also apply for the returned map of
+     * this method.
      *
      * @return
      */
-    Set<ResourceMethodRequest<?>> getRequests();
+    Map<Class<?>, ResourceMethodRequest<?>> getRequests();
 
     /**
-     * returns the request for the given mediatype.
+     * the filters for this method.
      *
+     * @return
+     */
+    Set<ResourceMethodFilter<?>> getFilters();
+
+    /**
+     * returns the possible requests for the given mediatype.
+     * <p>
      * If the mediatype is not defined for this request, a
+     * MediaTypeNotAllowedException will be thrown.
+     *
+     * @param mediaType
+     * @return
+     * @throws MediaTypeNotAllowedException
+     */
+    Set<ResourceMethodRequest<?>> getRequests(MediaType mediaType) throws
+            MediaTypeNotAllowedException;
+
+    /**
+     * returns the specific request for the given mediatype.
+     * <p>
+     * If the mediatype is not defined for this request, a
+     * MediaTypeNotAllowedException will be thrown.
+     * <p>
+     * If there are more then one requests specified that consumes the given
+     * mediatype, then a MediaTypeAmbigiousException is thrown.
+     *
+     * @param mediaType
+     * @return
+     * @throws MediaTypeNotAllowedException
+     * @throws MediaTypeAmbigiousException
+     */
+    ResourceMethodRequest<?> getRequest(MediaType mediaType) throws
+            MediaTypeNotAllowedException, MediaTypeAmbigiousException;
+
+    /**
+     * the responses, this resource method will produce.
+     * <p>
+     * Hint: the returned map is aware of polymorphism and class hierarchy. This
+     * means, that a
+     * <code>getResponses().get(Object.class)</code> will return the first
+     * response (if any), due to
+     * <code>Object.class</code> is assignable from ANY type.
+     * <p>
+     * In other words: Assume the method produces
+     * <code>String.class</code> and
+     * <code>Number.class</code> responses. Then a call of
+     * <code>getResponses().get(Integer.class)</code> will return the
+     * <code>Number.class</code> response.
+     * <p>
+     * You can also call the
+     * <code>get()</code> method of the returned map with an instance of a class
+     * and the
+     * <code>get()</code> will return the response for which the given key is an
+     * instance of.
+     * <p>
+     * The same is true for
+     * <code>getResponses().containsKey()</code>.
+     *
+     * @return
+     */
+    Map<Class<?>, ResourceMethodResponse<?>> getResponses();
+
+    /**
+     * returns the ResourceMethodResponse that produces the given mediaType.
+     *
+     * if there is no ResourceMethodResponse defined for this mediaType, a
      * MediaTypeNotSupportedException will be thrown.
      *
      * @param mediaType
      * @return
      * @throws MediaTypeNotSupportedException
      */
-    ResourceMethodRequest<?> getRequest(MediaType mediaType) throws
+    Set<ResourceMethodResponse<?>> getResponses(MediaType mediaType) throws
             MediaTypeNotSupportedException;
 
     /**
-     * returns the request for the given requestType type.
+     * returns the specific response for the given mediatype.
+     * <p>
+     * If the mediatype is not defined for this response, a
+     * MediaTypeNotSupportedException will be thrown.
+     * <p>
+     * If there are more then one responses specified that produces the given
+     * mediatype, then a MediaTypeAmbigiousException is thrown.
      *
-     * if the requestType is not supported by this resourcemethod, a
-     * RequestTypeNotSupportedException is thrown.
-     *
-     * @param <B> the type of the request
-     * @param requestType
+     * @param mediaType
      * @return
-     * @throws RequestTypeNotSupportedException
+     * @throws MediaTypeNotSupportedException
+     * @throws MediaTypeAmbigiousException
      */
-    <B> ResourceMethodRequest<B> getRequest(Class<B> requestType) throws
-            RequestTypeNotSupportedException;
-
-    /**
-     * returns true, if the given response entity is an instance of an available
-     * response of this method.
-     *
-     * @param entity
-     * @return
-     */
-    public boolean isResponseInstance(Object entity);
+    ResourceMethodResponse<?> getResponse(MediaType mediaType) throws
+            MediaTypeNotSupportedException, MediaTypeAmbigiousException;
 }

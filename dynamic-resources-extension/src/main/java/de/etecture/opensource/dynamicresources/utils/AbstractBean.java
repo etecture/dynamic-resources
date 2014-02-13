@@ -47,6 +47,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionPoint;
 
 /**
@@ -59,6 +60,7 @@ import javax.enterprise.inject.spi.InjectionPoint;
 public abstract class AbstractBean<T> implements Bean<T> {
 
     private final Class<T> beanClass;
+    private final BeanManager beanManager;
     private final String name;
     private final Set<Type> beanTypes;
     private final Set<Annotation> qualifier = new HashSet<>();
@@ -67,10 +69,11 @@ public abstract class AbstractBean<T> implements Bean<T> {
     private final boolean alternative;
     private final boolean nullable;
 
-    public AbstractBean(Class<T> beanClass, String name,
+    public AbstractBean(BeanManager beanManager, Class<T> beanClass, String name,
             Class<? extends Annotation> scope, boolean alternative,
             boolean nullable,
             Type... beanTypes) {
+        this.beanManager = beanManager;
         this.beanClass = beanClass;
         this.name = name;
         this.scope = scope;
