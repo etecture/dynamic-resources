@@ -40,7 +40,6 @@
 package de.etecture.opensource.dynamicresources.metadata;
 
 import de.etecture.opensource.dynamicresources.api.MediaType;
-import de.etecture.opensource.dynamicresources.contexts.ExecutionContext;
 import java.util.Set;
 
 /**
@@ -87,11 +86,4 @@ public interface ResourceMethodResponse<R> {
      */
     Set<MediaType> getSupportedResponseMediaTypes();
 
-    /**
-     * returns the ExecutionContexts that produces this response.
-     *
-     * @param <EC> the type of the execution context
-     * @return
-     */
-    <EC extends ExecutionContext<R>> EC getExecutionContext();
 }

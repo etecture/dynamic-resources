@@ -37,16 +37,39 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+package de.etecture.opensource.dynamicresources.api.events;
 
-package de.etecture.opensource.dynamicresources.contexts;
+import de.etecture.opensource.dynamicresources.api.Response;
 
 /**
+ * this is a CDI-event that is fired after the Resource Method was executed.
  *
  * @author rhk
  * @version
  * @since
  */
-public interface ChainedExecutionContext<R> extends
-        Iterable<ExecutionContext>, ExecutionContext<R> {
+public interface AfterResourceMethodExecution extends
+        ResourceMethodExecutionEvent {
 
+    /**
+     * returns the original response that was produced by the method execution.
+     *
+     * @return
+     */
+    Response<?> getOriginalResponse();
+
+    /**
+     * returns the response that will be returned for this method execution.
+     *
+     * @return
+     */
+    Response<?> getCurrentResponse();
+
+    /**
+     * specifies the new response, that should be returned for this method
+     * execution other then the standard response.
+     *
+     * @param newResponse
+     */
+    void setResponse(Response<?> newResponse);
 }

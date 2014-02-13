@@ -39,10 +39,15 @@
  */
 package de.etecture.opensource.dynamicresources.metadata.annotated;
 
+import de.etecture.opensource.dynamicrepositories.metadata.AnnotatedQueryDefinition;
+import de.etecture.opensource.dynamicrepositories.metadata.DefaultQueryDefinition;
+import de.etecture.opensource.dynamicrepositories.metadata.QueryDefinition;
 import de.etecture.opensource.dynamicresources.annotations.Method;
 import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.metadata.AbstractResourceMethodResponse;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethod;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 /**
  *
@@ -50,19 +55,57 @@ import de.etecture.opensource.dynamicresources.metadata.ResourceMethod;
  * @version
  * @since
  */
-public class AnnotatedResourceMethodResponse<R> extends AbstractResourceMethodResponse<R> {
+public class AnnotatedQueryResourceMethodResponse<R> extends AbstractResourceMethodResponse<R> {
 
-    AnnotatedResourceMethodResponse(
+    private final QueryDefinition queryDefinition;
+
+    AnnotatedQueryResourceMethodResponse(
             ResourceMethod method,
-            Class<R> resourceClass, int statusCode, MediaType... mediaTypes) {
+            Class<R> resourceClass, int statusCode,
+            QueryDefinition queryDefinition, MediaType... mediaTypes) {
         super(method, resourceClass, statusCode, mediaTypes);
+        this.queryDefinition = queryDefinition;
     }
 
-    public static <R> AnnotatedResourceMethodResponse<R> createWithQueryExecution(
+    public QueryDefinition getQueryDefinition() {
+        return queryDefinition;
+    }
+
+    public static <R> AnnotatedQueryResourceMethodResponse<R> createWithQueryExecution(
             final ResourceMethod method,
             final Class<R> resourceClass, Method annotation,
             MediaType... mediaTypes) {
-        return new AnnotatedResourceMethodResponse(method, resourceClass,
-                annotation.status(), mediaTypes);
+
+        QueryDefinition queryDefinition;
+        if (annotation.query().length > 0) {
+            queryDefinition =
+                    new AnnotatedQueryDefinition(
+                    annotation.query()[0]) {
+                @Override
+                public String getStatement() {
+                    return createStatement(resourceClass, method.getName(),
+                            super.getStatement());
+                }
+            };
+        } else {
+            queryDefinition = new DefaultQueryDefinition(createStatement(
+                    resourceClass,
+                    method.getName(), ""));
+        }
+        return new AnnotatedQueryResourceMethodResponse(method, resourceClass,
+                annotation.status(), queryDefinition, mediaTypes);
+    }
+
+    protected static String createStatement(Class<?> resourceClass,
+            String methodName, String statement) {
+        if (statement == null || statement.trim().isEmpty()) {
+            statement = methodName;
+        }
+        try {
+            return ResourceBundle.getBundle(resourceClass.getName()).getString(
+                    statement);
+        } catch (MissingResourceException e) {
+            return statement;
+        }
     }
 }

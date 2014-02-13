@@ -37,28 +37,23 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+package de.etecture.opensource.dynamicresources.api.events;
 
-package de.etecture.opensource.dynamicresources.extension;
-
-import de.etecture.opensource.dynamicresources.api.DefaultResponse;
-import de.etecture.opensource.dynamicresources.api.Request;
-import de.etecture.opensource.dynamicresources.api.ResourceException;
-import de.etecture.opensource.dynamicresources.api.ResourceMethodExecutor;
-import de.etecture.opensource.dynamicresources.api.Response;
-import de.etecture.opensource.dynamicresources.api.StatusCodes;
-import javax.enterprise.inject.Default;
+import de.etecture.opensource.dynamicresources.contexts.ExecutionContext;
 
 /**
+ * common class for the execution event.
  *
  * @author rhk
  * @version
  * @since
  */
-@Default
-public class DefaultResourceMethodExecutor implements ResourceMethodExecutor {
+interface ResourceMethodExecutionEvent {
 
-    @Override
-    public <T> Response<T> execute(Request request) throws ResourceException {
-        return new DefaultResponse(null, StatusCodes.NO_RESPONSE);
-    }
+    /**
+     * returns the execution context for the event.
+     *
+     * @return
+     */
+    ExecutionContext<?, ?> getExecutionContext();
 }

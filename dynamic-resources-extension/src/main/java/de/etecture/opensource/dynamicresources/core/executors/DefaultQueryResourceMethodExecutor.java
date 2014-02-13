@@ -37,53 +37,53 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.contexts;
+package de.etecture.opensource.dynamicresources.core.executors;
 
-import de.etecture.opensource.dynamicrepositories.metadata.QueryDefinition;
-import de.etecture.opensource.dynamicresources.metadata.ResourceMethodRequest;
-import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponse;
-import java.util.Map;
+import de.etecture.opensource.dynamicrepositories.executor.QueryExecutionException;
+import de.etecture.opensource.dynamicrepositories.extension.DefaultQueryExecutionContext;
+import de.etecture.opensource.dynamicrepositories.extension.QueryExecutors;
+import de.etecture.opensource.dynamicresources.annotations.Body;
+import de.etecture.opensource.dynamicresources.annotations.Executes;
+import de.etecture.opensource.dynamicresources.contexts.QueryExecutionContext;
+import de.herschke.converters.api.Converters;
+import javax.inject.Inject;
 
 /**
- * this is a Resource Method Execution that defines queries to be executed.
  *
- * @param <R>
  * @author rhk
  * @version
  * @since
  */
-public class QueryExecutionContext<R, B> extends AbstractExecutionContext<R, B> {
+public class DefaultQueryResourceMethodExecutor {
 
-    private final QueryDefinition query;
+    @Inject
+    QueryExecutors executors;
+    @Inject
+    Converters converters;
 
-    public QueryExecutionContext(QueryDefinition query,
-            ResourceMethodResponse<R> responseMetadata,
-            ResourceMethodRequest<B> requestMetadata) {
-        super(responseMetadata, requestMetadata);
-        this.query = query;
-    }
+    @Executes
+    public <R, B> R executeAnyResourceMethodWithQueryContext(
+            QueryExecutionContext<R, B> context, @Body B request) throws
+            QueryExecutionException {
 
-    public QueryExecutionContext(QueryDefinition query,
-            ResourceMethodResponse<R> responseMetadata,
-            ResourceMethodRequest<B> requestMetadata, B body) {
-        super(responseMetadata, requestMetadata, body);
-        this.query = query;
-    }
+        // build the query-execution-context (from repository)
+        DefaultQueryExecutionContext<R> queryContext =
+                new DefaultQueryExecutionContext(context.getResponseMetadata()
+                .getResponseType(), context.getResponseMetadata()
+                .getResponseType(), context.getQuery());
 
-    public QueryExecutionContext(QueryDefinition query,
-            ResourceMethodResponse<R> responseMetadata,
-            ResourceMethodRequest<B> requestMetadata, B body,
-            Map<String, Object> parameters) {
-        super(responseMetadata, requestMetadata, body, parameters);
-        this.query = query;
-    }
+        // add all the parameters as query-parameters.
+        for (String paramName : context.getParameterNames()) {
+            queryContext.addParameter(paramName, context.getParameterValue(
+                    paramName));
+        }
 
-    /**
-     * returns the query to be executed within this execution context.
-     *
-     * @return
-     */
-    public QueryDefinition getQuery() {
-        return this.query;
+        // add the request as a query-parameter
+        if (request != null) {
+            queryContext.addParameter("request", request);
+        }
+
+        // executes the query.
+        return executors.execute(queryContext);
     }
 }

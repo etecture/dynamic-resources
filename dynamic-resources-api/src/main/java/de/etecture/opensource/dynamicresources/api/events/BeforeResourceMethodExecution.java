@@ -37,53 +37,42 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.contexts;
+package de.etecture.opensource.dynamicresources.api.events;
 
-import de.etecture.opensource.dynamicrepositories.metadata.QueryDefinition;
-import de.etecture.opensource.dynamicresources.metadata.ResourceMethodRequest;
-import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponse;
-import java.util.Map;
+import de.etecture.opensource.dynamicresources.api.Response;
 
 /**
- * this is a Resource Method Execution that defines queries to be executed.
+ * this is a CDI-event that is fired when the Resource Method will be executed.
  *
- * @param <R>
  * @author rhk
  * @version
  * @since
  */
-public class QueryExecutionContext<R, B> extends AbstractExecutionContext<R, B> {
-
-    private final QueryDefinition query;
-
-    public QueryExecutionContext(QueryDefinition query,
-            ResourceMethodResponse<R> responseMetadata,
-            ResourceMethodRequest<B> requestMetadata) {
-        super(responseMetadata, requestMetadata);
-        this.query = query;
-    }
-
-    public QueryExecutionContext(QueryDefinition query,
-            ResourceMethodResponse<R> responseMetadata,
-            ResourceMethodRequest<B> requestMetadata, B body) {
-        super(responseMetadata, requestMetadata, body);
-        this.query = query;
-    }
-
-    public QueryExecutionContext(QueryDefinition query,
-            ResourceMethodResponse<R> responseMetadata,
-            ResourceMethodRequest<B> requestMetadata, B body,
-            Map<String, Object> parameters) {
-        super(responseMetadata, requestMetadata, body, parameters);
-        this.query = query;
-    }
+public interface BeforeResourceMethodExecution extends
+        ResourceMethodExecutionEvent {
 
     /**
-     * returns the query to be executed within this execution context.
+     * may be called from an observer of this event to inform the framework that
+     * the execution of the method should not be proceed but return the given
+     * response immediatly.
+     *
+     * @param response
+     */
+    void cancel(Response<?> response);
+
+    /**
+     * returns true, when another observer already cancelled the execution
      *
      * @return
      */
-    public QueryDefinition getQuery() {
-        return this.query;
-    }
+    boolean wasCanceled();
+
+    /**
+     * returns a possible response, another observer specified to cancel the
+     * execution, or
+     * <code>null</code> if the execution is not canceled yet.
+     *
+     * @return
+     */
+    Response<?> getCancelingResponse();
 }

@@ -37,53 +37,41 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.contexts;
 
-import de.etecture.opensource.dynamicrepositories.metadata.QueryDefinition;
-import de.etecture.opensource.dynamicresources.metadata.ResourceMethodRequest;
-import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponse;
-import java.util.Map;
+package de.etecture.opensource.dynamicresources.core.events;
 
-/**
- * this is a Resource Method Execution that defines queries to be executed.
- *
- * @param <R>
- * @author rhk
- * @version
- * @since
- */
-public class QueryExecutionContext<R, B> extends AbstractExecutionContext<R, B> {
+import de.etecture.opensource.dynamicresources.api.Response;
+import de.etecture.opensource.dynamicresources.api.events.BeforeResourceMethodExecution;
+import de.etecture.opensource.dynamicresources.contexts.ExecutionContext;
 
-    private final QueryDefinition query;
+public class BeforeResourceMethodExecutionImpl implements
+        BeforeResourceMethodExecution {
 
-    public QueryExecutionContext(QueryDefinition query,
-            ResourceMethodResponse<R> responseMetadata,
-            ResourceMethodRequest<B> requestMetadata) {
-        super(responseMetadata, requestMetadata);
-        this.query = query;
+    private final ExecutionContext<?, ?> context;
+    private Response<?> cancelingResponse = null;
+
+    public BeforeResourceMethodExecutionImpl(ExecutionContext<?, ?> context) {
+        this.context = context;
     }
 
-    public QueryExecutionContext(QueryDefinition query,
-            ResourceMethodResponse<R> responseMetadata,
-            ResourceMethodRequest<B> requestMetadata, B body) {
-        super(responseMetadata, requestMetadata, body);
-        this.query = query;
+    @Override
+    public void cancel(
+            Response<?> response) {
+        this.cancelingResponse = response;
     }
 
-    public QueryExecutionContext(QueryDefinition query,
-            ResourceMethodResponse<R> responseMetadata,
-            ResourceMethodRequest<B> requestMetadata, B body,
-            Map<String, Object> parameters) {
-        super(responseMetadata, requestMetadata, body, parameters);
-        this.query = query;
+    @Override
+    public boolean wasCanceled() {
+        return this.cancelingResponse != null;
     }
 
-    /**
-     * returns the query to be executed within this execution context.
-     *
-     * @return
-     */
-    public QueryDefinition getQuery() {
-        return this.query;
+    @Override
+    public Response<?> getCancelingResponse() {
+        return this.cancelingResponse;
+    }
+
+    @Override
+    public ExecutionContext<?, ?> getExecutionContext() {
+        return context;
     }
 }

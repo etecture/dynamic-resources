@@ -104,8 +104,8 @@ public class AnnotatedResourceMethod extends AbstractResourceMethod {
         }
         if (annotation.produces().length > 0) {
             for (Produces produces : annotation.produces()) {
-                AnnotatedResourceMethodResponse response =
-                        AnnotatedResourceMethodResponse
+                AnnotatedQueryResourceMethodResponse response =
+                        AnnotatedQueryResourceMethodResponse
                         .createWithQueryExecution(method, produces.contentType(),
                         annotation);
                 for (String mime : produces.mimeType()) {

@@ -39,10 +39,17 @@
  */
 package de.etecture.opensource.dynamicresources.api;
 
+import de.etecture.opensource.dynamicresources.api.events.AfterResourceMethodExecution;
+import de.etecture.opensource.dynamicresources.api.events.BeforeResourceMethodExecution;
+
 /**
  *
+ * @deprecated this type is deprecated. Intercepting resource method execution
+ * is now possible by observing resource execution events. See
+ * {@link BeforeResourceMethodExecution} and {@link AfterResourceMethodExecution}
  * @author rhk
  */
+@Deprecated
 public interface ResourceMethodInterceptor {
 
     /**

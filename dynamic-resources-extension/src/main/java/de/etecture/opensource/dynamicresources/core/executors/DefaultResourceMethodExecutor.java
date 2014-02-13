@@ -37,53 +37,20 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.contexts;
 
-import de.etecture.opensource.dynamicrepositories.metadata.QueryDefinition;
-import de.etecture.opensource.dynamicresources.metadata.ResourceMethodRequest;
-import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponse;
-import java.util.Map;
+package de.etecture.opensource.dynamicresources.core.executors;
+
+import de.etecture.opensource.dynamicresources.annotations.Executes;
 
 /**
- * this is a Resource Method Execution that defines queries to be executed.
  *
- * @param <R>
  * @author rhk
  * @version
  * @since
  */
-public class QueryExecutionContext<R, B> extends AbstractExecutionContext<R, B> {
+public class DefaultResourceMethodExecutor {
 
-    private final QueryDefinition query;
-
-    public QueryExecutionContext(QueryDefinition query,
-            ResourceMethodResponse<R> responseMetadata,
-            ResourceMethodRequest<B> requestMetadata) {
-        super(responseMetadata, requestMetadata);
-        this.query = query;
-    }
-
-    public QueryExecutionContext(QueryDefinition query,
-            ResourceMethodResponse<R> responseMetadata,
-            ResourceMethodRequest<B> requestMetadata, B body) {
-        super(responseMetadata, requestMetadata, body);
-        this.query = query;
-    }
-
-    public QueryExecutionContext(QueryDefinition query,
-            ResourceMethodResponse<R> responseMetadata,
-            ResourceMethodRequest<B> requestMetadata, B body,
-            Map<String, Object> parameters) {
-        super(responseMetadata, requestMetadata, body, parameters);
-        this.query = query;
-    }
-
-    /**
-     * returns the query to be executed within this execution context.
-     *
-     * @return
-     */
-    public QueryDefinition getQuery() {
-        return this.query;
+    @Executes
+    public void executeAnyResourceMethods() {
     }
 }

@@ -37,53 +37,43 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.contexts;
+package de.etecture.opensource.dynamicresources.core.events;
 
-import de.etecture.opensource.dynamicrepositories.metadata.QueryDefinition;
-import de.etecture.opensource.dynamicresources.metadata.ResourceMethodRequest;
-import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponse;
-import java.util.Map;
+import de.etecture.opensource.dynamicresources.api.Response;
+import de.etecture.opensource.dynamicresources.api.events.AfterResourceMethodExecution;
+import de.etecture.opensource.dynamicresources.contexts.ExecutionContext;
 
-/**
- * this is a Resource Method Execution that defines queries to be executed.
- *
- * @param <R>
- * @author rhk
- * @version
- * @since
- */
-public class QueryExecutionContext<R, B> extends AbstractExecutionContext<R, B> {
+public class AfterResourceMethodExecutionImpl implements
+        AfterResourceMethodExecution {
 
-    private final QueryDefinition query;
+    private final ExecutionContext<?, ?> context;
+    private final Response<?> originalResponse;
+    private Response<?> currentResponse;
 
-    public QueryExecutionContext(QueryDefinition query,
-            ResourceMethodResponse<R> responseMetadata,
-            ResourceMethodRequest<B> requestMetadata) {
-        super(responseMetadata, requestMetadata);
-        this.query = query;
+    public AfterResourceMethodExecutionImpl(
+            ExecutionContext<?, ?> context, Response<?> originalResponse) {
+        this.context = context;
+        this.originalResponse = originalResponse;
     }
 
-    public QueryExecutionContext(QueryDefinition query,
-            ResourceMethodResponse<R> responseMetadata,
-            ResourceMethodRequest<B> requestMetadata, B body) {
-        super(responseMetadata, requestMetadata, body);
-        this.query = query;
+    @Override
+    public Response<?> getOriginalResponse() {
+        return originalResponse;
     }
 
-    public QueryExecutionContext(QueryDefinition query,
-            ResourceMethodResponse<R> responseMetadata,
-            ResourceMethodRequest<B> requestMetadata, B body,
-            Map<String, Object> parameters) {
-        super(responseMetadata, requestMetadata, body, parameters);
-        this.query = query;
+    @Override
+    public Response<?> getCurrentResponse() {
+        return currentResponse;
     }
 
-    /**
-     * returns the query to be executed within this execution context.
-     *
-     * @return
-     */
-    public QueryDefinition getQuery() {
-        return this.query;
+    @Override
+    public void setResponse(
+            Response<?> newResponse) {
+        currentResponse = newResponse;
+    }
+
+    @Override
+    public ExecutionContext<?, ?> getExecutionContext() {
+        return this.context;
     }
 }

@@ -39,7 +39,10 @@
  */
 package de.etecture.opensource.dynamicresources.contexts;
 
+import de.etecture.opensource.dynamicresources.metadata.ResourceMethod;
+import de.etecture.opensource.dynamicresources.metadata.ResourceMethodRequest;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponse;
+import java.util.Set;
 
 /**
  * defines an execution context for a resource method, that provide the
@@ -50,13 +53,94 @@ import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponse;
  * @version
  * @since
  */
-public interface ExecutionContext<R> {
+public interface ExecutionContext<R, B> {
 
     /**
-     * returns the resource method response, this execution produces.
+     * returns the metadata request that represents the body of this request.
+     * <p>
+     * N.B. if the body of this request is null, which means, that no body is
+     * associated with this request, then this method may also return null.
      *
      * @return
      */
-    ResourceMethodResponse<R> getProducingResponse();
+    ResourceMethodRequest<B> getRequestMetadata();
 
+    /**
+     * returns the metadata for the resource method response associated with
+     * this request.
+     *
+     * @return
+     */
+    ResourceMethodResponse<R> getResponseMetadata();
+
+    /**
+     * returns the resource-method for this request.
+     *
+     * @return
+     */
+    ResourceMethod getResourceMethod();
+
+    /**
+     * returns all the names of the parameters for this request.
+     *
+     * @return
+     */
+    Set<String> getParameterNames();
+
+    /**
+     * returns the value for the parameter with the given name defined for this
+     * request.
+     *
+     * If no parameter with the given name was defined, the defaultValue is
+     * returned.
+     *
+     * @param <T>
+     * @param name
+     * @param defaultValue
+     * @return
+     */
+    <T> T getParameterValue(String name, T defaultValue);
+
+    /**
+     * returns the value for the parameter with the given name defined for this
+     * request.
+     *
+     * If no parameter with the given name was defined, null is returned.
+     *
+     * @param name
+     * @return
+     */
+    Object getParameterValue(String name);
+
+    /**
+     * defines a new value for the parameter with the specified name of this
+     * request.
+     *
+     * @param name
+     * @param value
+     */
+    void setParameterValue(String name, Object value);
+
+    /**
+     * returns true, if a parameter with the given name was defined for this
+     * request.
+     *
+     * @param name
+     * @return
+     */
+    boolean hasParameter(String name);
+
+    /**
+     * removes a parameter with the specified name from this request.
+     *
+     * @param name
+     */
+    void removeParameter(String name);
+
+    /**
+     * returns the request body.
+     *
+     * @return
+     */
+    B getBody();
 }

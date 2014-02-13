@@ -39,9 +39,9 @@
  */
 package de.etecture.opensource.dynamicresources.core;
 
-import de.etecture.opensource.dynamicresources.utils.PathParser;
 import de.etecture.opensource.dynamicresources.annotations.Resource;
 import de.etecture.opensource.dynamicresources.api.UriBuilder;
+import de.etecture.opensource.dynamicresources.utils.PathParser;
 import java.util.Map;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Default;
@@ -69,9 +69,9 @@ public class DefaultUriBuilder implements UriBuilder {
         Resource resource = resourceClazz.getAnnotation(Resource.class);
         String path;
         if (pathValues != null) {
-            path = PathParser.createURI(resource.uri(), pathValues);
+            path = PathParser.createURI(resource.path(), pathValues);
         } else {
-            path = resource.uri();
+            path = resource.path();
             if (!path.startsWith("/")) {
                 path = "/" + path;
             }
