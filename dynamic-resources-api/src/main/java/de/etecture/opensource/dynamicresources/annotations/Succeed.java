@@ -37,41 +37,26 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+package de.etecture.opensource.dynamicresources.annotations;
 
-package de.etecture.opensource.dynamicresources.core.events;
+import de.etecture.opensource.dynamicresources.api.events.AfterResourceMethodExecution;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import javax.inject.Qualifier;
 
-import de.etecture.opensource.dynamicresources.api.Response;
-import de.etecture.opensource.dynamicresources.api.events.BeforeResourceMethodExecution;
-import de.etecture.opensource.dynamicresources.api.ExecutionContext;
-
-public class BeforeResourceMethodExecutionImpl implements
-        BeforeResourceMethodExecution {
-
-    private final ExecutionContext<?, ?> context;
-    private Response<?> cancelingResponse = null;
-
-    public BeforeResourceMethodExecutionImpl(ExecutionContext<?, ?> context) {
-        this.context = context;
-    }
-
-    @Override
-    public void cancel(
-            Response<?> response) {
-        this.cancelingResponse = response;
-    }
-
-    @Override
-    public boolean wasCanceled() {
-        return this.cancelingResponse != null;
-    }
-
-    @Override
-    public Response<?> getCancelingResponse() {
-        return this.cancelingResponse;
-    }
-
-    @Override
-    public ExecutionContext<?, ?> getExecutionContext() {
-        return context;
-    }
+/**
+ * qualifies a {@link AfterResourceMethodExecution} event in case of successful
+ * execution of the resource method.
+ *
+ * @author rhk
+ * @version
+ * @since
+ */
+@Qualifier
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.FIELD,
+    ElementType.PARAMETER})
+public @interface Succeed {
 }

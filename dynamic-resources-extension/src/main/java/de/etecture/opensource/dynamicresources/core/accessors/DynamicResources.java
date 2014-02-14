@@ -166,7 +166,7 @@ public final class DynamicResources implements Resources {
         try {
             return BeanInstanceBuilder.forBeanType(
                     DynamicResources.class,
-                    beanManager).build(application);
+                    beanManager).buildVerbose(application);
         } catch (InstantiationException | IllegalAccessException |
                 IllegalArgumentException | InvocationTargetException |
                 NoSuchMethodException ex) {

@@ -37,11 +37,14 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.contexts;
+package de.etecture.opensource.dynamicresources.api;
 
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethod;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodRequest;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponse;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -53,7 +56,42 @@ import java.util.Set;
  * @version
  * @since
  */
-public interface ExecutionContext<R, B> {
+public final class ExecutionContext<R, B> {
+
+    private final ResourceMethodRequest<B> requestMetadata;
+    private final ResourceMethodResponse<R> responseMetadata;
+    private final ResourceMethod resourceMethod;
+    private final Map<String, Object> parameters = new HashMap<>();
+    private final B body;
+
+    public ExecutionContext(
+            ResourceMethodResponse<R> responseMetadata,
+            ResourceMethodRequest<B> requestMetadata) {
+        this(responseMetadata, requestMetadata, null);
+    }
+
+    public ExecutionContext(
+            ResourceMethodResponse<R> responseMetadata,
+            ResourceMethodRequest<B> requestMetadata,
+            B body) {
+        this(responseMetadata, requestMetadata, body, Collections
+                .<String, Object>emptyMap());
+    }
+
+    public ExecutionContext(
+            ResourceMethodResponse<R> responseMetadata,
+            ResourceMethodRequest<B> requestMetadata,
+            B body, Map<String, Object> parameters) {
+        this.requestMetadata = requestMetadata;
+        if (responseMetadata == null) {
+            throw new IllegalArgumentException(
+                    "responsemetadata may not be null");
+        }
+        this.responseMetadata = responseMetadata;
+        this.resourceMethod = this.responseMetadata.getMethod();
+        this.body = body;
+        this.parameters.putAll(parameters);
+    }
 
     /**
      * returns the metadata request that represents the body of this request.
@@ -63,7 +101,9 @@ public interface ExecutionContext<R, B> {
      *
      * @return
      */
-    ResourceMethodRequest<B> getRequestMetadata();
+    public ResourceMethodRequest<B> getRequestMetadata() {
+        return requestMetadata;
+    }
 
     /**
      * returns the metadata for the resource method response associated with
@@ -71,21 +111,27 @@ public interface ExecutionContext<R, B> {
      *
      * @return
      */
-    ResourceMethodResponse<R> getResponseMetadata();
+    public ResourceMethodResponse<R> getResponseMetadata() {
+        return responseMetadata;
+    }
 
     /**
      * returns the resource-method for this request.
      *
      * @return
      */
-    ResourceMethod getResourceMethod();
+    public ResourceMethod getResourceMethod() {
+        return resourceMethod;
+    }
 
     /**
      * returns all the names of the parameters for this request.
      *
      * @return
      */
-    Set<String> getParameterNames();
+    public Set<String> getParameterNames() {
+        return Collections.unmodifiableSet(parameters.keySet());
+    }
 
     /**
      * returns the value for the parameter with the given name defined for this
@@ -99,7 +145,14 @@ public interface ExecutionContext<R, B> {
      * @param defaultValue
      * @return
      */
-    <T> T getParameterValue(String name, T defaultValue);
+    public <T> T getParameterValue(String name, T defaultValue) {
+        Object value = getParameterValue(name);
+        if (value == null) {
+            return defaultValue;
+        } else {
+            return (T) value;
+        }
+    }
 
     /**
      * returns the value for the parameter with the given name defined for this
@@ -110,7 +163,9 @@ public interface ExecutionContext<R, B> {
      * @param name
      * @return
      */
-    Object getParameterValue(String name);
+    public Object getParameterValue(String name) {
+        return parameters.get(name);
+    }
 
     /**
      * defines a new value for the parameter with the specified name of this
@@ -119,7 +174,9 @@ public interface ExecutionContext<R, B> {
      * @param name
      * @param value
      */
-    void setParameterValue(String name, Object value);
+    public void setParameterValue(String name, Object value) {
+        this.parameters.put(name, value);
+    }
 
     /**
      * returns true, if a parameter with the given name was defined for this
@@ -128,19 +185,25 @@ public interface ExecutionContext<R, B> {
      * @param name
      * @return
      */
-    boolean hasParameter(String name);
+    public boolean hasParameter(String name) {
+        return this.parameters.containsKey(name);
+    }
 
     /**
      * removes a parameter with the specified name from this request.
      *
      * @param name
      */
-    void removeParameter(String name);
+    public void removeParameter(String name) {
+        this.parameters.remove(name);
+    }
 
     /**
      * returns the request body.
      *
      * @return
      */
-    B getBody();
+    public B getBody() {
+        return body;
+    }
 }

@@ -45,6 +45,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.enterprise.context.spi.CreationalContext;
+import javax.enterprise.inject.CreationException;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionTarget;
 
@@ -117,7 +118,7 @@ public class BeanInstanceBuilder<T> {
         return this.constructor.newInstance(initArguments);
     }
 
-    public T build(Object... parameterValues) throws InstantiationException,
+    public T buildVerbose(Object... parameterValues) throws InstantiationException,
             IllegalAccessException, IllegalArgumentException,
             InvocationTargetException, NoSuchMethodException {
         withInitArguments(parameterValues);
@@ -131,6 +132,17 @@ public class BeanInstanceBuilder<T> {
             injectionTarget.postConstruct(instance);
         }
         return instance;
+    }
+
+    public T build(Object... parameterValues) {
+        try {
+            return buildVerbose(parameterValues);
+        } catch (InstantiationException | IllegalAccessException |
+                IllegalArgumentException | InvocationTargetException |
+                NoSuchMethodException ex) {
+            throw new CreationException("cannot create bean instance of type: "
+                    + type.getName(), ex);
+        }
     }
 
     public static <X> BeanInstanceBuilder<X> forType(Class<X> type) {

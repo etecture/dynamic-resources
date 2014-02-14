@@ -37,16 +37,16 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
 package de.etecture.opensource.dynamicresources.core.executors;
 
-import de.etecture.opensource.dynamicrepositories.executor.QueryExecutionException;
-import de.etecture.opensource.dynamicrepositories.extension.DefaultQueryExecutionContext;
-import de.etecture.opensource.dynamicrepositories.extension.QueryExecutors;
-import de.etecture.opensource.dynamicresources.annotations.Body;
-import de.etecture.opensource.dynamicresources.annotations.Executes;
-import de.etecture.opensource.dynamicresources.contexts.QueryExecutionContext;
-import de.herschke.converters.api.Converters;
-import javax.inject.Inject;
+import de.etecture.opensource.dynamicrepositories.metadata.QueryDefinition;
+import de.etecture.opensource.dynamicresources.utils.BeanCreator;
+import de.etecture.opensource.dynamicresources.utils.BeanInstanceBuilder;
+import javax.enterprise.context.spi.CreationalContext;
+import javax.enterprise.inject.CreationException;
+import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanManager;
 
 /**
  *
@@ -54,36 +54,26 @@ import javax.inject.Inject;
  * @version
  * @since
  */
-public class DefaultQueryResourceMethodExecutor {
+public class QueryResourceMethodExecutorCreator implements BeanCreator {
 
-    @Inject
-    QueryExecutors executors;
-    @Inject
-    Converters converters;
+    private final QueryDefinition queryDefinition;
 
-    @Executes
-    public <R, B> R executeAnyResourceMethodWithQueryContext(
-            QueryExecutionContext<R, B> context, @Body B request) throws
-            QueryExecutionException {
-
-        // build the query-execution-context (from repository)
-        DefaultQueryExecutionContext<R> queryContext =
-                new DefaultQueryExecutionContext(context.getResponseMetadata()
-                .getResponseType(), context.getResponseMetadata()
-                .getResponseType(), context.getQuery());
-
-        // add all the parameters as query-parameters.
-        for (String paramName : context.getParameterNames()) {
-            queryContext.addParameter(paramName, context.getParameterValue(
-                    paramName));
-        }
-
-        // add the request as a query-parameter
-        if (request != null) {
-            queryContext.addParameter("request", request);
-        }
-
-        // executes the query.
-        return executors.execute(queryContext);
+    public QueryResourceMethodExecutorCreator(QueryDefinition queryDefinition) {
+        this.queryDefinition = queryDefinition;
     }
+
+    @Override
+    public <T> T create(BeanManager beanManager,
+            Bean<T> bean,
+            CreationalContext<T> creationalContext) {
+        try {
+            return (T) BeanInstanceBuilder.forBeanType(
+                    QueryResourceMethodExecutor.class,
+                    beanManager).usingConstructor(QueryDefinition.class).
+                    build(queryDefinition);
+        } catch (NoSuchMethodException ex) {
+            throw new CreationException(ex);
+        }
+    }
+
 }

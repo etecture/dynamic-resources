@@ -45,6 +45,7 @@ import de.etecture.opensource.dynamicresources.metadata.AbstractResource;
 import de.etecture.opensource.dynamicresources.metadata.Application;
 import de.etecture.opensource.dynamicresources.metadata.DefaultResourcePath;
 import de.etecture.opensource.dynamicresources.metadata.ResourcePath;
+import java.lang.reflect.AnnotatedElement;
 
 /**
  *
@@ -52,16 +53,26 @@ import de.etecture.opensource.dynamicresources.metadata.ResourcePath;
  * @version
  * @since
  */
-public class AnnotatedResource extends AbstractResource {
+public class AnnotatedResource extends AbstractResource implements
+        Annotated<Resource> {
 
+    private final AnnotatedElement annotatedElement;
+    private final Resource annotation;
     private final ResourcePath path;
 
-    AnnotatedResource(Application application,
-            de.etecture.opensource.dynamicresources.annotations.Resource annotation) {
+    AnnotatedResource(Application application, Resource annotation,
+            AnnotatedElement annotatedElement) {
         super(application, annotation.name(),
                 annotation.description());
         this.path = new DefaultResourcePath(this,
                 annotation.path());
+        this.annotation = annotation;
+        this.annotatedElement = annotatedElement;
+    }
+
+    @Override
+    public AnnotatedElement getAnnotatedElement() {
+        return annotatedElement;
     }
 
     @Override
@@ -69,10 +80,15 @@ public class AnnotatedResource extends AbstractResource {
         return path;
     }
 
+    @Override
+    public Resource getAnnotation() {
+        return annotation;
+    }
+
     public static AnnotatedResource create(Application application,
-            Resource annotation) throws
+            Resource annotation, AnnotatedElement annotatedElement) throws
             IllegalArgumentException {
-        return new AnnotatedResource(application, annotation);
+        return new AnnotatedResource(application, annotation, annotatedElement);
     }
 
     public static AnnotatedResource createAndAddMethods(Application application,
@@ -86,7 +102,8 @@ public class AnnotatedResource extends AbstractResource {
                     + " must be annotated with @Resource to build a resource metadata from it.");
         }
 
-        AnnotatedResource resource = create(application, annotation);
+        AnnotatedResource resource = create(application, annotation,
+                annotatedResourceClass);
         for (Method method : annotation.methods()) {
             resource.addMethod(AnnotatedResourceMethod.create(resource,
                     annotatedResourceClass, method, producedMimes, consumedMimes));

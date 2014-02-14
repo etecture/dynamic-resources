@@ -37,60 +37,26 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.utils;
+package de.etecture.opensource.dynamicresources.annotations;
 
-import de.etecture.opensource.dynamicresources.utils.PathParser;
-import java.util.HashMap;
-import java.util.Map;
-import org.junit.Assert;
-import org.junit.Test;
+import de.etecture.opensource.dynamicresources.api.events.AfterResourceMethodExecution;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import javax.inject.Qualifier;
 
 /**
+ * qualifies a {@link AfterResourceMethodExecution} event in case of errournous
+ * execution of the resource method.
  *
  * @author rhk
  * @version
  * @since
  */
-public class PathParserTest {
-
-    @Test
-    public void testMatch() {
-        String template =
-                "/customers/{custNo:\\d+}/employees/{empNo}/addresses";
-        String path =
-                "/customers/1234567890/employees/1-9Y2CLO/addresses";
-
-        Map<String, String> groups = new HashMap<>();
-        Assert.assertTrue(PathParser.match(template, path, groups));
-        Assert.assertFalse(groups.isEmpty());
-        Assert.assertEquals("1234567890", groups.get("custNo"));
-        Assert.assertEquals("1-9Y2CLO", groups.get("empNo"));
-    }
-
-    @Test
-    public void testMatch_emptyGroups() {
-        String template =
-                "/customers";
-        String path =
-                "/customers";
-
-        Map<String, String> groups = new HashMap<>();
-        Assert.assertTrue(PathParser.match(template, path, groups));
-        Assert.assertTrue(groups.isEmpty());
-    }
-
-    @Test
-    public void testCreateUri() {
-        String template =
-                "customers/{custNo:\\d+}/employees/{empNo}/addresses/{whatever}";
-        String expectedPath =
-                "/customers/1234567890/employees/1%2B9Y2CLO/addresses/a+value";
-
-        Map<String, String> groups = new HashMap<>();
-        groups.put("custNo", "1234567890");
-        groups.put("empNo", "1+9Y2CLO");
-        groups.put("whatever", "a value");
-        Assert.assertEquals(expectedPath, PathParser.createURI(template,
-                groups));
-    }
+@Qualifier
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.FIELD,
+    ElementType.PARAMETER})
+public @interface Failed {
 }

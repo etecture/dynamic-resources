@@ -39,10 +39,15 @@
  */
 package de.etecture.opensource.dynamicresources.api.events;
 
+import de.etecture.opensource.dynamicresources.annotations.Failed;
+import de.etecture.opensource.dynamicresources.annotations.Succeed;
 import de.etecture.opensource.dynamicresources.api.Response;
 
 /**
  * this is a CDI-event that is fired after the Resource Method was executed.
+ * <p>
+ * Observers of this event may use {@link Succeed} or {@link Failed} to catch
+ * only succeed or failed resource method executions.
  *
  * @author rhk
  * @version

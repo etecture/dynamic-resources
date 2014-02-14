@@ -46,9 +46,11 @@ import de.etecture.opensource.dynamicresources.annotations.Method;
 import de.etecture.opensource.dynamicresources.annotations.Produces;
 import de.etecture.opensource.dynamicresources.api.ResourceMethodInterceptor;
 import de.etecture.opensource.dynamicresources.core.mapping.mime.MediaTypeExpression;
-import de.etecture.opensource.dynamicresources.metadata.AbstractResourceMethod;
+import de.etecture.opensource.dynamicresources.metadata.BasicResourceMethod;
 import de.etecture.opensource.dynamicresources.metadata.BasicResourceMethodRequest;
+import de.etecture.opensource.dynamicresources.metadata.BasicResourceMethodResponse;
 import de.etecture.opensource.dynamicresources.metadata.Resource;
+import java.lang.reflect.AnnotatedElement;
 
 /**
  *
@@ -56,18 +58,34 @@ import de.etecture.opensource.dynamicresources.metadata.Resource;
  * @version
  * @since
  */
-public class AnnotatedResourceMethod extends AbstractResourceMethod {
+public class AnnotatedResourceMethod extends BasicResourceMethod implements
+        Annotated<Method> {
+
+    private final Method annotation;
+    private final AnnotatedElement annotatedElement;
 
     AnnotatedResourceMethod(Resource resource,
-            Method annotation) {
+            Method annotation, AnnotatedElement annotatedElement) {
         super(resource, annotation.name(), annotation.description());
+        this.annotation = annotation;
+        this.annotatedElement = annotatedElement;
+    }
+
+    @Override
+    public AnnotatedElement getAnnotatedElement() {
+        return annotatedElement;
+    }
+
+    @Override
+    public Method getAnnotation() {
+        return annotation;
     }
 
     public static AnnotatedResourceMethod create(Resource resource,
             Class<?> resourceClass, Method annotation,
             Iterable<String> producedMimes, Iterable<String> consumedMimes) {
         AnnotatedResourceMethod method = new AnnotatedResourceMethod(resource,
-                annotation);
+                annotation, resourceClass);
         for (String roleName : annotation.rolesAllowed()) {
             method.addAllowedRoleName(roleName);
         }
@@ -104,10 +122,10 @@ public class AnnotatedResourceMethod extends AbstractResourceMethod {
         }
         if (annotation.produces().length > 0) {
             for (Produces produces : annotation.produces()) {
-                AnnotatedQueryResourceMethodResponse response =
-                        AnnotatedQueryResourceMethodResponse
-                        .createWithQueryExecution(method, produces.contentType(),
-                        annotation);
+                BasicResourceMethodResponse response =
+                        new BasicResourceMethodResponse(method, produces
+                        .contentType(),
+                        annotation.status());
                 for (String mime : produces.mimeType()) {
                     response.addSupportedResponseMediaType(
                             new MediaTypeExpression(
@@ -122,10 +140,9 @@ public class AnnotatedResourceMethod extends AbstractResourceMethod {
             }
         } else {
             // add at least the resource class itself as a response
-            AnnotatedResourceMethodResponse response =
-                    AnnotatedResourceMethodResponse
-                    .createWithQueryExecution(method, resourceClass,
-                    annotation);
+            BasicResourceMethodResponse response =
+                    new BasicResourceMethodResponse(method, resourceClass,
+                    annotation.status());
             for (Header header : annotation.headers()) {
                 response.addHeader(
                         new AnnotatedResourceMethodResponseHeader(

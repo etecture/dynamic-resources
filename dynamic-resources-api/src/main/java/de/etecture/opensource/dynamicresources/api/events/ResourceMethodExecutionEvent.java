@@ -39,7 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.api.events;
 
-import de.etecture.opensource.dynamicresources.contexts.ExecutionContext;
+import de.etecture.opensource.dynamicresources.api.ExecutionContext;
 
 /**
  * common class for the execution event.

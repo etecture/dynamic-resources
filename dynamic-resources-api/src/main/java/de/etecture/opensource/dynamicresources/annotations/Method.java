@@ -43,6 +43,8 @@ import de.etecture.opensource.dynamicrepositories.api.annotations.Query;
 import de.etecture.opensource.dynamicresources.api.HttpMethods;
 import de.etecture.opensource.dynamicresources.api.ResourceMethodInterceptor;
 import de.etecture.opensource.dynamicresources.api.StatusCodes;
+import de.etecture.opensource.dynamicresources.api.events.AfterResourceMethodExecution;
+import de.etecture.opensource.dynamicresources.api.events.BeforeResourceMethodExecution;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.PARAMETER;
@@ -144,8 +146,12 @@ public @interface Method {
      * is invoked.
      *
      * @return
+     * @deprecated this definition is deprecated. Observe the CDI-Events:
+     * {@link BeforeResourceMethodExecution} and
+     * {@link AfterResourceMethodExecution}
      */
     @Nonbinding
+    @Deprecated
     Class<? extends ResourceMethodInterceptor>[] interceptors() default {};
 
     /**

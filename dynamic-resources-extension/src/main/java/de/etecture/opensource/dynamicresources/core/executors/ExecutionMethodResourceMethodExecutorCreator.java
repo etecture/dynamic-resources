@@ -37,12 +37,17 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.metadata.annotated;
 
-import de.etecture.opensource.dynamicresources.annotations.Method;
-import de.etecture.opensource.dynamicresources.api.MediaType;
-import de.etecture.opensource.dynamicresources.metadata.AbstractResourceMethodResponse;
-import de.etecture.opensource.dynamicresources.metadata.ResourceMethod;
+package de.etecture.opensource.dynamicresources.core.executors;
+
+import de.etecture.opensource.dynamicresources.core.executors.ExecutionMethod;
+import de.etecture.opensource.dynamicresources.core.executors.ExecutionMethodResourceMethodExecutor;
+import de.etecture.opensource.dynamicresources.utils.BeanCreator;
+import de.etecture.opensource.dynamicresources.utils.BeanInstanceBuilder;
+import javax.enterprise.context.spi.CreationalContext;
+import javax.enterprise.inject.CreationException;
+import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanManager;
 
 /**
  *
@@ -50,19 +55,26 @@ import de.etecture.opensource.dynamicresources.metadata.ResourceMethod;
  * @version
  * @since
  */
-public class AnnotatedResourceMethodResponse<R> extends AbstractResourceMethodResponse<R> {
+public class ExecutionMethodResourceMethodExecutorCreator implements BeanCreator {
+    private final ExecutionMethod<?> executionMethod;
 
-    AnnotatedResourceMethodResponse(
-            ResourceMethod method,
-            Class<R> resourceClass, int statusCode, MediaType... mediaTypes) {
-        super(method, resourceClass, statusCode, mediaTypes);
+    public ExecutionMethodResourceMethodExecutorCreator(
+            ExecutionMethod<?> executionMethod) {
+        this.executionMethod = executionMethod;
     }
 
-    public static <R> AnnotatedResourceMethodResponse<R> createWithQueryExecution(
-            final ResourceMethod method,
-            final Class<R> resourceClass, Method annotation,
-            MediaType... mediaTypes) {
-        return new AnnotatedResourceMethodResponse(method, resourceClass,
-                annotation.status(), mediaTypes);
+    @Override
+    public <T> T create(BeanManager beanManager,
+            Bean<T> bean,
+            CreationalContext<T> creationalContext) {
+        try {
+            return (T) BeanInstanceBuilder.forBeanType(
+                    ExecutionMethodResourceMethodExecutor.class,
+                    beanManager).usingConstructor(ExecutionMethod.class).
+                    build(executionMethod);
+        } catch (NoSuchMethodException ex) {
+            throw new CreationException(ex);
+        }
     }
+
 }

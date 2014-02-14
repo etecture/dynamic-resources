@@ -179,7 +179,7 @@ class DynamicMethodsForResponse<T> implements MethodsForResponse<T> {
         try {
             return BeanInstanceBuilder.forBeanType(
                     DynamicMethodsForResponse.class,
-                    beanManager).build(responseType, resource);
+                    beanManager).buildVerbose(responseType, resource);
         } catch (InstantiationException | IllegalAccessException |
                 IllegalArgumentException | InvocationTargetException |
                 NoSuchMethodException ex) {

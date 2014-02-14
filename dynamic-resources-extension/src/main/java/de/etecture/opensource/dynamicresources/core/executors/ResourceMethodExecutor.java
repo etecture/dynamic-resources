@@ -37,53 +37,32 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.contexts;
+package de.etecture.opensource.dynamicresources.core.executors;
 
-import de.etecture.opensource.dynamicrepositories.metadata.QueryDefinition;
-import de.etecture.opensource.dynamicresources.metadata.ResourceMethodRequest;
-import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponse;
-import java.util.Map;
+import de.etecture.opensource.dynamicresources.api.ResourceException;
+import de.etecture.opensource.dynamicresources.api.Response;
+import de.etecture.opensource.dynamicresources.api.ExecutionContext;
 
 /**
- * this is a Resource Method Execution that defines queries to be executed.
+ * The scanner uses this interface to map an annotated method to a bean that can
+ * * be executed.
  *
- * @param <R>
  * @author rhk
  * @version
  * @since
  */
-public class QueryExecutionContext<R, B> extends AbstractExecutionContext<R, B> {
-
-    private final QueryDefinition query;
-
-    public QueryExecutionContext(QueryDefinition query,
-            ResourceMethodResponse<R> responseMetadata,
-            ResourceMethodRequest<B> requestMetadata) {
-        super(responseMetadata, requestMetadata);
-        this.query = query;
-    }
-
-    public QueryExecutionContext(QueryDefinition query,
-            ResourceMethodResponse<R> responseMetadata,
-            ResourceMethodRequest<B> requestMetadata, B body) {
-        super(responseMetadata, requestMetadata, body);
-        this.query = query;
-    }
-
-    public QueryExecutionContext(QueryDefinition query,
-            ResourceMethodResponse<R> responseMetadata,
-            ResourceMethodRequest<B> requestMetadata, B body,
-            Map<String, Object> parameters) {
-        super(responseMetadata, requestMetadata, body, parameters);
-        this.query = query;
-    }
+public interface ResourceMethodExecutor {
 
     /**
-     * returns the query to be executed within this execution context.
+     * called by the {@link ResourceMethodExecutions} to execute the given
+     * context.
      *
+     * @param <R>
+     * @param <B>
+     * @param context
      * @return
+     * @throws ResourceException
      */
-    public QueryDefinition getQuery() {
-        return this.query;
-    }
+    <R, B> Response<R> execute(ExecutionContext<R, B> context) throws
+            ResourceException;
 }

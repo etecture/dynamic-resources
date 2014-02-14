@@ -41,6 +41,7 @@ package de.etecture.opensource.dynamicresources.metadata.annotated;
 
 import de.etecture.opensource.dynamicresources.metadata.AbstractApplication;
 import de.etecture.opensource.dynamicresources.metadata.Application;
+import java.lang.reflect.AnnotatedElement;
 import java.net.URISyntaxException;
 
 /**
@@ -51,13 +52,28 @@ import java.net.URISyntaxException;
  * @version
  * @since
  */
-public class AnnotatedApplication extends AbstractApplication {
+public class AnnotatedApplication extends AbstractApplication implements
+        Annotated<de.etecture.opensource.dynamicresources.annotations.Application> {
 
-    public AnnotatedApplication(
+    private final de.etecture.opensource.dynamicresources.annotations.Application annotation;
+    private final AnnotatedElement annotatedElement;
+
+    public AnnotatedApplication(AnnotatedElement annotatedElement,
             de.etecture.opensource.dynamicresources.annotations.Application annotation)
             throws URISyntaxException {
         super(annotation.name(), annotation.base(), annotation
                 .description());
+        this.annotatedElement = annotatedElement;
+        this.annotation = annotation;
     }
 
+    @Override
+    public de.etecture.opensource.dynamicresources.annotations.Application getAnnotation() {
+        return annotation;
+    }
+
+    @Override
+    public AnnotatedElement getAnnotatedElement() {
+        return annotatedElement;
+    }
 }

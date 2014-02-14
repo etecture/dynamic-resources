@@ -40,7 +40,12 @@
 package de.etecture.opensource.dynamicresources.utils;
 
 import de.etecture.opensource.dynamicresources.annotations.Executes;
-import de.etecture.opensource.dynamicresources.contexts.ExecutionContext;
+import de.etecture.opensource.dynamicresources.api.ExecutionContext;
+import de.etecture.opensource.dynamicresources.metadata.Application;
+import de.etecture.opensource.dynamicresources.metadata.Resource;
+import de.etecture.opensource.dynamicresources.metadata.ResourceMethod;
+import de.etecture.opensource.dynamicresources.metadata.ResourceMethodRequest;
+import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponse;
 import javax.enterprise.util.AnnotationLiteral;
 
 /**
@@ -54,28 +59,21 @@ public class ExecutesLiteral extends AnnotationLiteral<Executes> implements
         Executes {
 
     private static final long serialVersionUID = 1L;
-    private final Class<? extends ExecutionContext<?, ?>> contextType;
     private final String method;
     private final String resource;
     private final String application;
     private final Class<?> responseType, requestType;
 
     public ExecutesLiteral(
-            Class<? extends ExecutionContext<?, ?>> contextType, String method,
+            String method,
             String resource, String application,
             Class<?> responseType,
             Class<?> requestType) {
-        this.contextType = contextType;
         this.method = method;
         this.resource = resource;
         this.application = application;
         this.responseType = responseType;
         this.requestType = requestType;
-    }
-
-    @Override
-    public Class<? extends ExecutionContext<?, ?>> contextType() {
-        return contextType;
     }
 
     @Override
@@ -105,53 +103,120 @@ public class ExecutesLiteral extends AnnotationLiteral<Executes> implements
 
     public static class Builder {
 
-        private Class<? extends ExecutionContext<?, ?>> contextType;
         private String method;
         private String resource;
         private String application;
         private Class<?> responseType, requestType;
 
-        public Builder withContextType(
-                final Class<? extends ExecutionContext<?, ?>> contextType) {
-            this.contextType = contextType;
+        public Builder forMethodWithNameMatching(final String methodNamePattern) {
+            this.method = methodNamePattern;
             return this;
         }
 
-        public Builder withMethod(final String method) {
-            this.method = method;
+        public Builder forResourceWithNameMatching(
+                final String resourceNamePattern) {
+            this.resource = resourceNamePattern;
             return this;
         }
 
-        public Builder withResource(final String resource) {
-            this.resource = resource;
+        public Builder forApplicationWithNameMatching(
+                final String applicationNamePattern) {
+            this.application = applicationNamePattern;
             return this;
         }
 
-        public Builder withApplication(final String application) {
-            this.application = application;
+        public Builder forExactMethodResponseAndRequest(
+                final ResourceMethodResponse response,
+                final ResourceMethodRequest request) {
+            if (request != null) {
+                this.requestType = request.getRequestType();
+            }
+            return this.forExactMethodResponse(response);
+        }
+
+        public Builder forExactMethodResponse(
+                final ResourceMethodResponse response) {
+            this.responseType = response.getResponseType();
+            return this.forExactMethod(response.getMethod());
+        }
+
+        public Builder forExactMethod(final ResourceMethod method) {
+            this.method = method.getName();
+            return this.forExactResource(method.getResource());
+        }
+
+        public Builder forExactResource(final Resource resource) {
+            this.resource = resource.getName();
+            return this.forExactApplication(resource.getApplication());
+        }
+
+        public Builder forExactApplication(final Application application) {
+            this.application = application.getName();
             return this;
         }
 
-        public Builder withResponseType(
+        public Builder forResponseType(
                 final Class<?> responseType) {
             this.responseType = responseType;
             return this;
         }
 
-        public Builder withRequestType(
+        public Builder forRequestType(
                 final Class<?> requestType) {
             this.requestType = requestType;
             return this;
         }
 
         public ExecutesLiteral build() {
-            return new ExecutesLiteral(contextType, method, resource,
+            return new ExecutesLiteral(method, resource,
                     application,
                     responseType, requestType);
         }
     }
 
+    /**
+     * starts the creation of the {@link ExecutesLiteral} by using the
+     * {@link Builder}.
+     *
+     * @return
+     */
     public static Builder create() {
         return new Builder();
+    }
+
+    /**
+     * creates an {@link ExecutesLiteral} from the given
+     * {@link ExecutionContext}
+     *
+     * @param context
+     * @return
+     */
+    public static ExecutesLiteral create(ExecutionContext<?, ?> context) {
+        return create()
+                .forExactMethodResponseAndRequest(
+                context.getResponseMetadata(),
+                context.getRequestMetadata())
+                .build();
+    }
+
+    public static boolean matches(Executes checkFor, Executes possibleMatch) {
+        if (!checkFor.application().matches(possibleMatch.application())) {
+            return false;
+        }
+        if (!checkFor.resource().matches(possibleMatch.resource())) {
+            return false;
+        }
+        if (!checkFor.method().matches(possibleMatch.method())) {
+            return false;
+        }
+        if (!possibleMatch.responseType().isAssignableFrom(checkFor
+                .responseType())) {
+            return false;
+        }
+        if (!possibleMatch.requestType()
+                .isAssignableFrom(checkFor.requestType())) {
+            return false;
+        }
+        return true;
     }
 }

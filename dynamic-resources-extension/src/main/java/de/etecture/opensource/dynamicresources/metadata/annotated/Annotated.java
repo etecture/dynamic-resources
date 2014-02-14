@@ -37,67 +37,31 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+package de.etecture.opensource.dynamicresources.metadata.annotated;
 
-package de.etecture.opensource.dynamicresources.metadata;
-
-import de.etecture.opensource.dynamicresources.api.MediaType;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
 
 /**
+ * tags a class to be annotated.
  *
  * @author rhk
  * @version
  * @since
  */
-public abstract class AbstractResourceMethodResponse<R> implements ResourceMethodResponse<R> {
-    private final ResourceMethod method;
-    private final Class<R> responseType;
-    private final int statusCode;
-    private final Set<MediaType> mediaTypes = new HashSet<>();
-    private final Set<ResourceMethodResponseHeader> headers = new HashSet<>();
+public interface Annotated<A extends Annotation> {
 
-    public AbstractResourceMethodResponse(ResourceMethod method,
-            Class<R> responseType, int statusCode, MediaType... mediaTypes) {
-        this.method = method;
-        this.responseType = responseType;
-        this.statusCode = statusCode;
-        this.mediaTypes.addAll(Arrays.asList(mediaTypes));
-    }
+    /**
+     * returns the Annotation.
+     *
+     * @return
+     */
+    A getAnnotation();
 
-    public void addHeader(ResourceMethodResponseHeader header) {
-        this.headers.add(header);
-    }
-
-    public void addSupportedResponseMediaType(MediaType mediaType) {
-        this.mediaTypes.add(mediaType);
-    }
-
-    @Override
-    public ResourceMethod getMethod() {
-        return method;
-    }
-
-    @Override
-    public Set<ResourceMethodResponseHeader> getResponseHeaders() {
-        return Collections.unmodifiableSet(headers);
-    }
-
-    @Override
-    public Class<R> getResponseType() {
-        return responseType;
-    }
-
-    @Override
-    public int getStatusCode() {
-        return statusCode;
-    }
-
-    @Override
-    public Set<MediaType> getSupportedResponseMediaTypes() {
-        return Collections.unmodifiableSet(mediaTypes);
-    }
-
+    /**
+     * returns the annotated element, that is the source for this annotation.
+     *
+     * @return
+     */
+    AnnotatedElement getAnnotatedElement();
 }

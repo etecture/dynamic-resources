@@ -44,6 +44,7 @@ import de.etecture.opensource.dynamicresources.api.ResourceException;
 import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.api.accesspoints.MethodsForResponse;
 import de.etecture.opensource.dynamicresources.api.accesspoints.Responses;
+import de.etecture.opensource.dynamicresources.core.executors.ResourceMethodExecutions;
 import de.etecture.opensource.dynamicresources.metadata.Resource;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodRequest;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponse;
@@ -74,6 +75,8 @@ class DynamicResponses<R, B> implements Responses<R>, Request<R, B> {
     private int expectedStatusCode = -1; // all status codes are acceptable
     @Inject
     BeanManager beanManager;
+    @Inject
+    ResourceMethodExecutions executions;
 
     private DynamicResponses(
             ResourceMethodResponse<R> resourceMethodResponse,
@@ -181,7 +184,9 @@ class DynamicResponses<R, B> implements Responses<R>, Request<R, B> {
 
     @Override
     public Response<R> invoke() throws ResourceException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return executions.execute(resourceMethodResponse, getRequestMetadata(),
+                requestBody,
+                parameter);
     }
 
     @Override
@@ -196,7 +201,7 @@ class DynamicResponses<R, B> implements Responses<R>, Request<R, B> {
         try {
             return BeanInstanceBuilder.forBeanType(
                     DynamicResponses.class,
-                    beanManager).build(resourceMethodResponse, pathParameters);
+                    beanManager).buildVerbose(resourceMethodResponse, pathParameters);
         } catch (InstantiationException | IllegalAccessException |
                 IllegalArgumentException | InvocationTargetException |
                 NoSuchMethodException ex) {

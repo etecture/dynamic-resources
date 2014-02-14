@@ -55,7 +55,7 @@ import java.util.Set;
  * @version
  * @since
  */
-public abstract class AbstractResourceMethod implements ResourceMethod {
+public class BasicResourceMethod implements ResourceMethod {
 
     private final Resource resource;
     private final String name;
@@ -67,7 +67,7 @@ public abstract class AbstractResourceMethod implements ResourceMethod {
     private final Set<ResourceMethodRequest<?>> requests = new HashSet<>();
     private final Set<ResourceMethodResponse<?>> responses = new HashSet<>();
 
-    protected AbstractResourceMethod(Resource resource, String name,
+    public BasicResourceMethod(Resource resource, String name,
             String description) {
         this.resource = resource;
         this.name = name;
@@ -78,7 +78,7 @@ public abstract class AbstractResourceMethod implements ResourceMethod {
         this.allowedRoleNames.add(roleName);
     }
 
-    protected <T> void addFilter(
+    public <T> void addFilter(
             ResourceMethodFilter<T> filter) {
         if (filter.getResourceMethod() != this) {
             throw new IllegalArgumentException(
@@ -92,7 +92,7 @@ public abstract class AbstractResourceMethod implements ResourceMethod {
         this.interceptors.add(interceptor);
     }
 
-    protected <B> void addRequest(
+    public <B> void addRequest(
             ResourceMethodRequest<B> request) {
         if (request.getMethod() != this) {
             throw new IllegalArgumentException(
@@ -101,7 +101,7 @@ public abstract class AbstractResourceMethod implements ResourceMethod {
         this.requests.add(request);
     }
 
-    protected <R> void addResponse(
+    public <R> void addResponse(
             ResourceMethodResponse<R> response) {
         if (response.getMethod() != this) {
             throw new IllegalArgumentException(

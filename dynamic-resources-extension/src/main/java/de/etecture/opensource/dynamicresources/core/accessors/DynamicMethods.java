@@ -150,7 +150,7 @@ class DynamicMethods implements Methods {
         try {
             return BeanInstanceBuilder.forBeanType(
                     DynamicMethods.class,
-                    beanManager).build(resource);
+                    beanManager).buildVerbose(resource);
         } catch (InstantiationException | IllegalAccessException |
                 IllegalArgumentException | InvocationTargetException |
                 NoSuchMethodException ex) {

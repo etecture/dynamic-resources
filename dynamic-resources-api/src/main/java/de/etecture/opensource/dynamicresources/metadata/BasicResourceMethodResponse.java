@@ -38,9 +38,13 @@
  *
  */
 
-package de.etecture.opensource.dynamicresources.core.executors;
+package de.etecture.opensource.dynamicresources.metadata;
 
-import de.etecture.opensource.dynamicresources.annotations.Executes;
+import de.etecture.opensource.dynamicresources.api.MediaType;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  *
@@ -48,9 +52,52 @@ import de.etecture.opensource.dynamicresources.annotations.Executes;
  * @version
  * @since
  */
-public class DefaultResourceMethodExecutor {
+public class BasicResourceMethodResponse<R> implements ResourceMethodResponse<R> {
+    private final ResourceMethod method;
+    private final Class<R> responseType;
+    private final int statusCode;
+    private final Set<MediaType> mediaTypes = new HashSet<>();
+    private final Set<ResourceMethodResponseHeader> headers = new HashSet<>();
 
-    @Executes
-    public void executeAnyResourceMethods() {
+    public BasicResourceMethodResponse(ResourceMethod method,
+            Class<R> responseType, int statusCode, MediaType... mediaTypes) {
+        this.method = method;
+        this.responseType = responseType;
+        this.statusCode = statusCode;
+        this.mediaTypes.addAll(Arrays.asList(mediaTypes));
     }
+
+    public void addHeader(ResourceMethodResponseHeader header) {
+        this.headers.add(header);
+    }
+
+    public void addSupportedResponseMediaType(MediaType mediaType) {
+        this.mediaTypes.add(mediaType);
+    }
+
+    @Override
+    public ResourceMethod getMethod() {
+        return method;
+    }
+
+    @Override
+    public Set<ResourceMethodResponseHeader> getResponseHeaders() {
+        return Collections.unmodifiableSet(headers);
+    }
+
+    @Override
+    public Class<R> getResponseType() {
+        return responseType;
+    }
+
+    @Override
+    public int getStatusCode() {
+        return statusCode;
+    }
+
+    @Override
+    public Set<MediaType> getSupportedResponseMediaTypes() {
+        return Collections.unmodifiableSet(mediaTypes);
+    }
+
 }

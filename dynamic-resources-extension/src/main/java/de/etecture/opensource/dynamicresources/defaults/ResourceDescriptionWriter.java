@@ -40,12 +40,12 @@
 package de.etecture.opensource.dynamicresources.defaults;
 
 import de.etecture.opensource.dynamicresources.annotations.Produces;
-import de.etecture.opensource.dynamicresources.api.ResponseWriter;
 import de.etecture.opensource.dynamicresources.api.MediaType;
+import de.etecture.opensource.dynamicresources.api.ResponseWriter;
 import de.etecture.opensource.dynamicresources.metadata.Resource;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethod;
+import de.etecture.opensource.dynamicresources.metadata.ResourceMethodFilter;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodRequest;
-import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponseFilter;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -91,25 +91,24 @@ public enum ResourceDescriptionWriter implements ResponseWriter<Resource> {
                         .printf("\t%s: %s%n", rdm.getName(), rdm
                         .getDescription());
                 writer.println("\t\tFilters:");
-                for (ResourceMethodRequest rdmr : rdm.getRequests()) {
-                    for (ResourceMethodResponseFilter rdmrf : rdmr.getFilters()) {
-                        writer.printf("\t\t\t- %s: %s%n", rdmrf.getName(),
-                                rdmrf
-                                .getDescription());
-                    }
+                for (ResourceMethodFilter rdmf : rdm.getFilters()) {
+                    writer.printf("\t\t\t- %s: %s%n", rdmf.getName(),
+                            rdmf
+                            .getDescription());
                 }
                 writer.println("\t\tConsumes:");
-                for (ResourceMethodRequest rdmr : rdm.getRequests()) {
-                    for (MediaType mediatype : rdmr.getRequestMediaTypes()) {
+                for (ResourceMethodRequest<?> rdmr : rdm.getRequests().values()) {
+                    for (MediaType mediatype : rdmr
+                            .getAcceptedRequestMediaTypes()) {
                         writer.printf("\t\t\t- %s%n", mediatype);
                     }
                 }
                 writer.println("\t\tProduces:");
-                for (ResourceMethodRequest rdmr : rdm.getRequests()) {
-                    for (ResourceMethodResponse rdmrr : rdmr.getResponses()) {
-                        for (MediaType mediatype : rdmrr.getSupportedResponseMediaTypes()) {
-                            writer.printf("\t\t\t- %s%n", mediatype);
-                        }
+                for (ResourceMethodResponse<?> rdmrr : rdm.getResponses()
+                        .values()) {
+                    for (MediaType mediatype : rdmrr
+                            .getSupportedResponseMediaTypes()) {
+                        writer.printf("\t\t\t- %s%n", mediatype);
                     }
                 }
             }

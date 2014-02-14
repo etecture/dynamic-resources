@@ -41,7 +41,7 @@ package de.etecture.opensource.dynamicresources.core.events;
 
 import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.api.events.AfterResourceMethodExecution;
-import de.etecture.opensource.dynamicresources.contexts.ExecutionContext;
+import de.etecture.opensource.dynamicresources.api.ExecutionContext;
 
 public class AfterResourceMethodExecutionImpl implements
         AfterResourceMethodExecution {

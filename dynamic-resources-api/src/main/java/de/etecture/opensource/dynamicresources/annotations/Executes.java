@@ -42,12 +42,11 @@ package de.etecture.opensource.dynamicresources.annotations;
 import de.etecture.opensource.dynamicrepositories.api.annotations.ParamName;
 import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.api.ResponseException;
-import de.etecture.opensource.dynamicresources.contexts.ExecutionContext;
+import de.etecture.opensource.dynamicresources.api.ExecutionContext;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import javax.inject.Qualifier;
 
 /**
  * Declares any bean method as an execution handler for a resource.
@@ -98,7 +97,7 @@ import javax.inject.Qualifier;
  * <pre>
  * &#64;Executes(resource="Customer", method="GET")
  * public Customer &#47;*(1)*&#47; getCustomer(
- *   QueryExecutionContext &#47;*(2)*&#47; context,
+ *   QueryExecutionContext context,
  *   &#64;ParamName("id") String id) throws CustomerNotFoundException;
  * </pre> This executor method handles all 'GET' requests to the 'Customer'
  * resource. It is responsible to handle query-based executions and it assumes
@@ -110,11 +109,7 @@ import javax.inject.Qualifier;
  * only handle response types of this type. This means, that
  * <pre>&#64;Executes(responseType=Customer.class, ... ) </pre> is optional in
  * this case.</dd>
- * <dt>Hint (2):</dt><dd>Due to the argument
- * <code>QueryExecutionContext context</code>, this method only handles requests
- * with this type of execution. This means, that
- * <pre>&#64;Executes(contextType=QueryExecutionContext.class, ...)</pre> is
- * optional in this case.</dd></dl>
+ * </dl>
  * <hr>
  * <pre>
  * &#64;Executes(application="CustomerServices", resource="Customers", method="PUT|POST")
@@ -128,24 +123,9 @@ import javax.inject.Qualifier;
  * @version
  * @since
  */
-@Qualifier
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD})
+@Target(ElementType.METHOD)
 public @interface Executes {
-
-    static interface AnyExecutionContext extends
-            ExecutionContext<Object, Object> {
-    }
-
-    /**
-     * the type of the ExecutionContext, this handler is responsible for.
-     * <p>
-     * may be overridden when the annotated method contains an argument that is
-     * a subtype of {@link ExecutionContext}.
-     *
-     * @return
-     */
-    Class<? extends ExecutionContext<?, ?>> contextType() default AnyExecutionContext.class;
 
     /**
      * the name pattern of the method, this handler is responsible for.
