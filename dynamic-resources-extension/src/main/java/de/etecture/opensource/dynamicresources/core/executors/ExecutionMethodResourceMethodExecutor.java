@@ -45,7 +45,10 @@ import de.etecture.opensource.dynamicresources.api.ResourceException;
 import de.etecture.opensource.dynamicresources.api.Response;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
+import javax.annotation.PostConstruct;
+import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.AnnotatedParameter;
+import javax.inject.Inject;
 
 /**
  * executes an {@link ExecutionMethod}
@@ -58,9 +61,20 @@ public class ExecutionMethodResourceMethodExecutor<T> implements
         ResourceMethodExecutor {
 
     private final ExecutionMethod<T> method;
+    private T bean;
+    @Inject
+    Instance<Object> instances;
 
     public ExecutionMethodResourceMethodExecutor(ExecutionMethod<T> method) {
         this.method = method;
+    }
+
+    @PostConstruct
+    public void setupBean() {
+        // get the type of the bean
+        Class<T> beanType = method.getDeclaringType().getJavaClass();
+        // select the bean
+        bean = instances.select(beanType).get();
     }
 
     @Override
@@ -85,7 +99,6 @@ public class ExecutionMethodResourceMethodExecutor<T> implements
         if (!method.getJavaMember().isAccessible()) {
             method.getJavaMember().setAccessible(true);
         }
-        Object bean = createBean();
         try {
             Object result = method.getJavaMember().invoke(bean, arguments);
             if (Response.class.isInstance(result)) {
@@ -97,18 +110,6 @@ public class ExecutionMethodResourceMethodExecutor<T> implements
         } catch (IllegalAccessException | IllegalArgumentException |
                 InvocationTargetException ex) {
             throw new ResourceException("cannot call the execution method!", ex);
-        } finally {
-            disposeBean(bean);
         }
-    }
-
-    private Object createBean() {
-        // TODO: create bean.
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    private void disposeBean(Object bean) {
-        // TODO: destroy bean.
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
