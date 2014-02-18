@@ -39,22 +39,24 @@
  */
 package de.etecture.opensource.dynamicresources.core.executors;
 
-import de.etecture.opensource.dynamicresources.annotations.Executes;
+import de.etecture.opensource.dynamicresources.annotations.Application;
+import de.etecture.opensource.dynamicresources.annotations.Method;
+import de.etecture.opensource.dynamicresources.annotations.Resource;
 import de.etecture.opensource.dynamicresources.api.ExecutionContext;
+import de.etecture.opensource.dynamicresources.api.FilterValueGenerator;
 import de.etecture.opensource.dynamicresources.api.ResourceException;
 import de.etecture.opensource.dynamicresources.api.Response;
+import de.etecture.opensource.dynamicresources.metadata.ResourceMethodFilter;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodRequest;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponse;
-import de.etecture.opensource.dynamicresources.utils.AnyLiteral;
-import de.etecture.opensource.dynamicresources.utils.ExecutesLiteral;
-import de.etecture.opensource.dynamicresources.utils.InjectionPointHelper;
-import java.lang.annotation.Annotation;
+import de.etecture.opensource.dynamicresources.utils.ApplicationLiteral;
+import de.etecture.opensource.dynamicresources.utils.MethodLiteral;
+import de.etecture.opensource.dynamicresources.utils.ResourceLiteral;
 import java.util.Map;
 import javax.enterprise.inject.Default;
-import javax.enterprise.inject.Produces;
-import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.inject.spi.InjectionPoint;
+import javax.enterprise.inject.Instance;
+import javax.enterprise.inject.New;
+import javax.enterprise.util.AnnotationLiteral;
 import javax.inject.Inject;
 
 /**
@@ -73,10 +75,9 @@ import javax.inject.Inject;
 public class ResourceMethodExecutions {
 
     @Inject
-    BeanManager beanManager;
+    Instance<ResourceMethodExecutor> allExecutors;
     @Inject
-    @Default
-    ResourceMethodExecutor defaultExecutor;
+    Instance<FilterValueGenerator> generators;
 
     public <R, B> Response<R> execute(ResourceMethodResponse<R> responseMetadata,
             ResourceMethodRequest<B> requestMetadata, B body,
@@ -85,9 +86,19 @@ public class ResourceMethodExecutions {
         ExecutionContext<R, B> context = buildExecutionContext(responseMetadata,
                 requestMetadata, body, parameters);
 
+        // process the filters for the resource method
+        for (ResourceMethodFilter<?> f : responseMetadata.getMethod()
+                .getFilters()) {
+            // create the generator.
+            context.setParameterValue(f.getName(), generators.select(f
+                    .getValueGenerator(), new AnnotationLiteral<New>() {
+                private static final long serialVersionUID =
+                        1L;
+            }).get().generate(f, context));
+        }
+
         // resolve the executor
-        ResourceMethodExecutor executor = resolve(ExecutesLiteral
-                .create(context));
+        ResourceMethodExecutor executor = resolve(context);
 
         // execute
         return executor.execute(context);
@@ -102,43 +113,15 @@ public class ResourceMethodExecutions {
                 requestMetadata, body, parameters);
     }
 
-    @Produces
-    @Executes
-    public ResourceMethodExecutor produceExecutorForLiteral(InjectionPoint ip) {
-        // lookup the @Executes for this ip
-        Executes executesToFind = InjectionPointHelper.findQualifier(
-                Executes.class,
-                ip);
-        // resolve...
-        return resolve(executesToFind);
-    }
-
-    private ResourceMethodExecutor resolve(Executes executesToFind) {
-        // now iterate about all the executors-beans to resolve the one we need.
-        for (Bean<?> bean : beanManager.getBeans(
-                ResourceMethodExecutor.class, new AnyLiteral())) {
-            // do only handle ResourceMethodExecutor beans.
-            if (ResourceMethodExecutor.class.isAssignableFrom(bean
-                    .getBeanClass())) {
-                Bean<ResourceMethodExecutor> rmeBean =
-                        (Bean<ResourceMethodExecutor>) bean;
-                // check all the qualifiers
-                for (Annotation annotation : rmeBean.getQualifiers()) {
-                    if (Executes.class.isAssignableFrom(annotation
-                            .annotationType())) {
-                        // it is an @Executes, so compare it.
-                        Executes executesOfBean = (Executes) annotation;
-                        if (ExecutesLiteral.matches(executesToFind,
-                                executesOfBean)) {
-                            // found a match, so create it and return it.
-                            return rmeBean.create(beanManager
-                                    .createCreationalContext(rmeBean));
-                        }
-
-                    }
-                }
-            }
-        }
-        return defaultExecutor;
+    private <R, B> ResourceMethodExecutor resolve(ExecutionContext<R, B> context) {
+        // build the literals
+        Application application = new ApplicationLiteral(context
+                .getResourceMethod().getResource().getApplication().getName(),
+                context.getResourceMethod().getResource().getApplication()
+                .getBase());
+        Resource resource = new ResourceLiteral(context.getResourceMethod()
+                .getResource());
+        Method method = new MethodLiteral(context.getResourceMethod().getName());
+        return allExecutors.select(application, resource, method).get();
     }
 }

@@ -46,6 +46,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.CreationException;
+import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionTarget;
 
@@ -55,7 +56,7 @@ import javax.enterprise.inject.spi.InjectionTarget;
  * @version
  * @since
  */
-public class BeanInstanceBuilder<T> {
+public class BeanInstanceBuilder<T> implements BeanCreator {
 
     private final InjectionTarget<T> injectionTarget;
     private final Class<T> type;
@@ -115,6 +116,7 @@ public class BeanInstanceBuilder<T> {
         if (this.constructor == null) {
             this.constructor = lookupConstructor();
         }
+        this.constructor.setAccessible(true);
         return this.constructor.newInstance(initArguments);
     }
 
@@ -143,6 +145,14 @@ public class BeanInstanceBuilder<T> {
             throw new CreationException("cannot create bean instance of type: "
                     + type.getName(), ex);
         }
+    }
+
+    @Override
+    public <X> X create(BeanManager beanManager,
+            Bean<X> bean,
+            CreationalContext<X> creationalContext) {
+        usingCreationalContext((CreationalContext<T>) creationalContext);
+        return (X) build();
     }
 
     public static <X> BeanInstanceBuilder<X> forType(Class<X> type) {

@@ -45,7 +45,6 @@ import de.etecture.opensource.dynamicresources.annotations.Filter;
 import de.etecture.opensource.dynamicresources.annotations.Header;
 import de.etecture.opensource.dynamicresources.annotations.Method;
 import de.etecture.opensource.dynamicresources.annotations.Produces;
-import de.etecture.opensource.dynamicresources.api.ResourceMethodInterceptor;
 import de.etecture.opensource.dynamicresources.api.StatusCodes;
 import javax.enterprise.util.AnnotationLiteral;
 
@@ -84,11 +83,6 @@ public class MethodLiteral extends AnnotationLiteral<Method> implements Method {
     }
 
     @Override
-    public Class<?> seeOther() {
-        return Class.class;
-    }
-
-    @Override
     public Consumes[] consumes() {
         return new Consumes[0];
     }
@@ -101,11 +95,6 @@ public class MethodLiteral extends AnnotationLiteral<Method> implements Method {
     @Override
     public String[] rolesAllowed() {
         return new String[0];
-    }
-
-    @Override
-    public Class<? extends ResourceMethodInterceptor>[] interceptors() {
-        return new Class[0];
     }
 
     @Override

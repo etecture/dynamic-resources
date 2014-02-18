@@ -44,7 +44,6 @@ import de.etecture.opensource.dynamicresources.annotations.Filter;
 import de.etecture.opensource.dynamicresources.annotations.Header;
 import de.etecture.opensource.dynamicresources.annotations.Method;
 import de.etecture.opensource.dynamicresources.annotations.Produces;
-import de.etecture.opensource.dynamicresources.api.ResourceMethodInterceptor;
 import de.etecture.opensource.dynamicresources.core.mapping.mime.MediaTypeExpression;
 import de.etecture.opensource.dynamicresources.metadata.BasicResourceMethod;
 import de.etecture.opensource.dynamicresources.metadata.BasicResourceMethodRequest;
@@ -63,6 +62,12 @@ public class AnnotatedResourceMethod extends BasicResourceMethod implements
 
     private final Method annotation;
     private final AnnotatedElement annotatedElement;
+
+    public AnnotatedResourceMethod() {
+        super(null, null, null);
+        throw new IllegalStateException(
+                "AnnotatedResourceMethod must not be instantiated as a bean automatically.");
+    }
 
     AnnotatedResourceMethod(Resource resource,
             Method annotation, AnnotatedElement annotatedElement) {
@@ -88,10 +93,6 @@ public class AnnotatedResourceMethod extends BasicResourceMethod implements
                 annotation, resourceClass);
         for (String roleName : annotation.rolesAllowed()) {
             method.addAllowedRoleName(roleName);
-        }
-        for (Class<? extends ResourceMethodInterceptor> interceptorType
-                : annotation.interceptors()) {
-            method.addInterceptor(interceptorType);
         }
         for (Filter filter : annotation.filters()) {
             method.addFilter(AnnotatedResourceMethodFilter

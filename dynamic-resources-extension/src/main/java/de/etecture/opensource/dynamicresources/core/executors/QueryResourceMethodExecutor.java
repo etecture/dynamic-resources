@@ -39,13 +39,9 @@
  */
 package de.etecture.opensource.dynamicresources.core.executors;
 
-import de.etecture.opensource.dynamicrepositories.executor.QueryExecutionException;
 import de.etecture.opensource.dynamicrepositories.extension.DefaultQueryExecutionContext;
 import de.etecture.opensource.dynamicrepositories.extension.QueryExecutors;
 import de.etecture.opensource.dynamicrepositories.metadata.QueryDefinition;
-import de.etecture.opensource.dynamicresources.api.DefaultResponse;
-import de.etecture.opensource.dynamicresources.api.ResourceException;
-import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.api.ExecutionContext;
 import de.herschke.converters.api.Converters;
 import javax.inject.Inject;
@@ -56,7 +52,7 @@ import javax.inject.Inject;
  * @version
  * @since
  */
-public class QueryResourceMethodExecutor implements ResourceMethodExecutor {
+public class QueryResourceMethodExecutor extends AbstractResourceMethodExecutor {
 
     @Inject
     QueryExecutors executors;
@@ -69,8 +65,8 @@ public class QueryResourceMethodExecutor implements ResourceMethodExecutor {
     }
 
     @Override
-    public <R, B> Response<R> execute(ExecutionContext<R, B> context) throws
-            ResourceException {
+    protected <R, B> R getEntity(
+            ExecutionContext<R, B> context) throws Exception {
         // build the query-execution-context (from repository)
         DefaultQueryExecutionContext<R> queryContext =
                 new DefaultQueryExecutionContext(context
@@ -88,15 +84,7 @@ public class QueryResourceMethodExecutor implements ResourceMethodExecutor {
         if (context.getBody() != null) {
             queryContext.addParameter("request", context.getBody());
         }
-        try {
-            // executes the query.
-            return new DefaultResponse(executors.execute(queryContext), context
-                    .getResponseMetadata()
-                    .getStatusCode());
-        } catch (QueryExecutionException ex) {
-            // return another response for this exception
-            return new DefaultResponse(context.getResponseMetadata()
-                    .getResponseType(), ex);
-        }
+        // executes the query.
+        return (R) executors.execute(queryContext);
     }
 }

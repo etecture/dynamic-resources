@@ -65,8 +65,8 @@ public class SingletonBeanCreator implements BeanCreator {
             Bean<T> bean,
             CreationalContext<T> creationalContext) {
         InjectionTarget<T> it = (InjectionTarget<T>) beanManager
-                .createInjectionTarget(beanManager.createAnnotatedType(bean
-                .getBeanClass()));
+                .createInjectionTarget(beanManager.createAnnotatedType(instance
+                .getClass()));
         it.inject((T) instance, creationalContext);
         it.postConstruct((T) instance);
         return (T) instance;

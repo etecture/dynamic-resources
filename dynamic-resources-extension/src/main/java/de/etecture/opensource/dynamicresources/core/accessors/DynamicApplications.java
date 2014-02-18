@@ -40,31 +40,23 @@
 package de.etecture.opensource.dynamicresources.core.accessors;
 
 import de.etecture.opensource.dynamicrepositories.utils.NamedLiteral;
+import de.etecture.opensource.dynamicresources.api.accesspoints.ApplicationAccessor;
 import de.etecture.opensource.dynamicresources.api.accesspoints.Applications;
-import de.etecture.opensource.dynamicresources.api.accesspoints.Methods;
-import de.etecture.opensource.dynamicresources.api.accesspoints.MethodsForResponse;
-import de.etecture.opensource.dynamicresources.api.accesspoints.Resources;
-import de.etecture.opensource.dynamicresources.api.accesspoints.Responses;
+import de.etecture.opensource.dynamicresources.api.accesspoints.MethodAccessor;
+import de.etecture.opensource.dynamicresources.api.accesspoints.ResourceAccessor;
+import de.etecture.opensource.dynamicresources.api.accesspoints.TypedResourceAccessor;
 import de.etecture.opensource.dynamicresources.metadata.Application;
 import de.etecture.opensource.dynamicresources.metadata.ApplicationNotFoundException;
 import de.etecture.opensource.dynamicresources.metadata.Resource;
-import de.etecture.opensource.dynamicresources.metadata.ResourceMethod;
 import de.etecture.opensource.dynamicresources.metadata.ResourceNotFoundException;
 import de.etecture.opensource.dynamicresources.metadata.ResourcePathNotMatchException;
-import de.etecture.opensource.dynamicresources.utils.InjectionPointHelper;
-import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import javax.enterprise.inject.Any;
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Default;
-import javax.enterprise.inject.InjectionException;
 import javax.enterprise.inject.Instance;
-import javax.enterprise.inject.Produces;
-import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.inject.spi.InjectionPoint;
 import javax.inject.Inject;
-import javax.inject.Named;
 
 /**
  * this is the standard implementation for {@link Applications}.
@@ -72,14 +64,16 @@ import javax.inject.Named;
  * It provides the implementation for the
  * <code>select()</code>-methods in the {@link Application} interface as well as
  * producer methods to be able to inject qualified
- * {@link Resources}, {@link MethodsForResponse}s and {@link Responses}s.
+ * {@link ApplicationAccessor}, {@link TypedResourceAccessor}s and
+ * {@link MethodAccessor}s.
  *
  * @author rhk
  * @version
  * @since
- * @see Resources
+ * @see ApplicationAccessor
  */
 @Default
+@ApplicationScoped
 public class DynamicApplications implements Applications {
 
     /**
@@ -88,177 +82,10 @@ public class DynamicApplications implements Applications {
     @Inject
     Instance<Application> allApplications;
     /**
-     * an accesspoint to all available resource-metadatas.
+     * this is used to lookup or create accesspoints.
      */
     @Inject
-    @Any
-    Instance<Resource> allResources;
-    /**
-     * the bean manager.
-     */
-    @Inject
-    BeanManager beanManager;
-
-    /**
-     * produces a MethodsForResponse for an injectionPoint annotated with a
-     * {@link Resource} to access an Methods by uri annotation.
-     *
-     * searches the resourceaccessor for the uri specified with the annotation.
-     *
-     * <p>
-     * Example:
-     * <pre><code>
-     * public class MyBean {
-     *
-     *   &#64;Inject
-     *   &#64;Application("CustomerResourceApplication") // optional, if unique
-     *   &#64;Resource("/resources/customers/1234567890/")
-     *   MethodsForResponse&lt;CustomerResource&gt; customerResourceAccessor;
-     *
-     *   ...
-     * }
-     * <code></pre>
-     *
-     * @param ip
-     * @return
-     */
-    @Produces
-    @de.etecture.opensource.dynamicresources.annotations.Resource
-    public <T> MethodsForResponse<T> produceMethodsForResourceWithUri(
-            InjectionPoint ip) {
-        // lookup the @Application annotation of this injection point
-        de.etecture.opensource.dynamicresources.annotations.Application app =
-                InjectionPointHelper.findQualifier(
-                de.etecture.opensource.dynamicresources.annotations.Application.class,
-                ip);
-        // lookup the path from the @Resource annotation of this ip
-        String path = InjectionPointHelper.findQualifier(
-                de.etecture.opensource.dynamicresources.annotations.Resource.class,
-                ip).path();
-        Instance<Resource> resources;
-        if (app != null) {
-            // resolve the application's resource
-            resources = allResources.select(app);
-        } else {
-            // no @Application specified, so we lookup ALL resources.
-            resources = allResources;
-        }
-        Resource resource = null;
-        // lookup the resource that match the path
-        for (Resource r : resources) {
-            if (r.getPath().matches(path)) {
-                resource = r;
-                break;
-            }
-        }
-        if (resource == null) {
-            throw new InjectionException(
-                    "no resource found that matches the path: " + path);
-        }
-        // get the type of the response (which is the 0th element of the
-        // MethodsForResponse type)
-        Class<T> responseType = InjectionPointHelper
-                .getGenericTypeOfInjectionPoint(ip, 0);
-        if (responseType == null) {
-            throw new InjectionException(
-                    "cannot determine the response-type for the TypedResourceAccessor, so cannot find an appropriate resource!");
-        } else {
-            // check the response type
-            for (ResourceMethod method : resource.getMethods().values()) {
-                if (method.getResponses().containsKey(responseType)) {
-                    return DynamicMethodsForResponse.create(beanManager,
-                            responseType, resource);
-                }
-            }
-            throw new InjectionException(
-                    "cannot produce a TypedResourceAccessor for the resource: "
-                    + resource.getName()
-                    + ", due to it does not support the response-type: "
-                    + responseType.getName());
-        }
-    }
-
-    /**
-     * produces a MethodsForResponse for an injectionPoint annotated with a
-     * {@link Named} annotation. searches the resourceaccessor for the name
-     * specified with the annotation.
-     *
-     * <p>
-     * Example:
-     * <pre><code>
-     * public class MyBean {
-     *
-     *   &#64;Inject
-     *   &#64;Application("CustomerResourceApplication") // optional if unique
-     *   &#64;Named("CustomerResource")
-     *   MethodsForResponse&lt;CustomerResource&gt; customerResourceAccessor;
-     *
-     *   ...
-     * }
-     * <code></pre>
-     *
-     * @param <T>
-     * @param ip
-     * @return
-     */
-    @Produces
-    @Named
-    public <T> MethodsForResponse<T> produceMethodsForResourceWithName(
-            InjectionPoint ip) {
-        // lookup the @Named and @Application annotation of this injection point
-        Annotation[] annotations = InjectionPointHelper.findQualifiers(ip,
-                Named.class,
-                de.etecture.opensource.dynamicresources.annotations.Application.class);
-        // lookup the resource that match the criteria:
-        Resource resource = allResources.select(annotations).get();
-        // get the type of the response (which is the 0th element of the
-        // MethodsForResponse type)
-        Class<T> responseType = InjectionPointHelper
-                .getGenericTypeOfInjectionPoint(ip, 0);
-        if (responseType == null) {
-            throw new InjectionException(
-                    "cannot determine the response-type for the TypedResourceAccessor, so cannot find an appropriate resource!");
-        } else {
-            // check the response type
-            for (ResourceMethod method : resource.getMethods().values()) {
-                if (method.getResponses().containsKey(responseType)) {
-                    return DynamicMethodsForResponse.create(beanManager,
-                            responseType, resource);
-                }
-            }
-            throw new InjectionException(
-                    "cannot produce a TypedResourceAccessor for the resource: "
-                    + resource.getName()
-                    + ", due to it does not support the response-type: "
-                    + responseType.getName());
-        }
-    }
-
-    @Produces
-    @Named
-    public Resources produceResourcesForApplicationWithName(
-            InjectionPoint ip) {
-        try {
-            return selectByName(InjectionPointHelper.findQualifier(Named.class,
-                    ip)
-                    .value());
-        } catch (ApplicationNotFoundException ex) {
-            throw new InjectionException(ex);
-        }
-    }
-
-    @Produces
-    @de.etecture.opensource.dynamicresources.annotations.Application
-    public Resources produceResourcesForApplicationWithUri(
-            InjectionPoint ip) {
-        try {
-            return selectByPath(InjectionPointHelper.findQualifier(
-                    de.etecture.opensource.dynamicresources.annotations.Application.class,
-                    ip).base());
-        } catch (ApplicationNotFoundException ex) {
-            throw new InjectionException(ex);
-        }
-    }
+    DynamicAccessPoints accessPoints;
 
     @Override
     public Set<String> getApplicationNames() {
@@ -270,7 +97,7 @@ public class DynamicApplications implements Applications {
     }
 
     @Override
-    public Resources selectByName(String applicationName) throws
+    public ApplicationAccessor selectByName(String applicationName) throws
             ApplicationNotFoundException {
         // find the applications with the given name.
         final Instance<Application> applicationsWithName = allApplications
@@ -278,8 +105,7 @@ public class DynamicApplications implements Applications {
         if (!applicationsWithName.isUnsatisfied() && !applicationsWithName
                 .isAmbiguous()) {
             Application application = applicationsWithName.get();
-            // return a new Resources Accessor for this application
-            return DynamicResources.create(beanManager, application);
+            return accessPoints.create(application);
         } else if (applicationsWithName.isAmbiguous()) {
             throw new ApplicationNotFoundException(
                     "the application name is not unique: " + applicationName);
@@ -290,13 +116,12 @@ public class DynamicApplications implements Applications {
     }
 
     @Override
-    public Resources selectByPath(String basePath) throws
+    public ApplicationAccessor selectByPath(String basePath) throws
             ApplicationNotFoundException {
         // lookup the allApplications for the baseUri
         for (Application application : allApplications) {
             if (application.getBase().equals(basePath)) {
-                // found, so return a new Resources Accessor for this application
-                return DynamicResources.create(beanManager, application);
+                accessPoints.create(application);
             }
         }
         throw new ApplicationNotFoundException(
@@ -305,17 +130,16 @@ public class DynamicApplications implements Applications {
     }
 
     @Override
-    public Methods findForCompleteUri(String uri) throws
+    public ResourceAccessor findForCompleteUri(String uri) throws
             ResourceNotFoundException, ApplicationNotFoundException {
         // lookup the allApplications baseUri...
         for (Application application : allApplications) {
             if (uri.startsWith(application.getBase())) {
                 Resource resource = application.findResource(uri);
                 try {
-                    // found, so return a new Resources Accessor for this application
-                    return DynamicMethods.create(beanManager, resource)
-                            .pathParams(
-                            resource.getPath().getPathParameterValues(uri));
+                    return accessPoints.create(resource)
+                            .pathParams(resource.getPath()
+                            .getPathParameterValues(uri));
                 } catch (ResourcePathNotMatchException ex) {
                     throw new ResourceNotFoundException(ex);
                 }
@@ -325,4 +149,5 @@ public class DynamicApplications implements Applications {
                 "there is no application that holds any resource matching the path: "
                 + uri);
     }
+
 }

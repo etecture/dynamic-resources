@@ -41,6 +41,7 @@ package de.etecture.opensource.dynamicresources.utils;
 
 import de.etecture.opensource.dynamicresources.annotations.Application;
 import javax.enterprise.util.AnnotationLiteral;
+import javax.servlet.annotation.ServletSecurity;
 
 /**
  *
@@ -79,5 +80,10 @@ public class ApplicationLiteral extends AnnotationLiteral<Application>
     @Override
     public String description() {
         return "";
+    }
+
+    @Override
+    public ServletSecurity.TransportGuarantee transportGuarantee() {
+        return ServletSecurity.TransportGuarantee.NONE;
     }
 }

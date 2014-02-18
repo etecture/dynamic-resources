@@ -46,6 +46,7 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.ConversationScoped;
 import javax.enterprise.context.Dependent;
@@ -63,10 +64,11 @@ import javax.enterprise.inject.spi.BeanManager;
  */
 public class BeanBuilder<T> {
 
+    private final Logger LOG = Logger.getLogger("BeanBuilder");
     private final BeanManager beanManager;
     private final Class<T> beanClass;
     private String name;
-    private Set<Type> beanTypes;
+    private Set<Type> beanTypes = new HashSet<>();
     private Set<Annotation> qualifiers = new HashSet<>();
     private Set<Class<? extends Annotation>> stereotypes = new HashSet<>();
     private Class<? extends Annotation> scope;
@@ -78,6 +80,11 @@ public class BeanBuilder<T> {
     private BeanBuilder(BeanManager beanManager, Class<T> beanClass) {
         this.beanManager = beanManager;
         this.beanClass = beanClass;
+        this.beanTypes.addAll(Arrays.asList(beanClass.getGenericInterfaces()));
+        if (beanClass.getGenericSuperclass() != null) {
+            this.beanTypes.add(beanClass.getGenericSuperclass());
+        }
+        this.beanTypes.add(beanClass);
         this.name = beanClass.getSimpleName();
         this.alternative = false;
         this.nullable = false;
@@ -130,12 +137,17 @@ public class BeanBuilder<T> {
             Class<X> beanClass,
             String name) {
         final BeanBuilder beanBuilder = new BeanBuilder(beanManager, beanClass);
+        beanBuilder.qualifiers.add(new NamedLiteral(name));
         beanBuilder.name = name;
         return beanBuilder;
     }
 
     public BeanBuilder<T> withName(String name) {
         this.name = name;
+        return this;
+    }
+
+    public BeanBuilder<T> withNamed(String name) {
         this.qualifiers.add(new NamedLiteral(name));
         return this;
     }
@@ -150,6 +162,11 @@ public class BeanBuilder<T> {
             Annotation... moreQualifiers) {
         this.qualifiers.add(qualifier);
         this.qualifiers.addAll(Arrays.asList(moreQualifiers));
+        return this;
+    }
+
+    public BeanBuilder<T> withQualifier(Set<Annotation> qualifiers) {
+        this.qualifiers.addAll(qualifiers);
         return this;
     }
 

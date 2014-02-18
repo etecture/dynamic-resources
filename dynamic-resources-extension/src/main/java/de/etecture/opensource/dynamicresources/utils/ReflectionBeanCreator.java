@@ -59,9 +59,17 @@ public class ReflectionBeanCreator implements BeanCreator {
         InjectionTarget<T> it = (InjectionTarget<T>) beanManager
                 .createInjectionTarget(beanManager.createAnnotatedType(bean
                 .getBeanClass()));
-        T instance = (T) it.produce(creationalContext);
+        T instance = produce(beanManager, it, creationalContext);
         it.inject(instance, creationalContext);
         it.postConstruct(instance);
+        return instance;
+    }
+
+    protected <T> T produce(
+            BeanManager beanManager,
+            InjectionTarget<T> it,
+            CreationalContext<T> creationalContext) {
+        T instance = (T) it.produce(creationalContext);
         return instance;
     }
 }

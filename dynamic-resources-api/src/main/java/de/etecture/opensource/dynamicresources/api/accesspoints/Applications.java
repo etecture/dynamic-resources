@@ -53,18 +53,18 @@ import java.util.Set;
 public interface Applications {
 
     /**
-     * selects the Resources of the application for the specified application
+     * selects the ApplicationAccessor of the application for the specified application
      * name.
      * <p>
      * N.B. another way to get the resources by name, is to inject the
-     * Resources-Interface with &#64;Named annotation. Example:
+     * ApplicationAccessor-Interface with &#64;Named annotation. Example:
      * <p>
      * <pre>
      * public class MyBean {
      *
      *   &#64;Inject
      *   &#64;Named("MyApplication")
-     *   Resources myApplicationResources;
+     *   ApplicationAccessor myApplicationResources;
      *
      *   // ...
      * }
@@ -74,17 +74,17 @@ public interface Applications {
      * @return
      * @throws ApplicationNotFoundException
      */
-    Resources selectByName(String applicationName) throws
+    ApplicationAccessor selectByName(String applicationName) throws
             ApplicationNotFoundException;
 
     /**
-     * selects the Resources of the application for the specified basePath.
+     * selects the ApplicationAccessor of the application for the specified basePath.
      *
      * @param basePath
      * @return
      * @throws ApplicationNotFoundException
      */
-    Resources selectByPath(String basePath) throws ApplicationNotFoundException;
+    ApplicationAccessor selectByPath(String basePath) throws ApplicationNotFoundException;
 
     /**
      * returns a set that holds all the registered application names.
@@ -106,6 +106,6 @@ public interface Applications {
      * @throws ApplicationNotFoundException
      * @throws ResourceNotFoundException
      */
-    Methods findForCompleteUri(String uri) throws ApplicationNotFoundException,
+    ResourceAccessor findForCompleteUri(String uri) throws ApplicationNotFoundException,
             ResourceNotFoundException;
 }

@@ -55,10 +55,11 @@ public interface FilterValueGenerator {
      *
      * @param <T>
      * @param filter
-     * @param request
+     * @param context
      * @return
      * @throws InvalidFilterValueException
      */
-    <T> T generate(ResourceMethodFilter<T> filter, Request<?, ?> request)
+    <T> T generate(ResourceMethodFilter<T> filter,
+            ExecutionContext<?, ?> context)
             throws InvalidFilterValueException;
 }

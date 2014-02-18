@@ -64,15 +64,29 @@ public class DynamicResourcesServletRegistration {
 
     private static final Logger LOG = Logger.getLogger(
             "DynamicResourcesServletRegistration");
-    private static final String APPLICATION_MAPPING_TEMPLATE = "/%s/*";
-    private static final String APPLICATION_SERVLET_NAME_TEMPLATE = "%s-Servlet";
+    private static final String APPLICATION_MAPPING_TEMPLATE = "%s/*";
+    private static final String APPLICATION_SERVLET_NAME_TEMPLATE =
+            "%s-DynamicResourcesServlet";
     @Inject
     Instance<Application> allApplications;
 
     public void onRegistration(@Observes(during =
             TransactionPhase.AFTER_COMPLETION) ServletContextEvent sce) {
         LOG.info("start registration of application servlets.");
+        System.err.println(sce.getServletContext().getVirtualServerName());
         for (Application application : allApplications) {
+            StringBuilder sb = new StringBuilder();
+            for (String roleName : application.getDeclaredRoleNames()) {
+                if (sb.length() > 0) {
+                    sb.append(", ");
+                } else {
+                    sb.append("declare roles: ");
+                }
+                sb.append(roleName);
+                sce.getServletContext().declareRoles(roleName);
+            }
+            sb.append(" for application: ").append(application.getName());
+            LOG.info(sb.toString());
             ServletRegistration.Dynamic dn = sce.getServletContext().addServlet(
                     String.format(APPLICATION_SERVLET_NAME_TEMPLATE, application
                     .getName()),
@@ -83,6 +97,7 @@ public class DynamicResourcesServletRegistration {
                     String.format(APPLICATION_MAPPING_TEMPLATE, application
                     .getBase());
             dn.addMapping(mapping);
+            dn.setServletSecurity(application.getApplicationSecurity());
             LOG.log(Level.INFO,
                     "application: {0} is registered at: {1}{2} with servlet: {3}",
                     new Object[]{

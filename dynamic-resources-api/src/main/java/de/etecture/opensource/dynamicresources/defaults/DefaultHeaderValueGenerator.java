@@ -39,13 +39,14 @@
  */
 package de.etecture.opensource.dynamicresources.defaults;
 
-import de.etecture.opensource.dynamicresources.annotations.Header;
+import de.etecture.opensource.dynamicresources.api.ExecutionContext;
 import de.etecture.opensource.dynamicresources.api.HeaderValueGenerator;
+import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponseHeader;
+import de.herschke.converters.api.ConvertException;
+import de.herschke.converters.api.Converters;
 import java.text.DateFormat;
 import java.text.ParseException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.servlet.http.HttpServletResponse;
+import javax.inject.Inject;
 
 /**
  * generates a header value by using the default value given in the header
@@ -59,29 +60,29 @@ public class DefaultHeaderValueGenerator implements HeaderValueGenerator {
 
     public static final DateFormat DATEFORMAT = DateFormat.getDateTimeInstance(
             DateFormat.SHORT, DateFormat.SHORT);
+    @Inject
+    Converters converters;
 
     @Override
-    public void generateHeaderValue(Header header, HttpServletResponse resp,
-            Object entity) {
-        switch (header.type()) {
-            case DATE:
-                try {
-                    resp.addDateHeader(header.name(), DATEFORMAT.parse(header
-                            .value()).getTime());
-                } catch (ParseException ex) {
-                    Logger
-                            .getLogger(DefaultHeaderValueGenerator.class
-                            .getName()).
-                            log(Level.SEVERE, "cannot parse the date: " + header
-                            .value(), ex);
-                }
-                break;
-            case INTEGER:
-                resp.addIntHeader(header.name(), Integer
-                        .parseInt(header.value()));
-                break;
-            default:
-                resp.addHeader(header.name(), header.value());
+    public Object generateHeaderValue(ResourceMethodResponseHeader header,
+            ExecutionContext context) {
+        try {
+            switch (header.getType()) {
+                case DATE:
+                    try {
+                        return DATEFORMAT.parse(converters.toString(header
+                                .getDefaultValue())).getTime();
+                    } catch (ParseException ex) {
+                        return converters.toString(header.getDefaultValue());
+                    }
+                case INTEGER:
+                    return converters.select(Integer.class).convert(header
+                            .getDefaultValue());
+                default:
+                    return converters.toString(header.getDefaultValue());
+            }
+        } catch (ConvertException ex) {
+            return converters.toString(header.getDefaultValue());
         }
     }
 }

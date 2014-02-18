@@ -39,9 +39,9 @@
  */
 package de.etecture.opensource.dynamicresources.defaults;
 
+import de.etecture.opensource.dynamicresources.api.ExecutionContext;
 import de.etecture.opensource.dynamicresources.api.FilterValueGenerator;
 import de.etecture.opensource.dynamicresources.api.InvalidFilterValueException;
-import de.etecture.opensource.dynamicresources.api.Request;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodFilter;
 import de.herschke.converters.api.ConvertException;
 import de.herschke.converters.api.Converters;
@@ -60,11 +60,11 @@ public class DefaultFilterValueGenerator implements FilterValueGenerator {
 
     @Override
     public <T> T generate(
-            ResourceMethodFilter<T> filter, Request<?, ?> request)
+            ResourceMethodFilter<T> filter, ExecutionContext<?, ?> context)
             throws
             InvalidFilterValueException {
         final Object value =
-                request.getParameterValue(filter.getName());
+                context.getParameterValue(filter.getName());
         try {
             if (value == null) {
                 return converters.select(filter.getType()).convert(filter
@@ -79,10 +79,9 @@ public class DefaultFilterValueGenerator implements FilterValueGenerator {
                     }
                 }
             }
-            throw new InvalidFilterValueException(request, filter, value);
+            throw new InvalidFilterValueException(filter, value);
         } catch (ConvertException ex) {
-            throw new InvalidFilterValueException(request, filter,
-                    ex, value);
+            throw new InvalidFilterValueException(filter, ex, value);
         }
     }
 }

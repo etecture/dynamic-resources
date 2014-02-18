@@ -40,8 +40,6 @@
 package de.etecture.opensource.dynamicresources.metadata;
 
 import de.etecture.opensource.dynamicresources.api.MediaType;
-import de.etecture.opensource.dynamicresources.api.ResourceMethodInterceptor;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -73,13 +71,6 @@ public interface ResourceMethod {
      * @return
      */
     String getDescription();
-
-    /**
-     * returns the resourceinterceptors associated with this request;
-     *
-     * @return
-     */
-    List<Class<? extends ResourceMethodInterceptor>> getInterceptors();
 
     /**
      * returns the allowed roles names for this method.

@@ -39,7 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.annotations;
 
-import de.etecture.opensource.dynamicresources.api.events.AfterResourceMethodExecution;
+import de.etecture.opensource.dynamicresources.api.events.AfterExecutionEvent;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -47,7 +47,7 @@ import java.lang.annotation.Target;
 import javax.inject.Qualifier;
 
 /**
- * qualifies a {@link AfterResourceMethodExecution} event in case of successful
+ * qualifies a {@link AfterExecutionEvent} event in case of successful
  * execution of the resource method.
  *
  * @author rhk

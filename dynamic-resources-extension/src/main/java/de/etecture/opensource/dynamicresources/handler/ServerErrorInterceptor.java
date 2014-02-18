@@ -39,14 +39,13 @@
  */
 package de.etecture.opensource.dynamicresources.handler;
 
-import de.etecture.opensource.dynamicresources.defaults.AbstractResourceInterceptor;
-import de.etecture.opensource.dynamicresources.api.DefaultResponse;
-import de.etecture.opensource.dynamicresources.annotations.Global;
-import de.etecture.opensource.dynamicresources.api.OldRequest;
-import de.etecture.opensource.dynamicresources.api.Response;
+import de.etecture.opensource.dynamicresources.annotations.Failed;
+import de.etecture.opensource.dynamicresources.api.events.AfterExecutionEvent;
 import de.herschke.neo4j.uplink.api.Neo4jServerException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.enterprise.event.Observes;
+import javax.enterprise.inject.Default;
 
 /**
  * handles all {@link Neo4jServerException}s.
@@ -55,22 +54,20 @@ import java.util.logging.Logger;
  * @version ${project.version}
  * @since 0.0.1
  */
-@Global
-public class ServerErrorInterceptor extends AbstractResourceInterceptor {
+@Default
+public class ServerErrorInterceptor {
 
-    @Override
-    public <T> Response<T> afterFailure(
-            OldRequest<T> request,
-            Response<T> originalResponse, Throwable exception) {
+    public void onError(@Observes @Failed AfterExecutionEvent event) {
+        Exception exception = (Exception) event.getOriginalEntity();
+
         if (Neo4jServerException.class.isInstance(exception)) {
             Logger.getLogger(ServerErrorInterceptor.class.getSimpleName()).log(
                     Level.SEVERE, String.format(
                     "cannot execute: %S %s due to: %s(%s)",
-                    request.getMethodName(), request.getResourceClass()
-                    .getSimpleName(), exception.getClass().getName(), exception
+                    event.getExecutionContext().getResourceMethod().getName(),
+                    event.getExecutionContext().getResourceMethod()
+                    .getResource().getName(), exception
                     .getMessage()), exception);
-            return new DefaultResponse(request.getRequestType(), exception);
         }
-        return originalResponse;
     }
 }

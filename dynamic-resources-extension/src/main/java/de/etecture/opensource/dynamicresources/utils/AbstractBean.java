@@ -37,7 +37,6 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
 package de.etecture.opensource.dynamicresources.utils;
 
 import java.lang.annotation.Annotation;
@@ -46,9 +45,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionPoint;
+import javax.enterprise.inject.spi.PassivationCapable;
 
 /**
  *
@@ -57,7 +58,7 @@ import javax.enterprise.inject.spi.InjectionPoint;
  * @version
  * @since
  */
-public abstract class AbstractBean<T> implements Bean<T> {
+public abstract class AbstractBean<T> implements Bean<T>, PassivationCapable {
 
     private final Class<T> beanClass;
     private final BeanManager beanManager;
@@ -68,6 +69,7 @@ public abstract class AbstractBean<T> implements Bean<T> {
     private final Class<? extends Annotation> scope;
     private final boolean alternative;
     private final boolean nullable;
+    private final String id = UUID.randomUUID().toString();
 
     public AbstractBean(BeanManager beanManager, Class<T> beanClass, String name,
             Class<? extends Annotation> scope, boolean alternative,
@@ -81,6 +83,12 @@ public abstract class AbstractBean<T> implements Bean<T> {
         this.nullable = nullable;
         this.beanTypes = new HashSet<>(Arrays.asList(beanTypes));
     }
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
 
     @Override
     public Class<?> getBeanClass() {
@@ -133,5 +141,19 @@ public abstract class AbstractBean<T> implements Bean<T> {
 
     void addStereotype(Class<? extends Annotation> s) {
         this.stereotypes.add(s);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("Bean: ");
+        sb.append("@").append(scope.getSimpleName()).append(" ");
+        for (Annotation q : qualifier) {
+            sb.append("@");
+            sb.append(q.annotationType().getSimpleName());
+            sb.append(" ");
+        }
+        sb.append("\"").append(name).append("\" ");
+        sb.append(beanClass.getName());
+        return sb.toString();
     }
 }

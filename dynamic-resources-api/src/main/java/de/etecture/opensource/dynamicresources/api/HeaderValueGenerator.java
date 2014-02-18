@@ -39,8 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.api;
 
-import de.etecture.opensource.dynamicresources.annotations.Header;
-import javax.servlet.http.HttpServletResponse;
+import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponseHeader;
 
 /**
  * generates a header value.
@@ -52,13 +51,12 @@ import javax.servlet.http.HttpServletResponse;
 public interface HeaderValueGenerator {
 
     /**
-     * generates a header value for the given header definition and the response
-     * entity. The header value has to be set to the response.
+     * generates a header value
      *
      * @param header
-     * @param resp
-     * @param entity
+     * @param context
+     * @return
      */
-    void generateHeaderValue(Header header, HttpServletResponse resp,
-            Object entity);
+    Object generateHeaderValue(ResourceMethodResponseHeader header,
+            ExecutionContext context);
 }

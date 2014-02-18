@@ -39,8 +39,10 @@
  */
 package de.etecture.opensource.dynamicresources.annotations;
 
-import de.etecture.opensource.dynamicresources.defaults.DefaultHeaderValueGenerator;
 import de.etecture.opensource.dynamicresources.api.HeaderValueGenerator;
+import de.etecture.opensource.dynamicresources.api.HttpHeaders;
+import de.etecture.opensource.dynamicresources.defaults.DefaultHeaderValueGenerator;
+import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponseHeader;
 
 /**
  * defines a response-header field.
@@ -50,13 +52,6 @@ import de.etecture.opensource.dynamicresources.api.HeaderValueGenerator;
  * @since
  */
 public @interface Header {
-
-    public enum Type {
-
-        DEFAULT,
-        DATE,
-        INTEGER
-    }
 
     /**
      * the name of the header field.
@@ -78,7 +73,7 @@ public @interface Header {
      *
      * @return
      */
-    Type type() default Type.DEFAULT;
+    ResourceMethodResponseHeader.Type type() default ResourceMethodResponseHeader.Type.DEFAULT;
 
     /**
      * defines a generator to produce the header field by using the entity.

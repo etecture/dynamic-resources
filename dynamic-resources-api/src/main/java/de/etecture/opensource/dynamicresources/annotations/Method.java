@@ -41,10 +41,7 @@ package de.etecture.opensource.dynamicresources.annotations;
 
 import de.etecture.opensource.dynamicrepositories.api.annotations.Query;
 import de.etecture.opensource.dynamicresources.api.HttpMethods;
-import de.etecture.opensource.dynamicresources.api.ResourceMethodInterceptor;
 import de.etecture.opensource.dynamicresources.api.StatusCodes;
-import de.etecture.opensource.dynamicresources.api.events.AfterResourceMethodExecution;
-import de.etecture.opensource.dynamicresources.api.events.BeforeResourceMethodExecution;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.PARAMETER;
@@ -104,20 +101,6 @@ public @interface Method {
     int status() default StatusCodes.OK;
 
     /**
-     * a resource to redirect to.
-     *
-     * N.B. If this class is specified and a resource is given, then the status
-     * is set to {@link StatusCodes#SEE_OTHER}.
-     *
-     * The path-parameters for the see-other-uri will be caught from the
-     * parameters.
-     *
-     * @return
-     */
-    @Nonbinding
-    Class<?> seeOther() default Class.class;
-
-    /**
      * the request types, this method accepts.
      *
      * @return
@@ -140,19 +123,6 @@ public @interface Method {
      */
     @Nonbinding
     String[] rolesAllowed() default {};
-
-    /**
-     * these are the interceptors, the framework has to be noted if this method
-     * is invoked.
-     *
-     * @return
-     * @deprecated this definition is deprecated. Observe the CDI-Events:
-     * {@link BeforeResourceMethodExecution} and
-     * {@link AfterResourceMethodExecution}
-     */
-    @Nonbinding
-    @Deprecated
-    Class<? extends ResourceMethodInterceptor>[] interceptors() default {};
 
     /**
      * the optional filter parameter.

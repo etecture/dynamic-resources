@@ -39,7 +39,6 @@
  */
 package de.etecture.opensource.dynamicresources.core.executors;
 
-import de.etecture.opensource.dynamicresources.api.DefaultResponse;
 import de.etecture.opensource.dynamicresources.api.ExecutionContext;
 import de.etecture.opensource.dynamicresources.api.ResourceException;
 import de.etecture.opensource.dynamicresources.api.Response;
@@ -57,8 +56,7 @@ import javax.inject.Inject;
  * @version
  * @since
  */
-public class ExecutionMethodResourceMethodExecutor<T> implements
-        ResourceMethodExecutor {
+public class ExecutionMethodResourceMethodExecutor<T> extends AbstractResourceMethodExecutor {
 
     private final ExecutionMethod<T> method;
     private T bean;
@@ -78,8 +76,8 @@ public class ExecutionMethodResourceMethodExecutor<T> implements
     }
 
     @Override
-    public <R, B> Response<R> execute(
-            ExecutionContext<R, B> context) throws ResourceException {
+    protected <R, B> R getEntity(
+            ExecutionContext<R, B> context) throws Exception {
         // assemble the arguments...
         Object[] arguments = new Object[method.getParameters().size()];
         if (method.getExecutionContextArgument() != null) {
@@ -102,10 +100,9 @@ public class ExecutionMethodResourceMethodExecutor<T> implements
         try {
             Object result = method.getJavaMember().invoke(bean, arguments);
             if (Response.class.isInstance(result)) {
-                return Response.class.cast(result);
+                return (R) Response.class.cast(result).getEntity();
             } else {
-                return new DefaultResponse((R) result, context
-                        .getResponseMetadata().getStatusCode());
+                return (R) result;
             }
         } catch (IllegalAccessException | IllegalArgumentException |
                 InvocationTargetException ex) {

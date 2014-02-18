@@ -40,9 +40,8 @@
 package de.etecture.opensource.dynamicresources.annotations;
 
 import de.etecture.opensource.dynamicrepositories.api.annotations.ParamName;
-import de.etecture.opensource.dynamicresources.api.Response;
-import de.etecture.opensource.dynamicresources.api.ResponseException;
 import de.etecture.opensource.dynamicresources.api.ExecutionContext;
+import de.etecture.opensource.dynamicresources.api.ResponseException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -67,8 +66,6 @@ import java.lang.annotation.Target;
  * entity of the resource methid execution.
  * <li>If the method returns void, the response entity is
  * <code>null</code>.
- * <li>The method may return an instance of {@link Response} instead of an
- * entity
  * <li>The method may throw any exception. All execption types other then
  * {@link ResponseException} will be handled as response entity. A
  * {@link ResponseException} is handled directly.

@@ -42,6 +42,7 @@ package de.etecture.opensource.dynamicresources.utils;
 
 import java.util.AbstractSet;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -104,6 +105,11 @@ public abstract class AbstractValueMap<K, V> extends java.util.AbstractMap<K, V>
                 return collection.size();
             }
         };
+    }
+
+    @Override
+    public Collection<V> values() {
+        return Collections.unmodifiableCollection(collection);
     }
 
     protected abstract K getKeyForValue(V value);

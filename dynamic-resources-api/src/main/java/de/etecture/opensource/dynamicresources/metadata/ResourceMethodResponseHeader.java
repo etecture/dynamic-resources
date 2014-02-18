@@ -39,7 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.metadata;
 
-import de.etecture.opensource.dynamicresources.annotations.Header;
+import de.etecture.opensource.dynamicresources.api.HeaderValueGenerator;
 
 /**
  *
@@ -49,12 +49,19 @@ import de.etecture.opensource.dynamicresources.annotations.Header;
  */
 public interface ResourceMethodResponseHeader {
 
+    public enum Type {
+
+        DEFAULT,
+        DATE,
+        INTEGER
+    }
+
     /**
      * returns the type of the header value this response produces.
      *
      * @return
      */
-    Header.Type getType();
+    Type getType();
 
     /**
      * returns the name of the header
@@ -69,4 +76,18 @@ public interface ResourceMethodResponseHeader {
      * @return
      */
     String getDescription();
+
+    /**
+     * returns the defaultvalue for this header.
+     *
+     * @return
+     */
+    Object getDefaultValue();
+
+    /**
+     * returns the header value generator that generates this value.
+     *
+     * @return
+     */
+    Class<? extends HeaderValueGenerator> getGenerator();
 }

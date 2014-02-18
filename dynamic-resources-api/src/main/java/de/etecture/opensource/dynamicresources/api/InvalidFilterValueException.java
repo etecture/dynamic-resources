@@ -54,18 +54,15 @@ import java.util.List;
  */
 public class InvalidFilterValueException extends ResourceException {
     private static final long serialVersionUID = 1L;
-    private final Request request;
     private final ResourceMethodFilter<?> filter;
     private final List<Object> actualValues;
 
-    public InvalidFilterValueException(
-            Request<?, ?> request, ResourceMethodFilter<?> filter,
+    public InvalidFilterValueException(ResourceMethodFilter<?> filter,
             Object... actualValues) {
-        this(request, filter, null, actualValues);
+        this(filter, null, actualValues);
     }
 
-    public InvalidFilterValueException(
-            Request<?, ?> request, ResourceMethodFilter<?> filter,
+    public InvalidFilterValueException(ResourceMethodFilter<?> filter,
             Throwable cause,
             Object... actualValues) {
         super(String.format(
@@ -73,17 +70,12 @@ public class InvalidFilterValueException extends ResourceException {
                 filter.getName(), filter.getResourceMethod()
                 .getName(), filter.getResourceMethod()
                 .getResource().getName()), cause);
-        this.request = request;
         this.filter = filter;
         this.actualValues = Arrays.asList(actualValues);
     }
 
     public List<Object> getActualValues() {
         return Collections.unmodifiableList(actualValues);
-    }
-
-    public Request getRequest() {
-        return request;
     }
 
     public ResourceMethodFilter<?> getFilter() {

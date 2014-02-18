@@ -68,9 +68,6 @@ public class DefaultResourcePath implements ResourcePath {
 
     public DefaultResourcePath(Resource resource, String path) {
         this.resource = resource;
-        while (path.startsWith("/")) {
-            path = path.substring(1);
-        }
         this.path = path;
         Matcher matcher = GROUP_PATTERN.matcher(path);
         StringBuffer buffer = new StringBuffer();
@@ -128,6 +125,7 @@ public class DefaultResourcePath implements ResourcePath {
 
     @Override
     public boolean matches(String uri) {
+        uri = StringUtils.removeStart(uri, resource.getApplication().getBase());
         return compiledPath.matcher(uri).matches();
     }
 

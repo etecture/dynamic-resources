@@ -71,12 +71,6 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>3.1.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <!-- the implementation of dynamic-repositories with neo4j remote access -->
             <groupId>de.etecture.opensource</groupId>
             <artifactId>dynamic-repositories-remote-neo4j</artifactId>
@@ -101,7 +95,13 @@
             <artifactId>neo4j-uplink-cdi</artifactId>
             <version>[2.0.0,)</version>
         </dependency>
-         <dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>3.1.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-client</artifactId>
             <version>2.4.1</version>

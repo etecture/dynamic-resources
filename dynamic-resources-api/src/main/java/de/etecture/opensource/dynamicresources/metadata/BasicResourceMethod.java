@@ -40,12 +40,9 @@
 package de.etecture.opensource.dynamicresources.metadata;
 
 import de.etecture.opensource.dynamicresources.api.MediaType;
-import de.etecture.opensource.dynamicresources.api.ResourceMethodInterceptor;
 import de.etecture.opensource.dynamicresources.utils.AbstractValueMap;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -62,8 +59,6 @@ public class BasicResourceMethod implements ResourceMethod {
     private final String description;
     private final Set<String> allowedRoleNames = new HashSet<>();
     private final Set<ResourceMethodFilter<?>> filters = new HashSet<>();
-    private final List<Class<? extends ResourceMethodInterceptor>> interceptors =
-            new ArrayList<>();
     private final Set<ResourceMethodRequest<?>> requests = new HashSet<>();
     private final Set<ResourceMethodResponse<?>> responses = new HashSet<>();
 
@@ -85,11 +80,6 @@ public class BasicResourceMethod implements ResourceMethod {
                     "can only add filter that is part of this method.");
         }
         this.filters.add(filter);
-    }
-
-    protected void addInterceptor(
-            Class<? extends ResourceMethodInterceptor> interceptor) {
-        this.interceptors.add(interceptor);
     }
 
     public <B> void addRequest(
@@ -123,11 +113,6 @@ public class BasicResourceMethod implements ResourceMethod {
     @Override
     public Set<ResourceMethodFilter<?>> getFilters() {
         return Collections.unmodifiableSet(filters);
-    }
-
-    @Override
-    public List<Class<? extends ResourceMethodInterceptor>> getInterceptors() {
-        return Collections.unmodifiableList(interceptors);
     }
 
     @Override

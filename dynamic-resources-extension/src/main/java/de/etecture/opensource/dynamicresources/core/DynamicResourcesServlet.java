@@ -46,12 +46,12 @@ import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.api.ResponseException;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
 import de.etecture.opensource.dynamicresources.api.StatusCodes;
+import de.etecture.opensource.dynamicresources.api.accesspoints.ApplicationAccessor;
 import de.etecture.opensource.dynamicresources.api.accesspoints.Applications;
-import de.etecture.opensource.dynamicresources.api.accesspoints.Resources;
-import de.etecture.opensource.dynamicresources.api.accesspoints.Responses;
-import de.etecture.opensource.dynamicresources.core.mapping.mime.MediaTypeExpression;
+import de.etecture.opensource.dynamicresources.api.accesspoints.MethodAccessor;
 import de.etecture.opensource.dynamicresources.core.mapping.RequestReaderResolver;
 import de.etecture.opensource.dynamicresources.core.mapping.ResponseWriterResolver;
+import de.etecture.opensource.dynamicresources.core.mapping.mime.MediaTypeExpression;
 import de.etecture.opensource.dynamicresources.metadata.ApplicationNotFoundException;
 import de.etecture.opensource.dynamicresources.metadata.MediaTypeNotAllowedException;
 import de.etecture.opensource.dynamicresources.metadata.MediaTypeNotSupportedException;
@@ -60,8 +60,6 @@ import de.etecture.opensource.dynamicresources.metadata.Resource;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethod;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodNotFoundException;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodRequest;
-import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponse;
-import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponseHeader;
 import de.etecture.opensource.dynamicresources.metadata.ResourceNotFoundException;
 import de.etecture.opensource.dynamicresources.metadata.ResponseTypeNotSupportedException;
 import java.io.IOException;
@@ -112,7 +110,7 @@ public class DynamicResourcesServlet extends HttpServlet {
      * init-parameter 'application-name' in the {@link ServletConfig} of this
      * servlet.
      */
-    private Resources resources;
+    private ApplicationAccessor resources;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -138,19 +136,31 @@ public class DynamicResourcesServlet extends HttpServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+        log(String.format("handle: %S %s in application: %s", req.getMethod(),
+                req.getRequestURI(), resources.getMetadata().getName()));
         resp.setCharacterEncoding("UTF-8");
         try {
             executeResource(req, resp);
         } catch (ResourceNotFoundException | ApplicationNotFoundException ex) {
+            log(String.format("resource or application not found for: %s",
+                    req.getRequestURI()), ex);
             resp.sendError(StatusCodes.NOT_FOUND, ex.getMessage());
         } catch (ResourceMethodNotFoundException ex) {
+            log(String.format("resource method: %S not found for: %s",
+                    req.getMethod(), req.getRequestURI()), ex);
             resp.sendError(StatusCodes.METHOD_NOT_ALLOWED, ex.getMessage());
         } catch (RequestTypeNotSupportedException | MediaTypeNotAllowedException ex) {
+            log(String.format("resource method: %S not available for: %s",
+                    req.getMethod(), req.getRequestURI()), ex);
             resp.sendError(StatusCodes.UNSUPPORTED_MEDIA_TYPE, ex.getMessage());
         } catch (ResponseTypeNotSupportedException |
                 MediaTypeNotSupportedException ex) {
+            log(String.format("resource method: %S not acceptable for: %s",
+                    req.getMethod(), req.getRequestURI()), ex);
             resp.sendError(StatusCodes.NOT_ACCEPTABLE, ex.getMessage());
         } catch (ResourceException ex) {
+            log(String.format("resource method: %S for: %s was in error",
+                    req.getMethod(), req.getRequestURI()), ex);
             resp.sendError(StatusCodes.UNPROCESSABLE_ENTITY, ex.getMessage());
         }
         resp.getWriter().flush();
@@ -180,21 +190,27 @@ public class DynamicResourcesServlet extends HttpServlet {
         final MediaType acceptedType = getAcceptedType(req);
 
         // get the path of the request
-        final String path = req.getRequestURI();
+        final String path = StringUtils.removeStart(req.getRequestURI(), req
+                .getContextPath());
 
         // get the method of the request
         final String methodName = req.getMethod();
 
+        log(String.format(
+                "search a resource with path: %s with method: %S that produces: %s and consumes: %s",
+                path, methodName, acceptedType, contentType));
+
         // select the accesspoint for the given uri and method.
-        Responses<?> responses =
+        MethodAccessor<?> responses =
                 resources.selectByPathAndMime(path, methodName, acceptedType);
 
         // get the request that is responsible for this contentType
         ResourceMethodRequest requestMeta = responses.getMetadata().getMethod()
                 .getRequest(contentType);
 
-        // get the response that is responsible for this acceptedType
-        ResourceMethodResponse<?> responseMeta = responses.getMetadata();
+        log(String.format("found resource: %s to handle: %S %s", responses
+                .getMetadata().getMethod().getResource().getName(), responses
+                .getMetadata().getMethod().getName(), path));
 
         // add the query parameters
         for (Entry<String, String[]> e : req.getParameterMap().entrySet()) {
@@ -202,6 +218,8 @@ public class DynamicResourcesServlet extends HttpServlet {
                     .getValue());
         }
 
+        log(String.format("read request with type: %s and mimes: %s",
+                requestMeta.getRequestType().getSimpleName(), contentType));
         // read the request body
         final RequestReader requestReader =
                 requestReaders
@@ -211,15 +229,24 @@ public class DynamicResourcesServlet extends HttpServlet {
                 req.getReader(), contentType.toString()));
 
         // invoke the resource method
+        log(String.format("invoke the resource: %s with method: %S",
+                responses.getMetadata().getMethod().getResource().getName(),
+                responses.getMetadata().getMethod().getName()));
         Response<?> response = responses.invoke();
         Object entity;
         try {
             entity = response.getEntity();
+            log(String.format("got entity: %s for: %S %s", entity, responses
+                    .getMetadata().getMethod().getName(), responses
+                    .getMetadata().getMethod().getResource().getName()));
         } catch (ResponseException ex) {
             entity = ex.getCause();
+            log(String.format("got exception: %s for: %S %s", entity, responses
+                    .getMetadata().getMethod().getName(), responses
+                    .getMetadata().getMethod().getResource().getName()));
         }
 
-        // add the response-headers from the resonse object
+        // add the headers from the resonse object
         for (Entry<String, List<Object>> e : response.getHeaders()) {
             for (Object v : e.getValue()) {
                 // @TODO: choose the correct method to add header (int, date...)
@@ -227,15 +254,10 @@ public class DynamicResourcesServlet extends HttpServlet {
             }
         }
 
-        // add the response-headers from the meta data
-        for (ResourceMethodResponseHeader header : responseMeta
-                .getResponseHeaders()) {
-            // @TODO: add the correct value!
-            resp.addHeader(header.getName(), null);
-        }
-
         // write the response.
         if (entity != null) {
+            log(String.format("write response with type: %s and mimes: %s",
+                    entity.getClass().getSimpleName(), acceptedType));
             final ResponseWriter responseWriter =
                     responseWriters.resolve(entity.getClass(), acceptedType);
             resp.setContentLength(responseWriter.getContentLength(entity,

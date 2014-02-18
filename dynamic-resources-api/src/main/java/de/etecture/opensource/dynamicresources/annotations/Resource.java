@@ -39,16 +39,19 @@
  */
 package de.etecture.opensource.dynamicresources.annotations;
 
+import de.etecture.opensource.dynamicresources.api.accesspoints.ApplicationAccessor;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import javax.enterprise.util.Nonbinding;
+import javax.inject.Qualifier;
 
 /**
  * represents a ReST Resource.
  * <p>
- * Interfaces tagged with this annotation are handled as ReST Resources.
+ * Interfaces tagged with this annotation are handled as ReST
+ * ApplicationAccessor.
  * <p>
  * Example:
  * <pre>
@@ -59,8 +62,8 @@ import javax.enterprise.util.Nonbinding;
  * }
  * </pre>
  * <p>
- * Fields of type {@link Resources} tagged with this annotations are handled as
- * an injection point to a resource with the given path.
+ * Fields of type {@link ApplicationAccessor} tagged with this annotations are
+ * handled as * an injection point to a resource with the given path.
  * <p>
  * Example:
  * <pre>
@@ -69,7 +72,7 @@ import javax.enterprise.util.Nonbinding;
  *
  *   &#64;Inject
  *   &#64;Resource("/data/myresource/{id}")
- *   Resources&lt;MyResource&gt; myresources;
+ *   ApplicationAccessor&lt;MyResource&gt; myresources;
  *
  *   // ...
  * }
@@ -80,6 +83,7 @@ import javax.enterprise.util.Nonbinding;
  * @version ${project.version}
  */
 @Retention(RetentionPolicy.RUNTIME)
+@Qualifier
 @Target({ElementType.TYPE,
     ElementType.FIELD,
     ElementType.METHOD,
@@ -92,22 +96,14 @@ public @interface Resource {
      *
      * @return
      */
-    String path() default "";
-
-    /**
-     * defines the methods for this resource.
-     *
-     * @return
-     */
     @Nonbinding
-    Method[] methods() default {};
+    String path() default "";
 
     /**
      * the name of the resource.
      *
      * @return
      */
-    @Nonbinding
     String name() default "";
 
     /**

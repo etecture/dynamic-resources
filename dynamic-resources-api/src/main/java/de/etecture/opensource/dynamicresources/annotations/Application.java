@@ -43,6 +43,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import javax.enterprise.util.Nonbinding;
 import javax.inject.Qualifier;
+import javax.servlet.annotation.ServletSecurity;
 
 /**
  * defines an application that contains resources.
@@ -83,5 +84,15 @@ public @interface Application {
      * @return
      */
     @Nonbinding
+
     String description() default "";
+
+    /**
+     * specifies the transport-guarantee for the http connections within this
+     * application.
+     *
+     * @see ServletSecurity.TransportGuarantee for details.
+     * @return
+     */
+    ServletSecurity.TransportGuarantee transportGuarantee() default ServletSecurity.TransportGuarantee.NONE;
 }

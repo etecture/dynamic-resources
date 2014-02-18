@@ -40,6 +40,8 @@
 package de.etecture.opensource.dynamicresources.metadata;
 
 import java.util.Map;
+import java.util.Set;
+import javax.servlet.ServletSecurityElement;
 
 /**
  * an application is the base of all resources.
@@ -96,4 +98,19 @@ public interface Application {
      * @return
      */
     String getDescription();
+
+    /**
+     * returns a set with all the declared role names in this application.
+     *
+     * @return
+     */
+    Set<String> getDeclaredRoleNames();
+
+    /**
+     * returns the servletsecurityelement to define security for this
+     * application.
+     *
+     * @return
+     */
+    ServletSecurityElement getApplicationSecurity();
 }

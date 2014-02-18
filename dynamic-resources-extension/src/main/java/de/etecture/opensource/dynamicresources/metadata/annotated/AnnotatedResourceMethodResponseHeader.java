@@ -41,6 +41,7 @@
 package de.etecture.opensource.dynamicresources.metadata.annotated;
 
 import de.etecture.opensource.dynamicresources.annotations.Header;
+import de.etecture.opensource.dynamicresources.api.HeaderValueGenerator;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponseHeader;
 
 /**
@@ -52,17 +53,26 @@ import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponseHe
 public class AnnotatedResourceMethodResponseHeader implements
         ResourceMethodResponseHeader {
 
-    private final Header.Type type;
+    private final Type type;
     private final String name, description;
+    private final Class<? extends HeaderValueGenerator> generator;
+    private final Object defaultValue;
+
+    public AnnotatedResourceMethodResponseHeader() {
+        throw new IllegalStateException(
+                "AnnotatedResourceMethodResponseHeader must not be instantiated as a bean automatically.");
+    }
 
     public AnnotatedResourceMethodResponseHeader(Header header) {
         this.type = header.type();
         this.name = header.name();
         this.description = header.description();
+        this.generator = header.generator();
+        this.defaultValue = header.value();
     }
 
     @Override
-    public Header.Type getType() {
+    public Type getType() {
         return this.type;
     }
 
@@ -74,5 +84,15 @@ public class AnnotatedResourceMethodResponseHeader implements
     @Override
     public String getDescription() {
         return this.description;
+    }
+
+    @Override
+    public Object getDefaultValue() {
+        return defaultValue;
+    }
+
+    @Override
+    public Class<? extends HeaderValueGenerator> getGenerator() {
+        return this.generator;
     }
 }

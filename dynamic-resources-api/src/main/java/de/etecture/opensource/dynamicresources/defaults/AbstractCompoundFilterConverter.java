@@ -39,9 +39,9 @@
  */
 package de.etecture.opensource.dynamicresources.defaults;
 
+import de.etecture.opensource.dynamicresources.api.ExecutionContext;
 import de.etecture.opensource.dynamicresources.api.FilterValueGenerator;
 import de.etecture.opensource.dynamicresources.api.InvalidFilterValueException;
-import de.etecture.opensource.dynamicresources.api.Request;
 import de.etecture.opensource.dynamicresources.defaults.AbstractCompoundFilterConverter.FilterPart;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodFilter;
 import de.herschke.converters.api.ConvertException;
@@ -68,7 +68,7 @@ public abstract class AbstractCompoundFilterConverter<F extends FilterPart>
 
         int ordinal();
 
-        Object value(Request request);
+        Object value(ExecutionContext context);
     }
     private final Set<F> parts = new HashSet<>();
     private final String template;
@@ -89,22 +89,23 @@ public abstract class AbstractCompoundFilterConverter<F extends FilterPart>
 
     @Override
     public <T> T generate(
-            ResourceMethodFilter<T> filter, Request<?, ?> request) throws
+            ResourceMethodFilter<T> filter, ExecutionContext<?, ?> context)
+            throws
             InvalidFilterValueException {
         try {
-            if (!request.hasParameter(filter.getName())) {
+            if (!context.hasParameter(filter.getName())) {
             Object[] partValues = new Object[parts.size()];
             for (F part : parts) {
-                partValues[part.ordinal()] = part.value(request);
+                partValues[part.ordinal()] = part.value(context);
             }
             return converters.select(filter.getType()).convert(String.format(
                     template, partValues));
         } else {
-            return converters.select(filter.getType()).convert(request
-                    .getParameterValue(filter.getName()));
+                return converters.select(filter.getType()).convert(context
+                        .getParameterValue(filter.getName()));
             }
         } catch (ConvertException ex) {
-            throw new InvalidFilterValueException(request, filter, ex);
+            throw new InvalidFilterValueException(filter, ex);
         }
     }
 }

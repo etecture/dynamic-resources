@@ -40,12 +40,15 @@
 package de.etecture.opensource.dynamicresources.metadata.annotated;
 
 import de.etecture.opensource.dynamicresources.annotations.Method;
+import de.etecture.opensource.dynamicresources.annotations.Methods;
 import de.etecture.opensource.dynamicresources.annotations.Resource;
 import de.etecture.opensource.dynamicresources.metadata.AbstractResource;
 import de.etecture.opensource.dynamicresources.metadata.Application;
 import de.etecture.opensource.dynamicresources.metadata.DefaultResourcePath;
 import de.etecture.opensource.dynamicresources.metadata.ResourcePath;
 import java.lang.reflect.AnnotatedElement;
+import java.util.Objects;
+import org.apache.commons.lang.StringUtils;
 
 /**
  *
@@ -60,9 +63,16 @@ public class AnnotatedResource extends AbstractResource implements
     private final Resource annotation;
     private final ResourcePath path;
 
+    public AnnotatedResource() {
+        super(null, null, null);
+        throw new IllegalStateException(
+                "AnnotatedResource must not be instantiated as a bean automatically.");
+    }
+
     AnnotatedResource(Application application, Resource annotation,
             AnnotatedElement annotatedElement) {
-        super(application, annotation.name(),
+        super(application, StringUtils.defaultIfBlank(annotation.name(),
+                ((Class) annotatedElement).getSimpleName()),
                 annotation.description());
         this.path = new DefaultResourcePath(this,
                 annotation.path());
@@ -104,10 +114,42 @@ public class AnnotatedResource extends AbstractResource implements
 
         AnnotatedResource resource = create(application, annotation,
                 annotatedResourceClass);
-        for (Method method : annotation.methods()) {
+        if (annotatedResourceClass.isAnnotationPresent(Method.class)) {
             resource.addMethod(AnnotatedResourceMethod.create(resource,
-                    annotatedResourceClass, method, producedMimes, consumedMimes));
+                    annotatedResourceClass, annotatedResourceClass
+                    .getAnnotation(Method.class), producedMimes, consumedMimes));
+
+        }
+        if (annotatedResourceClass.isAnnotationPresent(Methods.class)) {
+            for (Method method : annotatedResourceClass.getAnnotation(
+                    Methods.class).value()) {
+                resource.addMethod(AnnotatedResourceMethod.create(resource,
+                        annotatedResourceClass, method, producedMimes,
+                        consumedMimes));
+            }
         }
         return resource;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 47 * hash + Objects.hashCode(this.annotation);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final AnnotatedResource other = (AnnotatedResource) obj;
+        if (!Objects.equals(this.annotation, other.annotation)) {
+            return false;
+        }
+        return true;
     }
 }

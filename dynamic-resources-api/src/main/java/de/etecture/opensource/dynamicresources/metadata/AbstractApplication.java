@@ -41,6 +41,7 @@
 package de.etecture.opensource.dynamicresources.metadata;
 
 import de.etecture.opensource.dynamicresources.utils.AbstractValueMap;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -56,6 +57,7 @@ public abstract class AbstractApplication implements Application {
     protected final String base;
     protected final String description;
     protected final Set<Resource> resources = new HashSet<>();
+    protected Set<String> roleNames = null;
 
     public AbstractApplication(String name, String base, String description) {
         this.name = name;
@@ -106,4 +108,18 @@ public abstract class AbstractApplication implements Application {
         };
     }
 
+    @Override
+    public Set<String> getDeclaredRoleNames() {
+        if (roleNames != null) {
+            return Collections.unmodifiableSet(roleNames);
+        } else {
+            roleNames = new HashSet<>();
+            for (Resource resource : resources) {
+                for (ResourceMethod method : resource.getMethods().values()) {
+                    roleNames.addAll(method.getAllowedRoleNames());
+                }
+            }
+            return roleNames;
+        }
+    }
 }

@@ -57,6 +57,11 @@ public class AnnotatedResourceMethodFilter<T> implements
     private final ResourceMethod method;
     private final Filter filter;
 
+    public AnnotatedResourceMethodFilter() {
+        throw new IllegalStateException(
+                "AnnotatedResourceMethodFilter must not be instantiated as a bean automatically.");
+    }
+
     AnnotatedResourceMethodFilter(ResourceMethod method,
             Filter filter) {
         this.method = method;

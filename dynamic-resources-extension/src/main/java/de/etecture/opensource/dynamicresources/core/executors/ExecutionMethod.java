@@ -256,4 +256,9 @@ public class ExecutionMethod<T> implements AnnotatedMethod<T>, Executes {
                 && method.getResponses().containsKey(responseType())
                 && method.getRequests().containsKey(requestType());
     }
+
+    @Override
+    public String toString() {
+        return method.toString();
+    }
 }

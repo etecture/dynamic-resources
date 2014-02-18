@@ -39,7 +39,6 @@
  */
 package de.etecture.opensource.dynamicresources.utils;
 
-import de.etecture.opensource.dynamicresources.annotations.Method;
 import de.etecture.opensource.dynamicresources.annotations.Resource;
 import javax.enterprise.util.AnnotationLiteral;
 
@@ -55,9 +54,17 @@ public class ResourceLiteral extends AnnotationLiteral<Resource>
 
     private static final long serialVersionUID = 1L;
     private final String path;
+    private final String name;
 
-    public ResourceLiteral(String path) {
+    public ResourceLiteral(String path, String name) {
         this.path = path;
+        this.name = name;
+    }
+
+    public ResourceLiteral(
+            de.etecture.opensource.dynamicresources.metadata.Resource resource) {
+        this.name = resource.getName();
+        this.path = resource.getPath().toString();
     }
 
     @Override
@@ -66,13 +73,8 @@ public class ResourceLiteral extends AnnotationLiteral<Resource>
     }
 
     @Override
-    public Method[] methods() {
-        return new Method[0];
-    }
-
-    @Override
     public String name() {
-        return "";
+        return name;
     }
 
     @Override

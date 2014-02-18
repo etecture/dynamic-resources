@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE glassfish-web-app PUBLIC "-//GlassFish.org//DTD GlassFish Application Server 3.1 Servlet 3.0//EN" "http://glassfish.org/dtds/glassfish-web-app_3_0-1.dtd">
+<glassfish-web-app error-url="">
+  <context-root>test</context-root>
+  <security-role-mapping>
+    <role-name>de.etecture.libray.Editor</role-name>
+    <group-name>MyMEWA</group-name>
+    <group-name>MEWA_CRM_USERS</group-name>
+  </security-role-mapping>
+  <security-role-mapping>
+    <role-name>de.etecture.library.Admin</role-name>
+    <group-name>MEWA_CRM_USERS</group-name>
+  </security-role-mapping>
+  <security-role-mapping>
+    <role-name>de.etecture.library.Manager</role-name>
+    <group-name>MyMEWA</group-name>
+  </security-role-mapping>
+</glassfish-web-app>

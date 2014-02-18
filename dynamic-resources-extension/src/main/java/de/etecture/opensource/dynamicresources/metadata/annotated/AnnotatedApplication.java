@@ -43,6 +43,10 @@ import de.etecture.opensource.dynamicresources.metadata.AbstractApplication;
 import de.etecture.opensource.dynamicresources.metadata.Application;
 import java.lang.reflect.AnnotatedElement;
 import java.net.URISyntaxException;
+import java.util.Objects;
+import javax.enterprise.inject.Vetoed;
+import javax.servlet.HttpConstraintElement;
+import javax.servlet.ServletSecurityElement;
 
 /**
  * This is the default implementation of the {@link Application} metadata
@@ -52,11 +56,18 @@ import java.net.URISyntaxException;
  * @version
  * @since
  */
+@Vetoed
 public class AnnotatedApplication extends AbstractApplication implements
         Annotated<de.etecture.opensource.dynamicresources.annotations.Application> {
 
     private final de.etecture.opensource.dynamicresources.annotations.Application annotation;
     private final AnnotatedElement annotatedElement;
+
+    public AnnotatedApplication() {
+        super(null, null, null);
+        throw new IllegalStateException(
+                "AnnotatedApplication must not be instantiated as a bean automatically.");
+    }
 
     public AnnotatedApplication(AnnotatedElement annotatedElement,
             de.etecture.opensource.dynamicresources.annotations.Application annotation)
@@ -75,5 +86,36 @@ public class AnnotatedApplication extends AbstractApplication implements
     @Override
     public AnnotatedElement getAnnotatedElement() {
         return annotatedElement;
+    }
+
+    @Override
+    public ServletSecurityElement getApplicationSecurity() {
+        ServletSecurityElement security = new ServletSecurityElement(
+                new HttpConstraintElement(
+                annotation.transportGuarantee(), getDeclaredRoleNames().toArray(
+                new String[getDeclaredRoleNames().size()])));
+        return security;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 79 * hash + Objects.hashCode(this.annotation);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final AnnotatedApplication other = (AnnotatedApplication) obj;
+        if (!Objects.equals(this.annotation, other.annotation)) {
+            return false;
+        }
+        return true;
     }
 }
