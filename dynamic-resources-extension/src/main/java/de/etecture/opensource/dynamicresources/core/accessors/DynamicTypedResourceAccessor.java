@@ -42,15 +42,20 @@ package de.etecture.opensource.dynamicresources.core.accessors;
 import de.etecture.opensource.dynamicresources.api.ResourceException;
 import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.api.StatusCodes;
+import de.etecture.opensource.dynamicresources.api.accesspoints.AccessPoint;
 import de.etecture.opensource.dynamicresources.api.accesspoints.MethodAccessor;
 import de.etecture.opensource.dynamicresources.api.accesspoints.TypedResourceAccessor;
 import de.etecture.opensource.dynamicresources.metadata.Resource;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethod;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodNotFoundException;
-import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponse;
 import de.etecture.opensource.dynamicresources.metadata.ResponseTypeNotSupportedException;
+import de.etecture.opensource.dynamicresources.utils.MethodLiteral;
+import de.etecture.opensource.dynamicresources.utils.ResourceLiteral;
+import de.etecture.opensource.dynamicresources.utils.TypedLiteral;
 import java.util.HashMap;
 import java.util.Map;
+import javax.enterprise.inject.Instance;
+import javax.enterprise.util.TypeLiteral;
 import javax.inject.Inject;
 
 /**
@@ -59,19 +64,21 @@ import javax.inject.Inject;
  * @version
  * @since
  */
-public class DynamicTypedResourceAccessor<T> implements TypedResourceAccessor<T>,
-        DynamicAccessPoint<Resource> {
+public class DynamicTypedResourceAccessor<T> implements TypedResourceAccessor<T> {
 
     private final Map<String, String> pathParameters = new HashMap<>();
-    private Resource resource;
-    private Class<T> responseType;
+    private final Resource resource;
+    private final Class<T> responseType;
     @Inject
-    DynamicAccessPoints accessPoints;
+    Instance<AccessPoint> accessPoints;
 
-    @Override
-    public void init(Resource metadata, Object... args) {
+    DynamicTypedResourceAccessor() {
+        throw new IllegalStateException("why the heck wants to proxy this bean?");
+    }
+
+    public DynamicTypedResourceAccessor(Resource metadata, Class<T> type) {
         this.resource = metadata;
-        this.responseType = (Class<T>) args[0];
+        this.responseType = type;
     }
 
     @Override
@@ -89,10 +96,13 @@ public class DynamicTypedResourceAccessor<T> implements TypedResourceAccessor<T>
             Class<R> responseType) throws ResponseTypeNotSupportedException {
         // check the response type
         for (ResourceMethod method : resource.getMethods().values()) {
-            if (method.getResponses().containsKey(responseType)) {
-                return accessPoints.create(resource, responseType)
-                        .pathParams(pathParameters);
-            }
+            return accessPoints.select(
+                    new TypeLiteral<TypedResourceAccessor<R>>() {
+                private static final long serialVersionUID =
+                        1L;
+            }, new ResourceLiteral(resource), new TypedLiteral(responseType))
+                    .get().pathParams(
+                    pathParameters);
         }
         throw new ResponseTypeNotSupportedException(resource, responseType);
     }
@@ -120,8 +130,12 @@ public class DynamicTypedResourceAccessor<T> implements TypedResourceAccessor<T>
         } else {
             // check the type...
             if (method.getResponses().containsKey(responseType)) {
-                return accessPoints.create((ResourceMethodResponse<T>) method
-                        .getResponses().get(responseType), pathParameters);
+                return accessPoints.select(
+                        new TypeLiteral<MethodAccessor<T>>() {
+                    private static final long serialVersionUID = 1L;
+                }, new ResourceLiteral(method.getResource()),
+                        new MethodLiteral(method.getName()),
+                        new TypedLiteral(responseType)).get();
             } else {
                 throw new ResourceMethodNotFoundException(resource, methodName,
                         new ResponseTypeNotSupportedException(method,
@@ -169,5 +183,4 @@ public class DynamicTypedResourceAccessor<T> implements TypedResourceAccessor<T>
     public T post(Object requestBody) throws ResourceException {
         return method("POST").body(requestBody).invoke().getEntity();
     }
-
 }

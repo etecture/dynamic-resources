@@ -52,13 +52,19 @@ import de.etecture.opensource.dynamicresources.annotations.URI;
 import de.etecture.opensource.dynamicresources.api.RequestReader;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
 import de.etecture.opensource.dynamicresources.api.StatusCodes;
+import de.etecture.opensource.dynamicresources.api.accesspoints.AccessPoint;
 import de.etecture.opensource.dynamicresources.api.accesspoints.ApplicationAccessor;
 import de.etecture.opensource.dynamicresources.api.accesspoints.MethodAccessor;
 import de.etecture.opensource.dynamicresources.api.accesspoints.ResourceAccessor;
 import de.etecture.opensource.dynamicresources.api.accesspoints.TypedResourceAccessor;
 import de.etecture.opensource.dynamicresources.core.accessors.DynamicApplicationAccessor;
+import de.etecture.opensource.dynamicresources.core.accessors.DynamicApplicationAccessorCreator;
+import de.etecture.opensource.dynamicresources.core.accessors.DynamicMethodAccessor;
+import de.etecture.opensource.dynamicresources.core.accessors.DynamicMethodAccessorCreator;
 import de.etecture.opensource.dynamicresources.core.accessors.DynamicResourceAccessor;
+import de.etecture.opensource.dynamicresources.core.accessors.DynamicResourceAccessorCreator;
 import de.etecture.opensource.dynamicresources.core.accessors.DynamicTypedResourceAccessor;
+import de.etecture.opensource.dynamicresources.core.accessors.DynamicTypedResourceAccessorCreator;
 import de.etecture.opensource.dynamicresources.core.executors.ExecutionMethod;
 import de.etecture.opensource.dynamicresources.core.executors.ExecutionMethodResourceMethodExecutorCreator;
 import de.etecture.opensource.dynamicresources.core.executors.QueryResourceMethodExecutorCreator;
@@ -69,6 +75,7 @@ import de.etecture.opensource.dynamicresources.metadata.BasicResourceMethod;
 import de.etecture.opensource.dynamicresources.metadata.BasicResourceMethodRequest;
 import de.etecture.opensource.dynamicresources.metadata.BasicResourceMethodResponse;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethod;
+import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponse;
 import de.etecture.opensource.dynamicresources.metadata.ResourceNotFoundException;
 import de.etecture.opensource.dynamicresources.metadata.annotated.AnnotatedApplication;
 import de.etecture.opensource.dynamicresources.metadata.annotated.AnnotatedResource;
@@ -76,15 +83,17 @@ import de.etecture.opensource.dynamicresources.metadata.annotated.AnnotatedResou
 import de.etecture.opensource.dynamicresources.utils.AnnotatedTypeDelegate;
 import de.etecture.opensource.dynamicresources.utils.ApplicationLiteral;
 import de.etecture.opensource.dynamicresources.utils.BeanBuilder;
+import de.etecture.opensource.dynamicresources.utils.BeanCreator;
 import de.etecture.opensource.dynamicresources.utils.ConsumesLiteral;
 import de.etecture.opensource.dynamicresources.utils.MethodLiteral;
 import de.etecture.opensource.dynamicresources.utils.ProducesLiteral;
-import de.etecture.opensource.dynamicresources.utils.ReflectionBeanCreator;
 import de.etecture.opensource.dynamicresources.utils.ResourceLiteral;
+import de.etecture.opensource.dynamicresources.utils.TypedLiteral;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -95,10 +104,8 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
-import javax.enterprise.inject.spi.Annotated;
 import javax.enterprise.inject.spi.AnnotatedMethod;
 import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.Bean;
@@ -106,9 +113,7 @@ import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.DefinitionException;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.InjectionPoint;
-import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
-import javax.enterprise.inject.spi.ProcessInjectionPoint;
 import javax.inject.Named;
 import org.apache.commons.lang.StringUtils;
 
@@ -135,40 +140,6 @@ public class ResourceMetadataScanner implements Extension {
     private Map<Class<?>, Set<String>> producedMimeTypes = new HashMap<>();
     private Set<ExecutionMethod<?>> executionMethods = new HashSet<>();
     private Set<ResourceMethod> resourceMethodsWithExecution = new HashSet<>();
-    private Set<InjectionPoint> resourceAccessorIPs = new HashSet<>();
-    private Set<InjectionPoint> typedResourceAccessorIPs = new HashSet<>();
-    private Set<InjectionPoint> applicationAccessorIPs = new HashSet<>();
-    private Set<InjectionPoint> methodAccessorIPs = new HashSet<>();
-
-    <T, X> void scanForAccessorsInjectionPoints(
-            @Observes ProcessInjectionPoint<T, X> pip) {
-        final InjectionPoint ip = pip.getInjectionPoint();
-        final Annotated at = ip.getAnnotated();
-        if (ip.getType() instanceof ParameterizedType) {
-            ParameterizedType pt = (ParameterizedType) ip.getType();
-            if (pt.getRawType() == TypedResourceAccessor.class) {
-                LOG.log(Level.INFO,
-                        "found TypedResourceAccessor with response-type: {0} to be injected into: {1}",
-                        new Object[]{pt.getActualTypeArguments()[0],
-                    ip});
-                this.typedResourceAccessorIPs.add(ip);
-            } else if (pt.getRawType() == MethodAccessor.class) {
-                LOG.log(Level.INFO,
-                        "found MethodAccessor with response-type: {0} to be injected into: {1}",
-                        new Object[]{pt.getActualTypeArguments()[0],
-                    ip});
-                this.methodAccessorIPs.add(ip);
-            }
-        } else if (ip.getType() == ApplicationAccessor.class) {
-            LOG.log(Level.INFO,
-                    "found ApplicationAccessor to be injected into: {0}", ip);
-            this.applicationAccessorIPs.add(ip);
-        } else if (ip.getType() == ResourceAccessor.class) {
-            LOG.log(Level.INFO,
-                    "found ResourceAccessor to be injected into: {0}", ip);
-            this.resourceAccessorIPs.add(ip);
-        }
-    }
 
     /**
      * scans for any type that is annotated with &#64;{@link Application}
@@ -262,7 +233,7 @@ public class ResourceMetadataScanner implements Extension {
                         "text/plain");
                 final Consumes consumes = new ConsumesLiteral(
                         responsibleTypeForRequestReader, new String[]{
-                    "text/plain"}, 0);
+                    "text/plain"});
                 // delegate the new @Consumes
                 pat.setAnnotatedType(new AnnotatedTypeDelegate<T>(at) {
                     @Override
@@ -310,7 +281,7 @@ public class ResourceMetadataScanner implements Extension {
         if (ResponseWriter.class.isAssignableFrom(at.getJavaClass())) {
 
             // look if @Consumes is present ...
-            if (!at.isAnnotationPresent(Consumes.class)) {
+            if (!at.isAnnotationPresent(Produces.class)) {
                 // lookup the class from the generics.
                 Class<?> responsibleTypeForResponseWriter =
                         findTypeForResponseWriter(
@@ -324,7 +295,7 @@ public class ResourceMetadataScanner implements Extension {
                         "text/plain");
                 final Produces produces = new ProducesLiteral(
                         responsibleTypeForResponseWriter, new String[]{
-                    "text/plain"}, 0);
+                    "text/plain"});
                 // delegate the new @Produces
                 pat.setAnnotatedType(new AnnotatedTypeDelegate<T>(at) {
                     @Override
@@ -463,8 +434,13 @@ public class ResourceMetadataScanner implements Extension {
         // now build a query executor for each annotated resource method, that does not have an executor.
         for (de.etecture.opensource.dynamicresources.metadata.Application application
                 : applications) {
+            // create ApplicationAccessorBean for this application
+            abd.addBean(createAccessPointBean(beanManager, application));
             for (de.etecture.opensource.dynamicresources.metadata.Resource resource
                     : application.getResources().values()) {
+                // create ResourceAccessorBean for this resource
+                abd.addBean(createAccessPointBean(beanManager, resource));
+                Set<Class<?>> supportedResponseTypes = new HashSet<>();
                 for (ResourceMethod method : resource.getMethods().values()) {
                     if (!resourceMethodsWithExecution.contains(method)
                             && method instanceof AnnotatedResourceMethod) {
@@ -478,155 +454,142 @@ public class ResourceMetadataScanner implements Extension {
                                 createResourceMethodExecutorBean(beanManager,
                                 (AnnotatedResourceMethod) method));
                     }
+                    for (ResourceMethodResponse<?> response : method
+                            .getResponses().values()) {
+                        supportedResponseTypes.add(response.getResponseType());
+                        abd.addBean(createAccessPointBean(beanManager,
+                                response));
+                    }
+                }
+                for (Class<?> responseType : supportedResponseTypes) {
+                    // create a TypedResourceAccessorBean for this resource and this response type
+                    abd.addBean(createAccessPointBean(beanManager,
+                            resource, responseType));
                 }
             }
         }
-
-        // for each Application Accessor injection point
-        for (InjectionPoint ip : applicationAccessorIPs) {
-            // find the application
-            de.etecture.opensource.dynamicresources.metadata.Application application;
-            if (ip.getAnnotated().isAnnotationPresent(Application.class)) {
-                // get the @Application
-                application = findApplicationByName(ip.getAnnotated()
-                        .getAnnotation(Application.class).name(), applications);
-            } else if (ip.getAnnotated().isAnnotationPresent(URI.class)) {
-                application = findApplicationByURI(ip.getAnnotated()
-                        .getAnnotation(URI.class).value(), applications);
-            } else if (ip.getAnnotated().isAnnotationPresent(Named.class)) {
-                application = findApplicationByName(ip.getAnnotated()
-                        .getAnnotation(Named.class).value(), applications);
-            } else if (applications.size() == 1) {
-                application = applications.iterator().next();
-            } else {
-                throw new DefinitionException(
-                        "Ambigiuous applications found for " + ip);
-            }
-            // create the Application Accessor Bean and add it
-            abd.addBean(createApplicationAccessorBean(beanManager, application,
-                    ip));
-        }
-
-        // for each Resource Accessor injection point
-        for (InjectionPoint ip : resourceAccessorIPs) {
-            de.etecture.opensource.dynamicresources.metadata.Resource resource =
-                    findResourceWithinApplicationsForInjectionPoint(ip,
-                    applications);
-            // create the Typed Resource Accessor Bean and add it
-            abd.addBean(createResourceAccessorBean(beanManager, resource,
-                    ip));
-        }
-
-        // for each Typed Resource Accessor injection point
-        for (InjectionPoint ip : typedResourceAccessorIPs) {
-            // get the type of the response
-            Class<?> type;
-            if (ip.getType() instanceof ParameterizedType) {
-                type = (Class<?>) ((ParameterizedType) ip.getType())
-                        .getActualTypeArguments()[0];
-            } else {
-                type = Object.class;
-            }
-            de.etecture.opensource.dynamicresources.metadata.Resource resource =
-                    findResourceWithinApplicationsForInjectionPoint(ip,
-                    applications);
-            // create the Typed Resource Accessor Bean and add it
-            abd.addBean(createTypedResourceAccessorBean(beanManager, resource,
-                    type,
-                    ip));
-        }
-
     }
 
-    private Bean<ApplicationAccessor> createApplicationAccessorBean(
-            BeanManager beanManager,
-            final de.etecture.opensource.dynamicresources.metadata.Application application,
-            InjectionPoint ip) {
+    Bean<ApplicationAccessor> createAccessPointBean(BeanManager beanManager,
+            de.etecture.opensource.dynamicresources.metadata.Application application) {
         LOG.log(Level.INFO,
-                "build Application-Accessor for application with name: {0} and base: {1} for: {2}",
-                new Object[]{application.getName(),
-            application.getBase(),
-            ip});
-        return BeanBuilder.forClass(beanManager, ApplicationAccessor.class)
-                .withName(application.getName() + "AccessorFor" + ip
-                .getAnnotated())
-                .withQualifier(ip.getQualifiers())
-                .withAny()
-                .applicationScoped()
-                .createdBy(new ReflectionBeanCreator() {
-            @Override
-            protected <T> T produce(
-                    BeanManager beanManager,
-                    InjectionTarget<T> it,
-                    CreationalContext<T> creationalContext) {
-                return (T) DynamicApplicationAccessor.create(beanManager,
-                        application);
-            }
-        }).build();
+                "create accesspoint: @Application(name = \"{0}\") ApplicationAccessor",
+                application.getName());
+        return createAccessPointBean(
+                beanManager,
+                ApplicationAccessor.class,
+                DynamicApplicationAccessor.class,
+                Collections.<Annotation>singleton(new ApplicationLiteral(
+                application)),
+                "" + application.hashCode(),
+                new DynamicApplicationAccessorCreator(application));
     }
 
-    private Bean<ResourceAccessor> createResourceAccessorBean(
-            BeanManager beanManager,
-            final de.etecture.opensource.dynamicresources.metadata.Resource resource,
-            InjectionPoint ip) {
+    Bean<ResourceAccessor> createAccessPointBean(BeanManager beanManager,
+            de.etecture.opensource.dynamicresources.metadata.Resource resource) {
         LOG.log(Level.INFO,
-                "build Resource-Accessor for resource with name: {0} and path: {1} in application: {2} for: {3}",
+                "create accesspoint: @Resource(name = \"{0}\") ResourceAccessor",
+                resource.getName());
+        return createAccessPointBean(
+                beanManager,
+                ResourceAccessor.class,
+                DynamicResourceAccessor.class,
+                Collections.<Annotation>singleton(new ResourceLiteral(resource)),
+                "" + resource.hashCode(),
+                new DynamicResourceAccessorCreator(resource));
+    }
+
+    <T> Bean<TypedResourceAccessor<T>> createAccessPointBean(
+            BeanManager beanManager,
+            de.etecture.opensource.dynamicresources.metadata.Resource resource,
+            Class<T> type) {
+        LOG.log(Level.INFO,
+                "create accesspoint: @Resource(name = \"{0}\") TypedResourceAccessor<{1}>",
                 new Object[]{resource.getName(),
-            resource.getPath().toString(),
-            resource.getApplication().getName(),
-            ip});
-        return BeanBuilder.forClass(beanManager, ResourceAccessor.class)
-                .withName(resource.getName() + "AccessorFor" + ip.getAnnotated())
-                .withQualifier(ip.getQualifiers())
-                .withAny()
-                .applicationScoped()
-                .createdBy(new ReflectionBeanCreator() {
-            @Override
-            protected <T> T produce(
-                    BeanManager beanManager,
-                    InjectionTarget<T> it,
-                    CreationalContext<T> creationalContext) {
-                return (T) DynamicResourceAccessor.create(beanManager,
-                        resource);
-            }
-        }).build();
+            type.getSimpleName()});
+        Set<Annotation> qualifier = new HashSet<>();
+        qualifier.add(new ResourceLiteral(resource));
+        qualifier.add(new TypedLiteral(type));
+        return createAccessPointBean(
+                beanManager,
+                TypedResourceAccessor.class,
+                DynamicTypedResourceAccessor.class,
+                qualifier,
+                "" + resource.hashCode() + "" + type.getSimpleName(),
+                new DynamicTypedResourceAccessorCreator(resource, type),
+                buildType(TypedResourceAccessor.class, type));
     }
 
-    private Bean<TypedResourceAccessor> createTypedResourceAccessorBean(
+    private Type buildType(final Class<?> rawType, final Class<?>... args) {
+        return new ParameterizedType() {
+            @Override
+            public Type[] getActualTypeArguments() {
+                return args;
+            }
+
+            @Override
+            public Type getRawType() {
+                return rawType;
+            }
+
+            @Override
+            public Type getOwnerType() {
+                return null;
+            }
+        };
+    }
+
+    <T> Bean<MethodAccessor<T>> createAccessPointBean(
             BeanManager beanManager,
-            final de.etecture.opensource.dynamicresources.metadata.Resource resource,
-            final Class<?> responseType,
-            InjectionPoint ip) {
+            ResourceMethodResponse<T> response) {
         LOG.log(Level.INFO,
-                "build TypedResource-Accessor for resource with name: {0} and path: {1} in application: {2} for response-type: {3} for: {4}",
-                new Object[]{resource.getName(),
-            resource.getPath().toString(),
-            resource.getApplication().getName(),
-            responseType.getName(),
-            ip});
-        return BeanBuilder.forClass(beanManager, TypedResourceAccessor.class)
-                .withName(resource.getName() + "AccessorFor" + responseType
-                .getSimpleName() + "And" + ip.getAnnotated())
-                .withQualifier(ip.getQualifiers())
-                .withTypes(ip.getType())
+                "create accesspoint: @Resource(name = \"{0}\") @Method(name = \"{2}\") MethodAccessor<{1}>",
+                new Object[]{response.getMethod().getResource().getName(),
+            response.getResponseType().getSimpleName(),
+            response.getMethod().getName()});
+        Set<Annotation> qualifier = new HashSet<>();
+        qualifier.add(new ResourceLiteral(response.getMethod().getResource()));
+        qualifier.add(new MethodLiteral(response.getMethod().getName()));
+        qualifier.add(new TypedLiteral(response.getResponseType()));
+        return createAccessPointBean(
+                beanManager,
+                MethodAccessor.class,
+                DynamicMethodAccessor.class,
+                qualifier,
+                "" + response.hashCode(),
+                new DynamicMethodAccessorCreator(response),
+                buildType(MethodAccessor.class, response.getResponseType()));
+    }
+
+    private <M, A extends AccessPoint<M>> Bean<A> createAccessPointBean(
+            BeanManager beanManager,
+            Class<A> type,
+            Class<? extends A> concreteType,
+            Set<Annotation> qualifier,
+            String prefix,
+            BeanCreator creator, Type... types) {
+        BeanBuilder<A> builder =
+                BeanBuilder.forClass(beanManager, type)
+                .withName(concreteType.getSimpleName() + "For" + prefix);
+        if (types.length > 0) {
+            builder = builder.withTypes(types);
+        }
+        return builder
+                .withQualifier(qualifier)
+                .withDefault()
                 .withAny()
                 .applicationScoped()
-                .createdBy(new ReflectionBeanCreator() {
-            @Override
-            protected <T> T produce(
-                    BeanManager beanManager,
-                    InjectionTarget<T> it,
-                    CreationalContext<T> creationalContext) {
-                return (T) DynamicTypedResourceAccessor.create(beanManager,
-                        responseType,
-                        resource);
-            }
-        }).build();
+                .createdBy(creator)
+                .build();
     }
 
     Bean<ResourceMethodExecutor> createResourceMethodExecutorBean(
             BeanManager beanManager, ResourceMethod resourceMethod,
             final ExecutionMethod<?> executionMethod) {
+        LOG.info(String.format(
+                "create Bean: @Application(name = \"%s\") @Resource(name = \"%s\") @Method(name = \"%s\") ExecutionMethodResourceMethodExecutor",
+                resourceMethod.getResource().getApplication().getName(),
+                resourceMethod.getResource().getName(), resourceMethod.getName()));
         return BeanBuilder.forClass(beanManager, ResourceMethodExecutor.class)
                 .withName(createResourceMethodExecutorName(resourceMethod))
                 .withQualifier(new ApplicationLiteral(resourceMethod
@@ -634,6 +597,7 @@ public class ResourceMetadataScanner implements Extension {
                 .withQualifier(new ResourceLiteral(resourceMethod.getResource()))
                 .withQualifier(new MethodLiteral(resourceMethod.getName()))
                 .withAny()
+                .withDefault()
                 .applicationScoped()
                 .createdBy(new ExecutionMethodResourceMethodExecutorCreator(
                 executionMethod))
@@ -643,6 +607,10 @@ public class ResourceMetadataScanner implements Extension {
     Bean<ResourceMethodExecutor> createResourceMethodExecutorBean(
             BeanManager beanManager,
             final AnnotatedResourceMethod resourceMethod) {
+        LOG.info(String.format(
+                "create Bean: @Application(name = \"%s\") @Resource(name = \"%s\") @Method(name = \"%s\") QueryResourceMethodExecutor",
+                resourceMethod.getResource().getApplication().getName(),
+                resourceMethod.getResource().getName(), resourceMethod.getName()));
         Method annotation = resourceMethod.getAnnotation();
         QueryDefinition queryDefinition;
         if (annotation.query().length > 0) {
@@ -669,6 +637,7 @@ public class ResourceMetadataScanner implements Extension {
                 .withQualifier(new ResourceLiteral(resourceMethod.getResource()))
                 .withQualifier(new MethodLiteral(resourceMethod.getName()))
                 .withAny()
+                .withDefault()
                 .applicationScoped()
                 .createdBy(new QueryResourceMethodExecutorCreator(
                 queryDefinition))
@@ -693,8 +662,8 @@ public class ResourceMetadataScanner implements Extension {
                 resource, resource.getName())
                 .withDefault()
                 .withAny()
-                .withQualifier(new ApplicationLiteral(resource
-                .getApplication().getName(), resource.getApplication().getBase()))
+                .withQualifier(new ApplicationLiteral(resource.getApplication()
+                .getName()))
                 .applicationScoped()
                 .build();
     }
@@ -972,6 +941,8 @@ public class ResourceMetadataScanner implements Extension {
             response.addSupportedResponseMediaType(new MediaTypeExpression(
                     producedMime));
         }
+        resourceMethod.addResponse(response);
+
         // create a new response defintion
         BasicResourceMethodRequest request = new BasicResourceMethodRequest(
                 resourceMethod, executes.requestType());
@@ -980,6 +951,8 @@ public class ResourceMetadataScanner implements Extension {
             request.addAcceptedRequestMediaType(new MediaTypeExpression(
                     consumedMime));
         }
+        resourceMethod.addRequest(request);
+
         // add the executes.
         ((AbstractResource) resource).addMethod(resourceMethod);
     }

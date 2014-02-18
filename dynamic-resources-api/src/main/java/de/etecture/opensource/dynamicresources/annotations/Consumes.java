@@ -65,6 +65,4 @@ public @interface Consumes {
     @Nonbinding
     String[] mimeType() default {};
 
-    @Nonbinding
-    int priority() default 0;
 }

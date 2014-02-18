@@ -53,29 +53,24 @@ public class ProducesLiteral extends AnnotationLiteral<Produces> implements
     private static final long serialVersionUID = 1L;
     private final String[] mimeTypes;
     private final Class contentType;
-    private final int priority;
 
     public ProducesLiteral(Class contentType) {
         this.contentType = contentType;
         this.mimeTypes = new String[]{"text/plain"};
-        this.priority = 0;
     }
 
     public ProducesLiteral(Object object) {
         this.contentType = object.getClass();
         this.mimeTypes = new String[]{"text/plain"};
-        this.priority = 0;
     }
 
     public ProducesLiteral(Produces produces) {
-        this(produces.contentType(), produces.mimeType(),
-                produces.priority());
+        this(produces.contentType(), produces.mimeType());
     }
 
-    public ProducesLiteral(Class contentType, String[] mimeTypes, int priority) {
+    public ProducesLiteral(Class contentType, String[] mimeTypes) {
         this.contentType = contentType;
         this.mimeTypes = mimeTypes;
-        this.priority = priority;
     }
 
     @Override
@@ -88,8 +83,4 @@ public class ProducesLiteral extends AnnotationLiteral<Produces> implements
         return contentType;
     }
 
-    @Override
-    public int priority() {
-        return priority;
-    }
 }

@@ -37,13 +37,12 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+package de.etecture.opensource.dynamicresources.core.accessors;
 
-package de.etecture.opensource.dynamicresources.core.executors;
-
+import de.etecture.opensource.dynamicresources.metadata.Resource;
 import de.etecture.opensource.dynamicresources.utils.BeanCreator;
 import de.etecture.opensource.dynamicresources.utils.BeanInstanceBuilder;
 import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.inject.CreationException;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 
@@ -53,29 +52,23 @@ import javax.enterprise.inject.spi.BeanManager;
  * @version
  * @since
  */
-public class ExecutionMethodResourceMethodExecutorCreator implements BeanCreator {
-    private final ExecutionMethod<?> executionMethod;
+public class DynamicResourceAccessorCreator implements BeanCreator {
 
-    public ExecutionMethodResourceMethodExecutorCreator(
-            ExecutionMethod<?> executionMethod) {
-        this.executionMethod = executionMethod;
+    private final Resource metadata;
+
+    public DynamicResourceAccessorCreator(Resource metadata) {
+        this.metadata = metadata;
     }
 
     @Override
     public <T> T create(BeanManager beanManager,
             Bean<T> bean,
             CreationalContext<T> creationalContext) {
-        try {
-            return (T) BeanInstanceBuilder.forBeanType(
-                    ExecutionMethodResourceMethodExecutor.class,
-                    beanManager)
-                    .usingConstructor(ExecutionMethod.class)
-                    .usingCreationalContext(
-                    (CreationalContext<ExecutionMethodResourceMethodExecutor>) creationalContext)
-                    .build(executionMethod);
-        } catch (NoSuchMethodException ex) {
-            throw new CreationException(ex);
-        }
+        return (T) BeanInstanceBuilder.forBeanType(
+                DynamicResourceAccessor.class,
+                beanManager)
+                .usingCreationalContext(
+                (CreationalContext<DynamicResourceAccessor>) creationalContext)
+                .build(metadata);
     }
-
 }

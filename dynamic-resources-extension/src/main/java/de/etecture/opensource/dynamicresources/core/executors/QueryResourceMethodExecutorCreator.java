@@ -37,7 +37,6 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
 package de.etecture.opensource.dynamicresources.core.executors;
 
 import de.etecture.opensource.dynamicrepositories.metadata.QueryDefinition;
@@ -69,11 +68,13 @@ public class QueryResourceMethodExecutorCreator implements BeanCreator {
         try {
             return (T) BeanInstanceBuilder.forBeanType(
                     QueryResourceMethodExecutor.class,
-                    beanManager).usingConstructor(QueryDefinition.class).
-                    build(queryDefinition);
+                    beanManager)
+                    .usingConstructor(QueryDefinition.class)
+                    .usingCreationalContext(
+                    (CreationalContext<QueryResourceMethodExecutor>) creationalContext)
+                    .build(queryDefinition);
         } catch (NoSuchMethodException ex) {
             throw new CreationException(ex);
         }
     }
-
 }

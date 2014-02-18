@@ -38,14 +38,10 @@
  *
  */
 
-package de.etecture.opensource.dynamicresources.core.executors;
+package de.etecture.opensource.dynamicresources.utils;
 
-import de.etecture.opensource.dynamicresources.utils.BeanCreator;
-import de.etecture.opensource.dynamicresources.utils.BeanInstanceBuilder;
-import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.inject.CreationException;
-import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.BeanManager;
+import de.etecture.opensource.dynamicresources.annotations.Typed;
+import javax.enterprise.util.AnnotationLiteral;
 
 /**
  *
@@ -53,29 +49,19 @@ import javax.enterprise.inject.spi.BeanManager;
  * @version
  * @since
  */
-public class ExecutionMethodResourceMethodExecutorCreator implements BeanCreator {
-    private final ExecutionMethod<?> executionMethod;
+@SuppressWarnings("AnnotationAsSuperInterface")
+public class TypedLiteral extends AnnotationLiteral<Typed> implements Typed {
 
-    public ExecutionMethodResourceMethodExecutorCreator(
-            ExecutionMethod<?> executionMethod) {
-        this.executionMethod = executionMethod;
+    private static final long serialVersionUID = 1L;
+    private final Class<?> type;
+
+    public TypedLiteral(
+            Class<?> type) {
+        this.type = type;
     }
 
     @Override
-    public <T> T create(BeanManager beanManager,
-            Bean<T> bean,
-            CreationalContext<T> creationalContext) {
-        try {
-            return (T) BeanInstanceBuilder.forBeanType(
-                    ExecutionMethodResourceMethodExecutor.class,
-                    beanManager)
-                    .usingConstructor(ExecutionMethod.class)
-                    .usingCreationalContext(
-                    (CreationalContext<ExecutionMethodResourceMethodExecutor>) creationalContext)
-                    .build(executionMethod);
-        } catch (NoSuchMethodException ex) {
-            throw new CreationException(ex);
-        }
+    public Class<?> value() {
+        return type;
     }
-
 }

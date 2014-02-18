@@ -58,60 +58,57 @@ import org.apache.commons.lang.StringUtils;
  * @version
  * @since
  */
-public enum ResourceDescriptionWriter implements ResponseWriter<Resource> {
+@Produces(contentType = Resource.class,
+          mimeType = "text/plain")
+public class ResourceDescriptionWriter implements ResponseWriter<Resource> {
 
-    @Produces(contentType = Resource.class,
-              mimeType = "text/plain",
-              priority = Integer.MAX_VALUE - 2)
-    TO_STRING {
-        @Override
-        public int getContentLength(Resource entity, MediaType acceptedMediaType) {
-            return -1;
+    @Override
+    public int getContentLength(Resource entity, MediaType acceptedMediaType) {
+        return -1;
+    }
+
+    @Override
+    public void processElement(Resource rd, Writer w,
+            MediaType mimetype) throws IOException {
+        final PrintWriter writer = new PrintWriter(w);
+        writer.printf("Resource: %s%n", rd.getName());
+        writer.println(StringUtils.repeat("=", rd.getName()
+                .length() + 10));
+        writer.println();
+
+        if (StringUtils.isBlank(rd.getDescription())) {
+            writer.printf("\t%s%n", rd.getDescription());
         }
 
-        @Override
-        public void processElement(Resource rd, Writer w,
-                MediaType mimetype) throws IOException {
-            final PrintWriter writer = new PrintWriter(w);
-            writer.printf("Resource: %s%n", rd.getName());
-            writer.println(StringUtils.repeat("=", rd.getName()
-                    .length() + 10));
-            writer.println();
+        writer.println("Available Methods");
+        writer.println("-----------------");
+        writer.println();
 
-            if (StringUtils.isBlank(rd.getDescription())) {
-                writer.printf("\t%s%n", rd.getDescription());
-            }
-
-            writer.println("Available Methods");
-            writer.println("-----------------");
-            writer.println();
-
-            for (ResourceMethod rdm : rd.getMethods().values()) {
-                writer
-                        .printf("\t%s: %s%n", rdm.getName(), rdm
+        for (ResourceMethod rdm : rd.getMethods().values()) {
+            writer
+                    .printf("\t%s: %s%n", rdm.getName(), rdm
+                    .getDescription());
+            writer.println("\t\tFilters:");
+            for (ResourceMethodFilter rdmf : rdm.getFilters()) {
+                writer.printf("\t\t\t- %s: %s%n", rdmf.getName(),
+                        rdmf
                         .getDescription());
-                writer.println("\t\tFilters:");
-                for (ResourceMethodFilter rdmf : rdm.getFilters()) {
-                    writer.printf("\t\t\t- %s: %s%n", rdmf.getName(),
-                            rdmf
-                            .getDescription());
+            }
+            writer.println("\t\tConsumes:");
+            for (ResourceMethodRequest<?> rdmr : rdm.getRequests().values()) {
+                for (MediaType mediatype : rdmr
+                        .getAcceptedRequestMediaTypes()) {
+                    writer.printf("\t\t\t- %s%n", mediatype);
                 }
-                writer.println("\t\tConsumes:");
-                for (ResourceMethodRequest<?> rdmr : rdm.getRequests().values()) {
-                    for (MediaType mediatype : rdmr
-                            .getAcceptedRequestMediaTypes()) {
-                        writer.printf("\t\t\t- %s%n", mediatype);
-                    }
-                }
-                writer.println("\t\tProduces:");
-                for (ResourceMethodResponse<?> rdmrr : rdm.getResponses()
-                        .values()) {
-                    for (MediaType mediatype : rdmrr
-                            .getSupportedResponseMediaTypes()) {
-                        writer.printf("\t\t\t- %s%n", mediatype);
-                    }
+            }
+            writer.println("\t\tProduces:");
+            for (ResourceMethodResponse<?> rdmrr : rdm.getResponses()
+                    .values()) {
+                for (MediaType mediatype : rdmrr
+                        .getSupportedResponseMediaTypes()) {
+                    writer.printf("\t\t\t- %s%n", mediatype);
                 }
             }
         }
-    };
+    }
 }

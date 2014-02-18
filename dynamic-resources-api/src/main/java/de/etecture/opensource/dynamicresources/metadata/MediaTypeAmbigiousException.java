@@ -55,6 +55,12 @@ public class MediaTypeAmbigiousException extends ResourceException {
     private final ResourceMethod resourceMethod;
     private final MediaType mediaType;
 
+    public MediaTypeAmbigiousException(MediaType mediaType) {
+        super("The mediaType: " + mediaType + " is not unique");
+        this.resourceMethod = null;
+        this.mediaType = mediaType;
+    }
+
     public MediaTypeAmbigiousException(ResourceMethod resourceMethod,
             MediaType mediaType) {
         super("The mediaType: " + mediaType

@@ -60,6 +60,10 @@ public class QueryResourceMethodExecutor extends AbstractResourceMethodExecutor 
     Converters converters;
     private final QueryDefinition query;
 
+    QueryResourceMethodExecutor() {
+        throw new IllegalStateException("do not create directly!");
+    }
+
     public QueryResourceMethodExecutor(QueryDefinition query) {
         this.query = query;
     }

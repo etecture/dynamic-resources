@@ -65,6 +65,4 @@ public @interface Produces {
     @Nonbinding
     String[] mimeType() default {};
 
-    @Nonbinding
-    int priority() default 0;
 }

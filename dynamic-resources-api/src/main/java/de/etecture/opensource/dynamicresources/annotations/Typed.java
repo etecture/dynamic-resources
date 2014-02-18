@@ -37,15 +37,16 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+package de.etecture.opensource.dynamicresources.annotations;
 
-package de.etecture.opensource.dynamicresources.core.executors;
-
-import de.etecture.opensource.dynamicresources.utils.BeanCreator;
-import de.etecture.opensource.dynamicresources.utils.BeanInstanceBuilder;
-import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.inject.CreationException;
-import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.BeanManager;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.ElementType.TYPE;
+import java.lang.annotation.Retention;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.lang.annotation.Target;
+import javax.inject.Qualifier;
 
 /**
  *
@@ -53,29 +54,13 @@ import javax.enterprise.inject.spi.BeanManager;
  * @version
  * @since
  */
-public class ExecutionMethodResourceMethodExecutorCreator implements BeanCreator {
-    private final ExecutionMethod<?> executionMethod;
+@Qualifier
+@Retention(RUNTIME)
+@Target({METHOD,
+    FIELD,
+    PARAMETER,
+    TYPE})
+public @interface Typed {
 
-    public ExecutionMethodResourceMethodExecutorCreator(
-            ExecutionMethod<?> executionMethod) {
-        this.executionMethod = executionMethod;
-    }
-
-    @Override
-    public <T> T create(BeanManager beanManager,
-            Bean<T> bean,
-            CreationalContext<T> creationalContext) {
-        try {
-            return (T) BeanInstanceBuilder.forBeanType(
-                    ExecutionMethodResourceMethodExecutor.class,
-                    beanManager)
-                    .usingConstructor(ExecutionMethod.class)
-                    .usingCreationalContext(
-                    (CreationalContext<ExecutionMethodResourceMethodExecutor>) creationalContext)
-                    .build(executionMethod);
-        } catch (NoSuchMethodException ex) {
-            throw new CreationException(ex);
-        }
-    }
-
+    Class<?> value();
 }

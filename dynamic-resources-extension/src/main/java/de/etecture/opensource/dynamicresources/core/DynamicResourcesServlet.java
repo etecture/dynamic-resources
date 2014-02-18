@@ -40,17 +40,15 @@
 package de.etecture.opensource.dynamicresources.core;
 
 import de.etecture.opensource.dynamicresources.api.MediaType;
-import de.etecture.opensource.dynamicresources.api.RequestReader;
 import de.etecture.opensource.dynamicresources.api.ResourceException;
 import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.api.ResponseException;
-import de.etecture.opensource.dynamicresources.api.ResponseWriter;
 import de.etecture.opensource.dynamicresources.api.StatusCodes;
 import de.etecture.opensource.dynamicresources.api.accesspoints.ApplicationAccessor;
 import de.etecture.opensource.dynamicresources.api.accesspoints.Applications;
 import de.etecture.opensource.dynamicresources.api.accesspoints.MethodAccessor;
-import de.etecture.opensource.dynamicresources.core.mapping.RequestReaderResolver;
-import de.etecture.opensource.dynamicresources.core.mapping.ResponseWriterResolver;
+import de.etecture.opensource.dynamicresources.core.mapping.RequestReaders;
+import de.etecture.opensource.dynamicresources.core.mapping.ResponseWriters;
 import de.etecture.opensource.dynamicresources.core.mapping.mime.MediaTypeExpression;
 import de.etecture.opensource.dynamicresources.metadata.ApplicationNotFoundException;
 import de.etecture.opensource.dynamicresources.metadata.MediaTypeNotAllowedException;
@@ -93,12 +91,12 @@ public class DynamicResourcesServlet extends HttpServlet {
      * resolves a writer for a given type, mediatype and version.
      */
     @Inject
-    ResponseWriterResolver responseWriters;
+    ResponseWriters responseWriters;
     /**
      * resolves a reader for a given type, mediatype and version.
      */
     @Inject
-    RequestReaderResolver requestReaders;
+    RequestReaders requestReaders;
     /**
      * these are all the applications found by scanning.
      */
@@ -221,12 +219,9 @@ public class DynamicResourcesServlet extends HttpServlet {
         log(String.format("read request with type: %s and mimes: %s",
                 requestMeta.getRequestType().getSimpleName(), contentType));
         // read the request body
-        final RequestReader requestReader =
-                requestReaders
-                .resolve(requestMeta.getRequestType(), contentType);
-        responses = responses
-                .body(requestReader.processRequest(
-                req.getReader(), contentType.toString()));
+        Object body = requestReaders
+                .read(requestMeta.getRequestType(), contentType, req.getReader());
+        responses = responses.body(body);
 
         // invoke the resource method
         log(String.format("invoke the resource: %s with method: %S",
@@ -258,19 +253,16 @@ public class DynamicResourcesServlet extends HttpServlet {
         if (entity != null) {
             log(String.format("write response with type: %s and mimes: %s",
                     entity.getClass().getSimpleName(), acceptedType));
-            final ResponseWriter responseWriter =
-                    responseWriters.resolve(entity.getClass(), acceptedType);
-            resp.setContentLength(responseWriter.getContentLength(entity,
+            resp.setContentLength(responseWriters.getContentLength(entity,
                     acceptedType));
-            responseWriter
-                    .processElement(entity, resp.getWriter(), acceptedType);
+            responseWriters.write(entity, acceptedType, resp.getWriter());
         }
     }
 
     private static MediaType getAcceptedType(HttpServletRequest req) {
         String acceptType = req.getHeader("Accept");
         if (StringUtils.isBlank(acceptType)) {
-            acceptType = "application/xml";
+            acceptType = "*/*";
         }
         return new MediaTypeExpression(acceptType);
     }
@@ -278,7 +270,7 @@ public class DynamicResourcesServlet extends HttpServlet {
     private static MediaType getContentType(HttpServletRequest req) {
         String contentType = req.getHeader("Content-Type");
         if (StringUtils.isBlank(contentType)) {
-            contentType = "application/xml";
+            contentType = "*/*";
         }
         return new MediaTypeExpression(contentType);
     }

@@ -65,6 +65,14 @@ public class ResponseTypeNotSupportedException extends ResourceException {
         this.responseType = responseType;
     }
 
+    public ResponseTypeNotSupportedException(Class<?> responseType) {
+        super("The requested response-type: " + responseType
+                + " is not supported");
+        this.resourceMethod = null;
+        this.resource = null;
+        this.responseType = responseType;
+    }
+
     public ResponseTypeNotSupportedException(Resource resource,
             Class<?> responseType) {
         super("The requested response-type: " + responseType

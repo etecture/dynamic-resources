@@ -42,6 +42,7 @@ package de.etecture.opensource.dynamicresources.core.accessors;
 import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.api.ResourceException;
 import de.etecture.opensource.dynamicresources.api.Response;
+import de.etecture.opensource.dynamicresources.api.accesspoints.AccessPoint;
 import de.etecture.opensource.dynamicresources.api.accesspoints.MethodAccessor;
 import de.etecture.opensource.dynamicresources.api.accesspoints.ResourceAccessor;
 import de.etecture.opensource.dynamicresources.api.accesspoints.TypedResourceAccessor;
@@ -51,9 +52,15 @@ import de.etecture.opensource.dynamicresources.metadata.MediaTypeNotSupportedExc
 import de.etecture.opensource.dynamicresources.metadata.Resource;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethod;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodNotFoundException;
+import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponse;
 import de.etecture.opensource.dynamicresources.metadata.ResponseTypeNotSupportedException;
+import de.etecture.opensource.dynamicresources.utils.MethodLiteral;
+import de.etecture.opensource.dynamicresources.utils.ResourceLiteral;
+import de.etecture.opensource.dynamicresources.utils.TypedLiteral;
 import java.util.HashMap;
 import java.util.Map;
+import javax.enterprise.inject.Instance;
+import javax.enterprise.util.TypeLiteral;
 import javax.inject.Inject;
 
 /**
@@ -62,18 +69,19 @@ import javax.inject.Inject;
  * @version
  * @since
  */
-public class DynamicResourceAccessor implements ResourceAccessor,
-        DynamicAccessPoint<Resource> {
+public class DynamicResourceAccessor implements ResourceAccessor {
 
-    private Resource resource;
+    private final Resource resource;
     private final Map<String, String> pathParams = new HashMap<>();
     @Inject
-    DynamicAccessPoints accessPoints;
+    Instance<AccessPoint> accessPoints;
 
-    @Override
-    public void init(Resource resource, Object... args) {
+    DynamicResourceAccessor() {
+        throw new IllegalStateException("why the heck wants to proxy this bean?");
+    }
+
+    public DynamicResourceAccessor(Resource resource) {
         this.resource = resource;
-        this.pathParams.clear();
     }
 
     @Override
@@ -87,7 +95,12 @@ public class DynamicResourceAccessor implements ResourceAccessor,
         // check the response type
         for (ResourceMethod method : resource.getMethods().values()) {
             if (method.getResponses().containsKey(responseType)) {
-                return accessPoints.create(resource, responseType).pathParams(
+                return accessPoints.select(
+                        new TypeLiteral<TypedResourceAccessor<R>>() {
+                    private static final long serialVersionUID =
+                            1L;
+                }, new ResourceLiteral(resource), new TypedLiteral(responseType))
+                        .get().pathParams(
                         pathParams);
             }
         }
@@ -109,7 +122,12 @@ public class DynamicResourceAccessor implements ResourceAccessor,
             }
         }
         if (responseType != null) {
-            return accessPoints.create(resource, responseType).pathParams(
+            return accessPoints.select(
+                    new TypeLiteral<TypedResourceAccessor<R>>() {
+                private static final long serialVersionUID =
+                        1L;
+            }, new ResourceLiteral(resource), new TypedLiteral(responseType))
+                    .get().pathParams(
                     pathParams);
         } else {
             throw new MediaTypeNotAllowedException(resource, mediaType);
@@ -130,6 +148,21 @@ public class DynamicResourceAccessor implements ResourceAccessor,
     }
 
     @Override
+    public <R> MethodAccessor<R> method(String methodName, MediaType produces)
+            throws MediaTypeNotSupportedException, MediaTypeAmbigiousException,
+            ResourceMethodNotFoundException {
+        ResourceMethod method = resource.getMethod(methodName);
+        ResourceMethodResponse<R> response = (ResourceMethodResponse<R>) method
+                .getResponse(produces);
+        return accessPoints.select(
+                new TypeLiteral<MethodAccessor<R>>() {
+            private static final long serialVersionUID = 1L;
+        }, new ResourceLiteral(method.getResource()),
+                new MethodLiteral(method.getName()),
+                new TypedLiteral(response.getResponseType())).get();
+    }
+
+    @Override
     public ResourceAccessor pathParam(String paramName, String paramValue) {
         this.pathParams.put(paramName, paramValue);
         return this;
@@ -141,5 +174,4 @@ public class DynamicResourceAccessor implements ResourceAccessor,
         this.pathParams.putAll(params);
         return this;
     }
-
 }

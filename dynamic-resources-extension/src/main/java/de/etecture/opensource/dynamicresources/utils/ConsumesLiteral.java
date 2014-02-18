@@ -53,29 +53,24 @@ public class ConsumesLiteral extends AnnotationLiteral<Consumes> implements
     private static final long serialVersionUID = 1L;
     private final String[] mimeTypes;
     private final Class requestType;
-    private final int priority;
 
     public ConsumesLiteral(Class requestType) {
         this.requestType = requestType;
         this.mimeTypes = new String[]{"text/plain"};
-        this.priority = 0;
     }
 
     public ConsumesLiteral(Object object) {
         this.requestType = object.getClass();
         this.mimeTypes = new String[]{"text/plain"};
-        this.priority = 0;
     }
 
     public ConsumesLiteral(Consumes consumes) {
-        this(consumes.requestType(), consumes.mimeType(),
-                consumes.priority());
+        this(consumes.requestType(), consumes.mimeType());
     }
 
-    public ConsumesLiteral(Class requestType, String[] mimeTypes,int priority) {
+    public ConsumesLiteral(Class requestType, String[] mimeTypes) {
         this.requestType = requestType;
         this.mimeTypes = mimeTypes;
-        this.priority = priority;
     }
 
     @Override
@@ -88,8 +83,4 @@ public class ConsumesLiteral extends AnnotationLiteral<Consumes> implements
         return requestType;
     }
 
-    @Override
-    public int priority() {
-        return priority;
-    }
 }

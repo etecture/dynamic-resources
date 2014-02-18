@@ -63,6 +63,10 @@ public class ExecutionMethodResourceMethodExecutor<T> extends AbstractResourceMe
     @Inject
     Instance<Object> instances;
 
+    ExecutionMethodResourceMethodExecutor() {
+        throw new IllegalStateException("do not create directly!");
+    }
+
     public ExecutionMethodResourceMethodExecutor(ExecutionMethod<T> method) {
         this.method = method;
     }

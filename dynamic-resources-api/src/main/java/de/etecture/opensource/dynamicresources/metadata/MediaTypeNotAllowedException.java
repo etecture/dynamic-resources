@@ -53,6 +53,12 @@ public class MediaTypeNotAllowedException extends ResourceException {
     private static final long serialVersionUID = 1L;
     private final MediaType mediaType;
 
+    public MediaTypeNotAllowedException(MediaType mediaType) {
+        super("The requested response-mediaType: " + mediaType
+                + " is not provided");
+        this.mediaType = mediaType;
+    }
+
     public MediaTypeNotAllowedException(ResourceMethod resourceMethod,
             MediaType mediaType) {
         super("The requested response-mediaType: " + mediaType

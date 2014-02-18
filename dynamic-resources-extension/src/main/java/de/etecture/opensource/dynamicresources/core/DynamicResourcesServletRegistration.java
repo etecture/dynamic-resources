@@ -73,7 +73,6 @@ public class DynamicResourcesServletRegistration {
     public void onRegistration(@Observes(during =
             TransactionPhase.AFTER_COMPLETION) ServletContextEvent sce) {
         LOG.info("start registration of application servlets.");
-        System.err.println(sce.getServletContext().getVirtualServerName());
         for (Application application : allApplications) {
             StringBuilder sb = new StringBuilder();
             for (String roleName : application.getDeclaredRoleNames()) {

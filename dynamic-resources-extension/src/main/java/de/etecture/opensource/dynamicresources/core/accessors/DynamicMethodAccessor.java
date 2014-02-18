@@ -41,6 +41,7 @@ package de.etecture.opensource.dynamicresources.core.accessors;
 
 import de.etecture.opensource.dynamicresources.api.ResourceException;
 import de.etecture.opensource.dynamicresources.api.Response;
+import de.etecture.opensource.dynamicresources.api.accesspoints.AccessPoint;
 import de.etecture.opensource.dynamicresources.api.accesspoints.MethodAccessor;
 import de.etecture.opensource.dynamicresources.api.accesspoints.TypedResourceAccessor;
 import de.etecture.opensource.dynamicresources.core.executors.ResourceMethodExecutions;
@@ -48,11 +49,14 @@ import de.etecture.opensource.dynamicresources.metadata.RequestTypeNotSupportedE
 import de.etecture.opensource.dynamicresources.metadata.Resource;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodRequest;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponse;
+import de.etecture.opensource.dynamicresources.utils.ResourceLiteral;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.enterprise.inject.Instance;
+import javax.enterprise.util.TypeLiteral;
 import javax.inject.Inject;
 
 /**
@@ -61,24 +65,27 @@ import javax.inject.Inject;
  * @version
  * @since
  */
-public class DynamicMethodAccessor<R, B> implements MethodAccessor<R>,
-        DynamicAccessPoint<ResourceMethodResponse<R>> {
+public class DynamicMethodAccessor<R, B> implements MethodAccessor<R> {
 
     private ResourceMethodResponse<R> resourceMethodResponse;
     private final Map<String, Object> parameter = new HashMap<>();
     private B requestBody;
     private int expectedStatusCode = -1; // all status codes are acceptable
     @Inject
-    DynamicAccessPoints accessPoints;
+    Instance<AccessPoint> accessPoints;
     @Inject
     ResourceMethodExecutions executions;
 
-    @Override
-    public void init(
-            ResourceMethodResponse<R> metadata, Object... args) {
+    DynamicMethodAccessor() {
+        throw new IllegalStateException("why the heck wants to proxy this bean?");
+    }
+
+    public DynamicMethodAccessor(ResourceMethodResponse<R> metadata) {
         this.resourceMethodResponse = metadata;
-        parameter.clear();
-        parameter.putAll((Map<String, String>) args[0]);
+    }
+
+    public void pathParams(Map<String, String> pathParameter) {
+        parameter.putAll(pathParameter);
     }
 
     @Override
@@ -89,8 +96,9 @@ public class DynamicMethodAccessor<R, B> implements MethodAccessor<R>,
     @Override
     public TypedResourceAccessor<R> methods() {
         Resource resource = resourceMethodResponse.getMethod().getResource();
-        return accessPoints.create(resource, resourceMethodResponse
-                .getResponseType());
+        return accessPoints.select(new TypeLiteral<TypedResourceAccessor<R>>() {
+            private static final long serialVersionUID = 1L;
+        }, new ResourceLiteral(resource)).get();
     }
 
     @Override
@@ -175,5 +183,4 @@ public class DynamicMethodAccessor<R, B> implements MethodAccessor<R>,
                     response.getStatus()));
         }
     }
-
 }

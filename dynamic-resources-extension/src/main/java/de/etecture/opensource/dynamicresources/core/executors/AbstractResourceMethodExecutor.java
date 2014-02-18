@@ -53,7 +53,6 @@ import de.etecture.opensource.dynamicresources.utils.ApplicationLiteral;
 import de.etecture.opensource.dynamicresources.utils.MethodLiteral;
 import de.etecture.opensource.dynamicresources.utils.ResourceLiteral;
 import javax.enterprise.event.Event;
-import javax.enterprise.inject.New;
 import javax.inject.Inject;
 
 /**
@@ -66,10 +65,8 @@ public abstract class AbstractResourceMethodExecutor implements
         ResourceMethodExecutor {
 
     @Inject
-    @New
     BeforeExecutionEventBean beforeEvent;
     @Inject
-    @New
     AfterExecutionEventBean afterEvent;
     @Inject
     Event<BeforeExecutionEvent> beforeEvents;
@@ -88,9 +85,7 @@ public abstract class AbstractResourceMethodExecutor implements
             ExecutionContext<R, B> context) throws ResourceException {
         // build the literals for the event selection
         Application application = new ApplicationLiteral(context
-                .getResourceMethod().getResource().getApplication().getName(),
-                context.getResourceMethod().getResource().getApplication()
-                .getBase());
+                .getResourceMethod().getResource().getApplication().getName());
         Resource resource = new ResourceLiteral(
                 context.getResourceMethod().getResource());
         Method method = new MethodLiteral(context.getResourceMethod().getName());

@@ -37,13 +37,13 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
 package de.etecture.opensource.dynamicresources.metadata;
 
 import de.etecture.opensource.dynamicresources.api.MediaType;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -53,6 +53,7 @@ import java.util.Set;
  * @since
  */
 public class BasicResourceMethodResponse<R> implements ResourceMethodResponse<R> {
+
     private final ResourceMethod method;
     private final Class<R> responseType;
     private final int statusCode;
@@ -100,4 +101,42 @@ public class BasicResourceMethodResponse<R> implements ResourceMethodResponse<R>
         return Collections.unmodifiableSet(mediaTypes);
     }
 
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 11 * hash + Objects.hashCode(this.method);
+        hash = 11 * hash + Objects.hashCode(this.responseType);
+        hash = 11 * hash + this.statusCode;
+        hash = 11 * hash + Objects.hashCode(this.mediaTypes);
+        hash = 11 * hash + Objects.hashCode(this.headers);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final BasicResourceMethodResponse<R> other =
+                (BasicResourceMethodResponse<R>) obj;
+        if (!Objects.equals(this.method, other.method)) {
+            return false;
+        }
+        if (!Objects.equals(this.responseType, other.responseType)) {
+            return false;
+        }
+        if (this.statusCode != other.statusCode) {
+            return false;
+        }
+        if (!Objects.equals(this.mediaTypes, other.mediaTypes)) {
+            return false;
+        }
+        if (!Objects.equals(this.headers, other.headers)) {
+            return false;
+        }
+        return true;
+    }
 }

@@ -45,13 +45,16 @@ import de.etecture.opensource.dynamicresources.api.accesspoints.MethodAccessor;
 import de.etecture.opensource.dynamicresources.api.accesspoints.ResourceAccessor;
 import de.etecture.opensource.dynamicresources.api.accesspoints.TypedResourceAccessor;
 import de.etecture.opensource.dynamicresources.metadata.Application;
-import de.etecture.opensource.dynamicresources.metadata.MediaTypeNotAllowedException;
+import de.etecture.opensource.dynamicresources.metadata.MediaTypeAmbigiousException;
+import de.etecture.opensource.dynamicresources.metadata.MediaTypeNotSupportedException;
 import de.etecture.opensource.dynamicresources.metadata.Resource;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodNotFoundException;
 import de.etecture.opensource.dynamicresources.metadata.ResourceNotFoundException;
 import de.etecture.opensource.dynamicresources.metadata.ResourcePathNotMatchException;
 import de.etecture.opensource.dynamicresources.metadata.ResponseTypeNotSupportedException;
+import de.etecture.opensource.dynamicresources.utils.ResourceLiteral;
 import java.util.Map;
+import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 
 /**
@@ -60,15 +63,17 @@ import javax.inject.Inject;
  * @version
  * @since
  */
-public class DynamicApplicationAccessor implements ApplicationAccessor,
-        DynamicAccessPoint<Application> {
+public class DynamicApplicationAccessor implements ApplicationAccessor {
 
-    private Application application;
+    private final Application application;
     @Inject
-    DynamicAccessPoints accessPoints;
+    Instance<Object> accessPoints;
 
-    @Override
-    public void init(Application application, Object... args) {
+    DynamicApplicationAccessor() {
+        throw new IllegalStateException("why the heck wants to proxy this bean?");
+    }
+
+    public DynamicApplicationAccessor(Application application) {
         this.application = application;
     }
 
@@ -100,7 +105,8 @@ public class DynamicApplicationAccessor implements ApplicationAccessor,
                     + " not found within the application: " + application
                     .getName());
         }
-        return accessPoints.create(application.getResources().get(name));
+        return accessPoints.select(ResourceAccessor.class, new ResourceLiteral(
+                name)).get();
     }
 
     @Override
@@ -108,7 +114,7 @@ public class DynamicApplicationAccessor implements ApplicationAccessor,
             ResourceNotFoundException {
         Resource resource = application.findResource(path);
         try {
-            return accessPoints.create(resource)
+            return selectByName(resource.getName())
                     .pathParams(
                     resource.getPath().
                     getPathParameterValues(path));
@@ -130,9 +136,10 @@ public class DynamicApplicationAccessor implements ApplicationAccessor,
     public <X> MethodAccessor<X> selectByPathAndMime(String path, String method,
             MediaType acceptedMediaType) throws
             ResourceNotFoundException,
-            MediaTypeNotAllowedException, ResourceMethodNotFoundException {
-        return (MethodAccessor<X>) selectByPath(path).select(acceptedMediaType)
-                .method(method);
+            MediaTypeNotSupportedException, MediaTypeAmbigiousException,
+            ResourceMethodNotFoundException {
+        return (MethodAccessor<X>) selectByPath(path).method(method,
+                acceptedMediaType);
     }
 
     @Override
@@ -159,5 +166,4 @@ public class DynamicApplicationAccessor implements ApplicationAccessor,
         return selectByName(name, responseType).pathParams(pathParams).
                 method(method);
     }
-
 }

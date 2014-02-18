@@ -116,9 +116,7 @@ public class ResourceMethodExecutions {
     private <R, B> ResourceMethodExecutor resolve(ExecutionContext<R, B> context) {
         // build the literals
         Application application = new ApplicationLiteral(context
-                .getResourceMethod().getResource().getApplication().getName(),
-                context.getResourceMethod().getResource().getApplication()
-                .getBase());
+                .getResourceMethod().getResource().getApplication().getName());
         Resource resource = new ResourceLiteral(context.getResourceMethod()
                 .getResource());
         Method method = new MethodLiteral(context.getResourceMethod().getName());

@@ -55,16 +55,14 @@ public class ApplicationLiteral extends AnnotationLiteral<Application>
 
     private static final long serialVersionUID = 1L;
     private final String applicationName;
-    private final String applicationBase;
 
     public ApplicationLiteral(
             de.etecture.opensource.dynamicresources.metadata.Application application) {
-        this(application.getName(), application.getBase());
+        this(application.getName());
     }
 
-    public ApplicationLiteral(String applicationName, String applicationBase) {
+    public ApplicationLiteral(String applicationName) {
         this.applicationName = applicationName;
-        this.applicationBase = applicationBase;
     }
 
     @Override
@@ -74,7 +72,7 @@ public class ApplicationLiteral extends AnnotationLiteral<Application>
 
     @Override
     public String base() {
-        return applicationBase;
+        return "";
     }
 
     @Override

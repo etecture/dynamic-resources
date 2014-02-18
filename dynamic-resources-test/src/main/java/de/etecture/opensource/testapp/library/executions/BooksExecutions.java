@@ -45,26 +45,28 @@ import de.etecture.opensource.dynamicresources.annotations.Executes;
 import de.etecture.opensource.dynamicresources.annotations.Method;
 import de.etecture.opensource.dynamicresources.annotations.Resource;
 import de.etecture.opensource.dynamicresources.annotations.Succeed;
-import de.etecture.opensource.dynamicresources.annotations.URI;
 import de.etecture.opensource.dynamicresources.api.ExecutionContext;
 import de.etecture.opensource.dynamicresources.api.HttpHeaders;
 import de.etecture.opensource.dynamicresources.api.ResourceException;
 import de.etecture.opensource.dynamicresources.api.StatusCodes;
 import de.etecture.opensource.dynamicresources.api.accesspoints.ApplicationAccessor;
-import de.etecture.opensource.dynamicresources.api.accesspoints.ResourceAccessor;
+import de.etecture.opensource.dynamicresources.api.accesspoints.Applications;
 import de.etecture.opensource.dynamicresources.api.accesspoints.TypedResourceAccessor;
 import de.etecture.opensource.dynamicresources.api.events.AfterExecutionEvent;
+import de.etecture.opensource.dynamicresources.metadata.ApplicationNotFoundException;
+import de.etecture.opensource.dynamicresources.metadata.ResourceMethodNotFoundException;
+import de.etecture.opensource.dynamicresources.metadata.ResourceNotFoundException;
+import de.etecture.opensource.dynamicresources.metadata.ResponseTypeNotSupportedException;
 import de.etecture.opensource.testapp.library.Author;
 import de.etecture.opensource.testapp.library.Book;
-import de.etecture.opensource.testapp.library.Book.AuthorRole;
 import de.etecture.opensource.testapp.library.Books;
 import de.herschke.neo4j.uplink.api.Neo4jServerException;
 import de.herschke.neo4j.uplink.api.Neo4jUplink;
 import de.herschke.neo4j.uplink.api.Node;
 import de.herschke.neo4j.uplink.cdi.Remote;
-import java.util.Map;
-import java.util.Set;
-import javax.ejb.Stateless;
+import javax.annotation.PostConstruct;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
@@ -74,25 +76,45 @@ import javax.inject.Inject;
  * @version
  * @since
  */
-@Stateless
+@Singleton
+@Startup
 public class BooksExecutions {
 
     @Inject
     @Remote(url = "http://localhost:17474/db/data")
     Neo4jUplink uplink;
     @Inject
-    @Application(name = "Library")
     @Resource(name = "Author")
     TypedResourceAccessor<Author> accessor;
     @Inject
     @Application(name = "Library")
     ApplicationAccessor app;
+    //@Inject
+    //@URI("/library/authors/1234567890")
+    //TypedResourceAccessor<Author> blabla;
+    //@Inject
+    //@URI("/library/books/1234567890")
+    //ResourceAccessor xxxxaBook;
     @Inject
-    @URI("/library/authors/1234567890")
-    TypedResourceAccessor<Author> blabla;
-    @Inject
-    @URI("/library/books/1234567890")
-    ResourceAccessor aBook;
+    Applications applications;
+
+    @PostConstruct
+    void init() {
+        try {
+            System.out.println(applications.selectByName("Library")
+                    .selectByName("Books").getMetadata().getName());
+            System.out.println(applications.selectByName("Library")
+                    .selectByName("Author").select(Author.class).getMetadata()
+                    .getName());
+            System.out.println(applications.selectByName("Library")
+                    .selectByName("Author").select(Author.class).method("GET")
+                    .getMetadata().getStatusCode());
+        } catch (ResourceNotFoundException | ApplicationNotFoundException |
+                ResponseTypeNotSupportedException |
+                ResourceMethodNotFoundException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
 
     @Executes(resource = "Book",
               method = "POST")
@@ -107,19 +129,19 @@ public class BooksExecutions {
                 .label("Book")
                 .create();
 
-        for (Map.Entry<Author, Set<AuthorRole>> e : newBook.getAuthors()
-                .entrySet()) {
-            Author author = (Author) accessor.pathParam("id", Long.toString(
-                    e.getKey().getId())).select(Author.class).put(e.getKey());
-            for (AuthorRole role : e.getValue()) {
-                uplink.buildRelationship()
-                        .creator()
-                        .history()
-                        .property("role", role.name())
-                        .create(bookNode.getId(), e.getKey().getId(), "WROTE_BY");
-            }
-
-        }
+//        for (Map.Entry<Author, Set<AuthorRole>> e : newBook.getAuthors()
+//                .entrySet()) {
+//            Author author = (Author) accessor.pathParam("id", Long.toString(
+//                    e.getKey().getId())).select(Author.class).put(e.getKey());
+//            for (AuthorRole role : e.getValue()) {
+//                uplink.buildRelationship()
+//                        .creator()
+//                        .history()
+//                        .property("role", role.name())
+//                        .create(bookNode.getId(), e.getKey().getId(), "WROTE_BY");
+//            }
+//
+//        }
         return newBook;
     }
 

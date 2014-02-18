@@ -39,7 +39,6 @@
  */
 package de.etecture.opensource.dynamicresources.core.accessors;
 
-import de.etecture.opensource.dynamicrepositories.utils.NamedLiteral;
 import de.etecture.opensource.dynamicresources.api.accesspoints.ApplicationAccessor;
 import de.etecture.opensource.dynamicresources.api.accesspoints.Applications;
 import de.etecture.opensource.dynamicresources.api.accesspoints.MethodAccessor;
@@ -50,11 +49,11 @@ import de.etecture.opensource.dynamicresources.metadata.ApplicationNotFoundExcep
 import de.etecture.opensource.dynamicresources.metadata.Resource;
 import de.etecture.opensource.dynamicresources.metadata.ResourceNotFoundException;
 import de.etecture.opensource.dynamicresources.metadata.ResourcePathNotMatchException;
+import de.etecture.opensource.dynamicresources.utils.ApplicationLiteral;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Default;
+import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 
@@ -72,8 +71,6 @@ import javax.inject.Inject;
  * @since
  * @see ApplicationAccessor
  */
-@Default
-@ApplicationScoped
 public class DynamicApplications implements Applications {
 
     /**
@@ -85,7 +82,8 @@ public class DynamicApplications implements Applications {
      * this is used to lookup or create accesspoints.
      */
     @Inject
-    DynamicAccessPoints accessPoints;
+    @Any
+    Instance<Object> accessPoints;
 
     @Override
     public Set<String> getApplicationNames() {
@@ -99,20 +97,18 @@ public class DynamicApplications implements Applications {
     @Override
     public ApplicationAccessor selectByName(String applicationName) throws
             ApplicationNotFoundException {
-        // find the applications with the given name.
-        final Instance<Application> applicationsWithName = allApplications
-                .select(new NamedLiteral(applicationName));
-        if (!applicationsWithName.isUnsatisfied() && !applicationsWithName
-                .isAmbiguous()) {
-            Application application = applicationsWithName.get();
-            return accessPoints.create(application);
-        } else if (applicationsWithName.isAmbiguous()) {
+        final Instance<ApplicationAccessor> selected =
+                accessPoints.select(ApplicationAccessor.class,
+                new ApplicationLiteral(applicationName));
+        if (selected.isAmbiguous()) {
             throw new ApplicationNotFoundException(
-                    "the application name is not unique: " + applicationName);
-        } else {
-            throw new ApplicationNotFoundException("an application with name: "
-                    + applicationName + " does not exists.");
+                    "more than one applications will  match the name: "
+                    + applicationName);
+        } else if (selected.isUnsatisfied()) {
+            throw new ApplicationNotFoundException(
+                    "no application match the name: " + applicationName);
         }
+        return selected.get();
     }
 
     @Override
@@ -121,7 +117,7 @@ public class DynamicApplications implements Applications {
         // lookup the allApplications for the baseUri
         for (Application application : allApplications) {
             if (application.getBase().equals(basePath)) {
-                accessPoints.create(application);
+                return selectByName(application.getName());
             }
         }
         throw new ApplicationNotFoundException(
@@ -137,7 +133,8 @@ public class DynamicApplications implements Applications {
             if (uri.startsWith(application.getBase())) {
                 Resource resource = application.findResource(uri);
                 try {
-                    return accessPoints.create(resource)
+                    return selectByName(application.getName())
+                            .selectByName(resource.getName())
                             .pathParams(resource.getPath()
                             .getPathParameterValues(uri));
                 } catch (ResourcePathNotMatchException ex) {
@@ -149,5 +146,4 @@ public class DynamicApplications implements Applications {
                 "there is no application that holds any resource matching the path: "
                 + uri);
     }
-
 }

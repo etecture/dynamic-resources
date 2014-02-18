@@ -39,8 +39,8 @@
  */
 package de.etecture.opensource.dynamicresources.defaults;
 
-import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.annotations.Produces;
+import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -52,25 +52,22 @@ import java.io.Writer;
  * @version
  * @since
  */
-public enum ToStringWriter implements ResponseWriter<Object> {
+@Produces(contentType = Object.class,
+          mimeType = "text/plain")
+public class ToStringWriter implements ResponseWriter<Object> {
 
-    @Produces(contentType = Object.class,
-              mimeType = "text/plain",
-              priority = Integer.MAX_VALUE)
-    DEFAULT {
-        @Override
-        public void processElement(Object element, Writer writer,
-                MediaType mimetype)
-                throws IOException {
-            if (element != null) {
-                writer.append(element.toString());
-            }
-            writer.flush();
+    @Override
+    public void processElement(Object element, Writer writer,
+            MediaType mimetype)
+            throws IOException {
+        if (element != null) {
+            writer.append(element.toString());
         }
+        writer.flush();
+    }
 
-        @Override
-        public int getContentLength(Object entity, MediaType acceptedMediaType) {
-            return entity != null ? entity.toString().length() : 0;
-        }
+    @Override
+    public int getContentLength(Object entity, MediaType acceptedMediaType) {
+        return entity != null ? entity.toString().length() : 0;
     }
 }

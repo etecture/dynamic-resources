@@ -39,8 +39,8 @@
  */
 package de.etecture.opensource.dynamicresources.defaults;
 
-import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.annotations.Produces;
+import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -52,26 +52,23 @@ import java.io.Writer;
  * @version
  * @since
  */
-public enum StringWriter implements ResponseWriter<String> {
+@Produces(contentType = String.class,
+          mimeType = {"application/xml",
+    "text/xml",
+    "text/plain"
+})
+public class StringWriter implements ResponseWriter<String> {
 
-    @Produces(contentType = String.class,
-              mimeType = {"application/xml",
-        "text/xml",
-        "text/plain"
-    },
-              priority = 5555)
-    DEFAULT {
-        @Override
-        public void processElement(String element, Writer writer,
-                MediaType mimetype)
-                throws IOException {
-            writer.append(element);
-            writer.flush();
-        }
+    @Override
+    public void processElement(String element, Writer writer,
+            MediaType mimetype)
+            throws IOException {
+        writer.append(element);
+        writer.flush();
+    }
 
-        @Override
-        public int getContentLength(String entity, MediaType acceptedMediaType) {
-            return entity != null ? entity.length() : 0;
-        }
+    @Override
+    public int getContentLength(String entity, MediaType acceptedMediaType) {
+        return entity != null ? entity.length() : 0;
     }
 }

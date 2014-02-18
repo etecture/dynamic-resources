@@ -37,20 +37,36 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.core.mapping;
+package de.etecture.opensource.dynamicresources.defaults;
 
+import de.etecture.opensource.dynamicresources.annotations.Produces;
 import de.etecture.opensource.dynamicresources.api.MediaType;
-import de.etecture.opensource.dynamicresources.api.RequestReader;
+import de.etecture.opensource.dynamicresources.api.ResponseWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
 
 /**
  *
  * @author rhk
  */
-public class RequestReaderResolver {
+@Produces(contentType = Exception.class,
+          mimeType = "text/plain")
+public class ExceptionPlainWriter implements ResponseWriter<Throwable> {
 
-    public <T> RequestReader<T> resolve(Class<T> requestType,
-            MediaType contentType) {
-        // TODO: implement the RequestReaderResolver!!
-        throw new UnsupportedOperationException("Not supported yet.");
+    @Override
+    public void processElement(Throwable element, Writer writer,
+            MediaType mimetype) throws
+            IOException {
+        try (PrintWriter printWriter = new PrintWriter(writer)) {
+            element.printStackTrace(printWriter);
+        }
     }
+
+    @Override
+    public int getContentLength(Throwable entity,
+            MediaType acceptedMediaType) {
+        return -1;
+    }
+    static final int PRIORITY = Integer.MAX_VALUE - 1;
 }

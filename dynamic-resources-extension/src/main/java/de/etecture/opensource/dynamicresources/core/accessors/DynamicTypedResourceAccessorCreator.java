@@ -37,10 +37,15 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
 package de.etecture.opensource.dynamicresources.core.accessors;
 
-import de.etecture.opensource.dynamicresources.api.accesspoints.AccessPoint;
+import de.etecture.opensource.dynamicresources.metadata.Resource;
+import de.etecture.opensource.dynamicresources.utils.BeanCreator;
+import de.etecture.opensource.dynamicresources.utils.BeanInstanceBuilder;
+import javax.enterprise.context.spi.CreationalContext;
+import javax.enterprise.inject.CreationException;
+import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanManager;
 
 /**
  *
@@ -48,7 +53,31 @@ import de.etecture.opensource.dynamicresources.api.accesspoints.AccessPoint;
  * @version
  * @since
  */
-public interface DynamicAccessPoint<A> extends AccessPoint<A> {
+public class DynamicTypedResourceAccessorCreator implements BeanCreator {
 
-    void init(A metadata, Object... args);
+    private final Resource metadata;
+    private final Class<?> type;
+
+    public DynamicTypedResourceAccessorCreator(Resource metadata,
+            Class<?> type) {
+        this.metadata = metadata;
+        this.type = type;
+    }
+
+    @Override
+    public <T> T create(BeanManager beanManager,
+            Bean<T> bean,
+            CreationalContext<T> creationalContext) {
+        try {
+            return (T) BeanInstanceBuilder.forBeanType(
+                    DynamicTypedResourceAccessor.class,
+                    beanManager)
+                    .usingCreationalContext(
+                    (CreationalContext<DynamicTypedResourceAccessor>) creationalContext)
+                    .usingConstructor(Resource.class, Class.class)
+                    .build(metadata, type);
+        } catch (NoSuchMethodException ex) {
+            throw new CreationException(ex);
+        }
+    }
 }

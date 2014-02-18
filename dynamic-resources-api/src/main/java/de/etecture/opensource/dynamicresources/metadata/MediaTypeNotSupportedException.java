@@ -55,6 +55,12 @@ public class MediaTypeNotSupportedException extends ResourceException {
     private final ResourceMethod resourceMethod;
     private final MediaType mediaType;
 
+    public MediaTypeNotSupportedException(MediaType mediaType) {
+        super("The request-mediatype: " + mediaType + " is not supported.");
+        this.resourceMethod = null;
+        this.mediaType = mediaType;
+    }
+
     public MediaTypeNotSupportedException(ResourceMethod resourceMethod,
             MediaType mediaType) {
         super("The request-mediatype: " + mediaType

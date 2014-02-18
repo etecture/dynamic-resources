@@ -158,9 +158,19 @@ public class BeanBuilder<T> {
         return this;
     }
 
+    public BeanBuilder<T> withTypes(Type[] moreTypes) {
+        this.beanTypes.addAll(Arrays.asList(moreTypes));
+        return this;
+    }
+
     public BeanBuilder<T> withQualifier(Annotation qualifier,
             Annotation... moreQualifiers) {
         this.qualifiers.add(qualifier);
+        this.qualifiers.addAll(Arrays.asList(moreQualifiers));
+        return this;
+    }
+
+    public BeanBuilder<T> withQualifier(Annotation[] moreQualifiers) {
         this.qualifiers.addAll(Arrays.asList(moreQualifiers));
         return this;
     }

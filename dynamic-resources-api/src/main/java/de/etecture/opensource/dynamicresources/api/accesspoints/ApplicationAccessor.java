@@ -41,7 +41,8 @@ package de.etecture.opensource.dynamicresources.api.accesspoints;
 
 import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.metadata.Application;
-import de.etecture.opensource.dynamicresources.metadata.MediaTypeNotAllowedException;
+import de.etecture.opensource.dynamicresources.metadata.MediaTypeAmbigiousException;
+import de.etecture.opensource.dynamicresources.metadata.MediaTypeNotSupportedException;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodNotFoundException;
 import de.etecture.opensource.dynamicresources.metadata.ResourceNotFoundException;
 import de.etecture.opensource.dynamicresources.metadata.ResponseTypeNotSupportedException;
@@ -279,12 +280,13 @@ public interface ApplicationAccessor extends AccessPoint<Application> {
      * @return
      * @throws ResourceMethodNotFoundException
      * @throws ResourceNotFoundException
-     * @throws MediaTypeNotAllowedException
+     * @throws MediaTypeNotSupportedException
+     * @throws MediaTypeAmbigiousException
      */
     <X> MethodAccessor<X> selectByPathAndMime(String path, String method,
             MediaType acceptedMediaType)
             throws ResourceMethodNotFoundException, ResourceNotFoundException,
-            MediaTypeNotAllowedException;
+            MediaTypeNotSupportedException, MediaTypeAmbigiousException;
 
     /**
      * selects the specific resource for a given response-type and it's method.

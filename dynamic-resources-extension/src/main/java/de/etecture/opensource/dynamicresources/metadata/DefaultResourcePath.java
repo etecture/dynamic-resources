@@ -71,6 +71,7 @@ public class DefaultResourcePath implements ResourcePath {
         this.path = path;
         Matcher matcher = GROUP_PATTERN.matcher(path);
         StringBuffer buffer = new StringBuffer();
+        buffer.append("^");
         while (matcher.find()) {
             String name = matcher.group(1);
             pathParamNames.add(name);
@@ -83,6 +84,7 @@ public class DefaultResourcePath implements ResourcePath {
                     name, pattern));
         }
         matcher.appendTail(buffer);
+        buffer.append("$");
         this.compiledPath = Pattern.compile(buffer.toString());
     }
 
@@ -110,6 +112,7 @@ public class DefaultResourcePath implements ResourcePath {
     @Override
     public Map<String, String> getPathParameterValues(String uri) throws
             ResourcePathNotMatchException {
+        uri = StringUtils.removeStart(uri, resource.getApplication().getBase());
         Map<String, String> values = new HashMap<>();
         Matcher matcher = compiledPath.matcher(uri);
         if (matcher.matches()) {
