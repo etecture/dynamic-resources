@@ -84,8 +84,10 @@ public class DynamicMethodAccessor<R, B> implements MethodAccessor<R> {
         this.resourceMethodResponse = metadata;
     }
 
-    public void pathParams(Map<String, String> pathParameter) {
+    @Override
+    public MethodAccessor<R> pathParams(Map<String, String> pathParameter) {
         parameter.putAll(pathParameter);
+        return this;
     }
 
     @Override

@@ -43,13 +43,15 @@ import de.etecture.opensource.dynamicresources.api.ResourceException;
 import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.metadata.RequestTypeNotSupportedException;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponse;
+import java.util.Map;
 
 /**
  * This interface declares an access point for a resource method execution.
  * <p>
  * A resource method access point may be used as in the following * example:
  * <p>
- * <pre>
+ * <
+ * pre>
  * &#64;Stateless
  * public class MyBean {
  *
@@ -69,7 +71,7 @@ import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponse;
  *   }
  * }
  * </pre>
- *
+ * <p>
  * @param <T> the type of the resources to be given here.
  * @author rhk
  * @since 2.0.0
@@ -80,14 +82,22 @@ public interface MethodAccessor<T> extends
 
     /**
      * returns the methods accessor for the resource of this method.
-     *
+     * <p>
      * @return
      */
     TypedResourceAccessor<T> methods();
 
     /**
+     * add path parameters...
+     * <p>
+     * @param pathParameter
+     * @return
+     */
+    MethodAccessor<T> pathParams(Map<String, String> pathParameter);
+
+    /**
      * add a specific query param to the response accessor
-     *
+     * <p>
      * @param name
      * @param value
      * @return
@@ -96,7 +106,7 @@ public interface MethodAccessor<T> extends
 
     /**
      * add a specific body to the resourcemethod accessor
-     *
+     * <p>
      * @param body
      * @return
      * @throws RequestTypeNotSupportedException
@@ -108,9 +118,9 @@ public interface MethodAccessor<T> extends
      * specifies that a specific status code is expected. If the response is not
      * of the given status code, a ResourceException is thrown on the
      * shortcut-methods.
-     *
+     * <p>
      * If this method is not called, no status-code check will be performed.
-     *
+     * <p>
      * @param expectedStatusCode
      * @return
      */
@@ -118,9 +128,9 @@ public interface MethodAccessor<T> extends
 
     /**
      * invokes the method and returns the response immediatly.
-     *
+     * <p>
      * This method does no check for types or exceptions or statuscodes.
-     *
+     * <p>
      * @return
      * @throws ResourceException
      */
@@ -130,10 +140,10 @@ public interface MethodAccessor<T> extends
      * invokes the method and checks, if the type of the response is the
      * expected type and if the returned status code is the expected status
      * code.
-     *
+     * <p>
      * If the check fails, a ResponseException is thrown. Otherwise the entity
      * of the response is returned.
-     *
+     * <p>
      * @return
      * @throws ResourceException
      */

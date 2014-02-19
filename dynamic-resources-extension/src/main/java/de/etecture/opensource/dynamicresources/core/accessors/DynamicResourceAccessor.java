@@ -161,7 +161,8 @@ public class DynamicResourceAccessor implements ResourceAccessor {
                     private static final long serialVersionUID = 1L;
                 }, new ResourceLiteral(method.getResource()),
                 new MethodLiteral(method.getName()),
-                new TypedLiteral(response.getResponseType())).get();
+                new TypedLiteral(response.getResponseType())).get().pathParams(
+                        pathParams);
     }
 
     @Override
