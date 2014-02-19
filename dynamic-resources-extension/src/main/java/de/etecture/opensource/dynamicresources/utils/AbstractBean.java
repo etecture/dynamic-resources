@@ -40,6 +40,8 @@
 package de.etecture.opensource.dynamicresources.utils;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
@@ -50,6 +52,7 @@ import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.PassivationCapable;
+import javax.enterprise.util.Nonbinding;
 
 /**
  *
@@ -88,7 +91,6 @@ public abstract class AbstractBean<T> implements Bean<T>, PassivationCapable {
     public String getId() {
         return id;
     }
-
 
     @Override
     public Class<?> getBeanClass() {
@@ -150,6 +152,29 @@ public abstract class AbstractBean<T> implements Bean<T>, PassivationCapable {
         for (Annotation q : qualifier) {
             sb.append("@");
             sb.append(q.annotationType().getSimpleName());
+            if (q.annotationType().getDeclaredMethods().length > 0) {
+                sb.append("(");
+                boolean first = true;
+                for (Method method : q.annotationType().getDeclaredMethods()) {
+                    if (!method.isAnnotationPresent(Nonbinding.class)) {
+                        if (!first) {
+                            sb.append(", ");
+                        } else {
+                            first = false;
+                        }
+                        try {
+                            sb.append(method.getName()).append("=").append(
+                                    method
+                                    .invoke(q));
+                        } catch (IllegalAccessException |
+                                IllegalArgumentException |
+                                InvocationTargetException ex) {
+                            sb.append("<unknown>");
+                        }
+                    }
+                }
+                sb.append(")");
+            }
             sb.append(" ");
         }
         sb.append("\"").append(name).append("\" ");

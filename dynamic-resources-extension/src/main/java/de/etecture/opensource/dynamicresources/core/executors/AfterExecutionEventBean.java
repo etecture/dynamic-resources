@@ -41,6 +41,7 @@ package de.etecture.opensource.dynamicresources.core.executors;
 
 import de.etecture.opensource.dynamicresources.api.ExecutionContext;
 import de.etecture.opensource.dynamicresources.api.HeaderValueGenerator;
+import de.etecture.opensource.dynamicresources.api.Response;
 import de.etecture.opensource.dynamicresources.api.ResponseException;
 import de.etecture.opensource.dynamicresources.api.events.AfterExecutionEvent;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponseHeader;
@@ -49,6 +50,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.New;
@@ -68,10 +70,7 @@ class AfterExecutionEventBean implements
 
     void init(ExecutionContext<?, ?> context, Object originalEntity) {
         this.context = context;
-        this.originalEntity = originalEntity;
-        this.currentEntity = originalEntity;
-        this.currentStatus = context.getResponseMetadata().getStatusCode();
-        // process the headers
+        // process the original response headers
         for (ResourceMethodResponseHeader h : context.getResponseMetadata()
                 .getResponseHeaders()) {
             // create the generator.
@@ -80,6 +79,26 @@ class AfterExecutionEventBean implements
                 private static final long serialVersionUID =
                         1L;
             }).get().generateHeaderValue(h, context));
+        }
+        if (originalEntity instanceof Response) {
+            this.currentStatus = ((Response<?>) originalEntity).getStatus();
+            try {
+                this.originalEntity = ((Response<?>) originalEntity).getEntity();
+            } catch (ResponseException ex) {
+                this.originalEntity = ex;
+            }
+            this.currentEntity = this.originalEntity;
+            for (Entry<String, List<Object>> e : ((Response<?>) originalEntity)
+                    .getHeaders()) {
+                this.headers.addAll(e.getKey(),
+                        ResourceMethodResponseHeader.Type.DEFAULT, e.getValue());
+            }
+
+        } else {
+            this.originalEntity = originalEntity;
+            this.currentEntity = originalEntity;
+            this.currentStatus = context.getResponseMetadata().getStatusCode();
+
         }
     }
 

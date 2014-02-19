@@ -60,10 +60,15 @@ import de.etecture.opensource.dynamicresources.metadata.ResponseTypeNotSupported
 import de.etecture.opensource.testapp.library.Author;
 import de.etecture.opensource.testapp.library.Book;
 import de.etecture.opensource.testapp.library.Books;
+import de.etecture.opensource.testapp.library.Publisher;
 import de.herschke.neo4j.uplink.api.Neo4jServerException;
 import de.herschke.neo4j.uplink.api.Neo4jUplink;
 import de.herschke.neo4j.uplink.api.Node;
 import de.herschke.neo4j.uplink.cdi.Remote;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.annotation.PostConstruct;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
@@ -116,7 +121,45 @@ public class BooksExecutions {
         }
     }
 
-    @Executes(resource = "Book",
+    @Executes(resource = "Books",
+              method = "GET")
+    public Books getAllBooks() {
+        final List<Book> books = new ArrayList<>();
+        books.add(new Book() {
+            @Override
+            public String getISBN() {
+                return "1234567890-12345678-12345";
+            }
+
+            @Override
+            public String getTitle() {
+                return "Graph Databases";
+            }
+
+            @Override
+            public String getSubTitle() {
+                return "";
+            }
+
+            @Override
+            public Publisher getPublisher() {
+                return null;
+            }
+
+            @Override
+            public Map<Author, Set<Book.AuthorRole>> getAuthors() {
+                return null;
+            }
+        });
+        return new Books() {
+            @Override
+            public List<Book> getBooks() {
+                return books;
+            }
+        };
+    }
+
+    @Executes(resource = "Books",
               method = "POST")
     public Book createNewBook(ExecutionContext<Books, Book> context,
             @Body Book newBook) throws Neo4jServerException, ResourceException {

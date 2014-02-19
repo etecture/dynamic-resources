@@ -48,7 +48,6 @@ import de.etecture.opensource.dynamicresources.annotations.Executes;
 import de.etecture.opensource.dynamicresources.annotations.Method;
 import de.etecture.opensource.dynamicresources.annotations.Produces;
 import de.etecture.opensource.dynamicresources.annotations.Resource;
-import de.etecture.opensource.dynamicresources.annotations.URI;
 import de.etecture.opensource.dynamicresources.api.RequestReader;
 import de.etecture.opensource.dynamicresources.api.ResponseWriter;
 import de.etecture.opensource.dynamicresources.api.StatusCodes;
@@ -76,10 +75,11 @@ import de.etecture.opensource.dynamicresources.metadata.BasicResourceMethodReque
 import de.etecture.opensource.dynamicresources.metadata.BasicResourceMethodResponse;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethod;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponse;
-import de.etecture.opensource.dynamicresources.metadata.ResourceNotFoundException;
+import de.etecture.opensource.dynamicresources.metadata.ResourcePath;
 import de.etecture.opensource.dynamicresources.metadata.annotated.AnnotatedApplication;
 import de.etecture.opensource.dynamicresources.metadata.annotated.AnnotatedResource;
 import de.etecture.opensource.dynamicresources.metadata.annotated.AnnotatedResourceMethod;
+import de.etecture.opensource.dynamicresources.metadata.annotated.DefaultResourcePath;
 import de.etecture.opensource.dynamicresources.utils.AnnotatedTypeDelegate;
 import de.etecture.opensource.dynamicresources.utils.ApplicationLiteral;
 import de.etecture.opensource.dynamicresources.utils.BeanBuilder;
@@ -112,9 +112,7 @@ import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.DefinitionException;
 import javax.enterprise.inject.spi.Extension;
-import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
-import javax.inject.Named;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -194,8 +192,6 @@ public class ResourceMetadataScanner implements Extension {
                     at.getJavaClass().getName()});
                 // add the type as a resource to the application.
                 addResourceType(annotation, at.getJavaClass());
-                // and add a produced mime-type for it:
-                addProducedMimeType(at.getJavaClass(), "text/plain");
             }
         }
     }
@@ -216,7 +212,8 @@ public class ResourceMetadataScanner implements Extension {
         final AnnotatedType<T> at = pat.getAnnotatedType();
 
         // look, if the type is a subtype of RequestReader.
-        if (RequestReader.class.isAssignableFrom(at.getJavaClass())) {
+        if (RequestReader.class.isAssignableFrom(at.getJavaClass())
+                && RequestReader.class != at.getJavaClass()) {
 
             // look if @Consumes is present ...
             if (!at.isAnnotationPresent(Consumes.class)) {
@@ -230,10 +227,10 @@ public class ResourceMetadataScanner implements Extension {
                     responsibleTypeForRequestReader = Object.class;
                 }
                 addConsumedMimeType(responsibleTypeForRequestReader,
-                        "text/plain");
+                        "*/*");
                 final Consumes consumes = new ConsumesLiteral(
                         responsibleTypeForRequestReader, new String[]{
-                    "text/plain"});
+                    "*/*"});
                 // delegate the new @Consumes
                 pat.setAnnotatedType(new AnnotatedTypeDelegate<T>(at) {
                     @Override
@@ -278,7 +275,8 @@ public class ResourceMetadataScanner implements Extension {
         final AnnotatedType<T> at = pat.getAnnotatedType();
 
         // look, if the type is a subtype of RequestReader.
-        if (ResponseWriter.class.isAssignableFrom(at.getJavaClass())) {
+        if (ResponseWriter.class.isAssignableFrom(at.getJavaClass())
+                && ResponseWriter.class != at.getJavaClass()) {
 
             // look if @Consumes is present ...
             if (!at.isAnnotationPresent(Produces.class)) {
@@ -292,10 +290,10 @@ public class ResourceMetadataScanner implements Extension {
                     responsibleTypeForResponseWriter = Object.class;
                 }
                 addProducedMimeType(responsibleTypeForResponseWriter,
-                        "text/plain");
+                        "*/*");
                 final Produces produces = new ProducesLiteral(
                         responsibleTypeForResponseWriter, new String[]{
-                    "text/plain"});
+                    "*/*"});
                 // delegate the new @Produces
                 pat.setAnnotatedType(new AnnotatedTypeDelegate<T>(at) {
                     @Override
@@ -408,6 +406,22 @@ public class ResourceMetadataScanner implements Extension {
             // now buildVerbose a bean for this application.
             abd.addBean(createApplicationBean(beanManager, application));
 
+            // create the root resource for the application.
+            AbstractResource rootResource = new AbstractResource(application,
+                    application.getName() + "Root",
+                    "the Root Resource for the application" + application
+                    .getName()) {
+                private final DefaultResourcePath path =
+                        new DefaultResourcePath(this, "/");
+
+                @Override
+                public ResourcePath getPath() {
+                    return path;
+                }
+            };
+            application.addResource(rootResource);
+            abd.addBean(createResourceBean(beanManager, rootResource));
+
         }
 
         // process the executionMethods
@@ -481,7 +495,6 @@ public class ResourceMetadataScanner implements Extension {
                 DynamicApplicationAccessor.class,
                 Collections.<Annotation>singleton(new ApplicationLiteral(
                 application)),
-                "" + application.hashCode(),
                 new DynamicApplicationAccessorCreator(application));
     }
 
@@ -495,7 +508,6 @@ public class ResourceMetadataScanner implements Extension {
                 ResourceAccessor.class,
                 DynamicResourceAccessor.class,
                 Collections.<Annotation>singleton(new ResourceLiteral(resource)),
-                "" + resource.hashCode(),
                 new DynamicResourceAccessorCreator(resource));
     }
 
@@ -515,7 +527,6 @@ public class ResourceMetadataScanner implements Extension {
                 TypedResourceAccessor.class,
                 DynamicTypedResourceAccessor.class,
                 qualifier,
-                "" + resource.hashCode() + "" + type.getSimpleName(),
                 new DynamicTypedResourceAccessorCreator(resource, type),
                 buildType(TypedResourceAccessor.class, type));
     }
@@ -556,7 +567,6 @@ public class ResourceMetadataScanner implements Extension {
                 MethodAccessor.class,
                 DynamicMethodAccessor.class,
                 qualifier,
-                "" + response.hashCode(),
                 new DynamicMethodAccessorCreator(response),
                 buildType(MethodAccessor.class, response.getResponseType()));
     }
@@ -566,11 +576,10 @@ public class ResourceMetadataScanner implements Extension {
             Class<A> type,
             Class<? extends A> concreteType,
             Set<Annotation> qualifier,
-            String prefix,
             BeanCreator creator, Type... types) {
         BeanBuilder<A> builder =
                 BeanBuilder.forClass(beanManager, type)
-                .withName(concreteType.getSimpleName() + "For" + prefix);
+                .withoutName();
         if (types.length > 0) {
             builder = builder.withTypes(types);
         }
@@ -591,7 +600,7 @@ public class ResourceMetadataScanner implements Extension {
                 resourceMethod.getResource().getApplication().getName(),
                 resourceMethod.getResource().getName(), resourceMethod.getName()));
         return BeanBuilder.forClass(beanManager, ResourceMethodExecutor.class)
-                .withName(createResourceMethodExecutorName(resourceMethod))
+                .withoutName()
                 .withQualifier(new ApplicationLiteral(resourceMethod
                 .getResource().getApplication()))
                 .withQualifier(new ResourceLiteral(resourceMethod.getResource()))
@@ -631,7 +640,7 @@ public class ResourceMetadataScanner implements Extension {
         }
 
         return BeanBuilder.forClass(beanManager, ResourceMethodExecutor.class)
-                .withName(createResourceMethodExecutorName(resourceMethod))
+                .withoutName()
                 .withQualifier(new ApplicationLiteral(resourceMethod
                 .getResource().getApplication()))
                 .withQualifier(new ResourceLiteral(resourceMethod.getResource()))
@@ -649,6 +658,7 @@ public class ResourceMetadataScanner implements Extension {
         return BeanBuilder.forInstanceWithName(beanManager,
                 de.etecture.opensource.dynamicresources.metadata.Application.class,
                 application, application.getName())
+                .withNamed(application.getName())
                 .withDefault()
                 .withAny()
                 .applicationScoped()
@@ -656,10 +666,12 @@ public class ResourceMetadataScanner implements Extension {
     }
 
     Bean<de.etecture.opensource.dynamicresources.metadata.Resource> createResourceBean(
-            BeanManager beanManager, AnnotatedResource resource) {
-        return BeanBuilder.forInstanceWithName(beanManager,
+            BeanManager beanManager, AbstractResource resource) {
+        return BeanBuilder.forInstance(beanManager,
                 de.etecture.opensource.dynamicresources.metadata.Resource.class,
-                resource, resource.getName())
+                resource)
+                .withName(resource.getName())
+                .withNamed(resource.getName())
                 .withDefault()
                 .withAny()
                 .withQualifier(new ApplicationLiteral(resource.getApplication()
@@ -718,7 +730,7 @@ public class ResourceMetadataScanner implements Extension {
             Class<?> responsibleTypeForRequestReader, String... mimeTypes) {
         Set<String> mimes =
                 getConsumedMimeTypes(responsibleTypeForRequestReader);
-        if (mimes == null) {
+        if (mimes == null || mimes.isEmpty()) {
             mimes = new HashSet<>();
             consumedMimeTypes.put(responsibleTypeForRequestReader,
                     mimes);
@@ -734,7 +746,7 @@ public class ResourceMetadataScanner implements Extension {
             Class<?> responsibleTypeForRequestReader, String... mimeTypes) {
         Set<String> mimes =
                 getProducedMimeTypes(responsibleTypeForRequestReader);
-        if (mimes == null) {
+        if (mimes == null || mimes.isEmpty()) {
             mimes = new HashSet<>();
             producedMimeTypes.put(responsibleTypeForRequestReader,
                     mimes);
@@ -762,6 +774,9 @@ public class ResourceMetadataScanner implements Extension {
                 break;
             }
         }
+        if (mimes == null) {
+            mimes = Collections.emptySet();
+        }
         return mimes;
     }
 
@@ -780,6 +795,9 @@ public class ResourceMetadataScanner implements Extension {
                 mimes = e.getValue();
                 break;
             }
+        }
+        if (mimes == null) {
+            mimes = Collections.emptySet();
         }
         return mimes;
     }
@@ -975,19 +993,6 @@ public class ResourceMetadataScanner implements Extension {
         return methods;
     }
 
-    private Iterable<AnnotatedResourceMethod> getAnnotatedResourceMethods(
-            Iterable<de.etecture.opensource.dynamicresources.metadata.Application> applications) {
-        Set<AnnotatedResourceMethod> methods = new HashSet<>();
-        return methods;
-    }
-
-    private String createResourceMethodExecutorName(
-            ResourceMethod resourceMethod) {
-        return String.format("ExecutorFor%sInResource%sAndApplication%s",
-                resourceMethod.getName(), resourceMethod.getResource().getName(),
-                resourceMethod.getResource().getApplication().getName());
-    }
-
     private String createStatement(Class<?> resourceClass,
             String methodName, String statement) {
         if (statement == null || statement.trim().isEmpty()) {
@@ -1001,91 +1006,4 @@ public class ResourceMetadataScanner implements Extension {
         }
     }
 
-    private de.etecture.opensource.dynamicresources.metadata.Application findApplicationByName(
-            String name,
-            Iterable<de.etecture.opensource.dynamicresources.metadata.Application> applications) {
-        for (de.etecture.opensource.dynamicresources.metadata.Application application
-                : applications) {
-            if (name.equals(application.getName())) {
-                return application;
-            }
-        }
-        throw new DefinitionException(
-                "There is no application defined with name: " + name);
-    }
-
-    private de.etecture.opensource.dynamicresources.metadata.Application findApplicationByURI(
-            String uri,
-            Iterable<de.etecture.opensource.dynamicresources.metadata.Application> applications) {
-        for (de.etecture.opensource.dynamicresources.metadata.Application application
-                : applications) {
-            if (uri.equals(application.getBase())) {
-                return application;
-            }
-        }
-        throw new DefinitionException(
-                "There is no application defined with uri: " + uri);
-    }
-
-    private de.etecture.opensource.dynamicresources.metadata.Application findApplicationStartingWithURI(
-            String uri,
-            Iterable<de.etecture.opensource.dynamicresources.metadata.Application> applications) {
-        for (de.etecture.opensource.dynamicresources.metadata.Application application
-                : applications) {
-            if (uri.startsWith(application.getBase())) {
-                return application;
-            }
-        }
-        throw new DefinitionException(
-                "There is no application defined that is root of uri: " + uri);
-    }
-
-    private de.etecture.opensource.dynamicresources.metadata.Resource findResourceInApplicationForInjectionPoint(
-            InjectionPoint ip,
-            de.etecture.opensource.dynamicresources.metadata.Application application)
-            throws DefinitionException, ResourceNotFoundException {
-        if (ip.getAnnotated().isAnnotationPresent(Resource.class)) {
-            return application.getResources().get(ip.getAnnotated()
-                    .getAnnotation(Resource.class).name());
-        } else if (ip.getAnnotated().isAnnotationPresent(Named.class)) {
-            return application.getResources().get(ip.getAnnotated()
-                    .getAnnotation(Named.class).value());
-        } else if (ip.getAnnotated().isAnnotationPresent(URI.class)) {
-            return application.findResource(ip.getAnnotated()
-                    .getAnnotation(URI.class).value());
-        } else if (application.getResources().isEmpty()) {
-            throw new DefinitionException(
-                    "Ambigiuous resources found for " + ip);
-        } else {
-            return application.getResources().values().iterator()
-                    .next();
-        }
-    }
-
-    private de.etecture.opensource.dynamicresources.metadata.Resource findResourceWithinApplicationsForInjectionPoint(
-            InjectionPoint ip,
-            Set<de.etecture.opensource.dynamicresources.metadata.Application> applications)
-            throws ResourceNotFoundException, DefinitionException {
-        // find the application
-        de.etecture.opensource.dynamicresources.metadata.Application application;
-        if (ip.getAnnotated().isAnnotationPresent(Application.class)) {
-            // get the @Application
-            application = findApplicationByName(ip.getAnnotated()
-                    .getAnnotation(Application.class).name(), applications);
-            return findResourceInApplicationForInjectionPoint(ip,
-                    application);
-        } else if (ip.getAnnotated().isAnnotationPresent(URI.class)) {
-            application = findApplicationStartingWithURI(ip.getAnnotated()
-                    .getAnnotation(URI.class).value(), applications);
-            return application.findResource(ip.getAnnotated()
-                    .getAnnotation(URI.class).value());
-        } else if (applications.size() == 1) {
-            application = applications.iterator().next();
-            return findResourceInApplicationForInjectionPoint(ip,
-                    application);
-        } else {
-            throw new DefinitionException(
-                    "Ambigiuous applications found for " + ip);
-        }
-    }
 }

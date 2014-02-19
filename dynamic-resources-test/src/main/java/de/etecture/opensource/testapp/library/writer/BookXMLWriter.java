@@ -37,49 +37,41 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+package de.etecture.opensource.testapp.library.writer;
 
-package de.etecture.opensource.dynamicresources.metadata;
-
+import de.etecture.opensource.dynamicresources.annotations.Produces;
 import de.etecture.opensource.dynamicresources.api.MediaType;
-import de.etecture.opensource.dynamicresources.api.ResourceException;
-import java.util.Arrays;
+import de.etecture.opensource.dynamicresources.api.ResponseWriter;
+import de.etecture.opensource.testapp.library.Book;
+import java.io.IOException;
+import java.io.Writer;
+import org.apache.commons.lang.StringUtils;
 
 /**
  *
  * @author rhk
  * @version
  * @since
+ *
  */
-public class MediaTypeAmbigiousException extends ResourceException {
+@Produces(contentType = Book.class,
+          mimeType = "application/vnd.etecture.testapp.library.book+xml")
+public class BookXMLWriter implements ResponseWriter<Book> {
 
-    private static final long serialVersionUID = 1L;
-    private final ResourceMethod resourceMethod;
-    private final MediaType mediaType;
-
-    public MediaTypeAmbigiousException(MediaType mediaType,
-            String... writers) {
-        super("The mediaType: " + mediaType
-                + " is not unique. Possible writers are: " + Arrays.toString(
-                writers));
-        this.resourceMethod = null;
-        this.mediaType = mediaType;
+    @Override
+    public void processElement(Book element, Writer writer, MediaType mimetype)
+            throws IOException {
+        writer.append("<book isbn=\"").append(element.getISBN()).append("\">");
+        writer.append("<title>").append(element.getTitle()).append("</title>");
+        if (StringUtils.isNotBlank(element.getSubTitle())) {
+            writer.append("<sub-title>").append(element.getSubTitle()).append(
+                    "</sub-title>");
+        }
+        writer.append("</book>");
     }
 
-    public MediaTypeAmbigiousException(ResourceMethod resourceMethod,
-            MediaType mediaType) {
-        super("The mediaType: " + mediaType
-                + " is not unique for resourceMethod: " + resourceMethod
-                .getName() + " for resource: " + resourceMethod.getResource()
-                .getName());
-        this.resourceMethod = resourceMethod;
-        this.mediaType = mediaType;
-    }
-
-    public ResourceMethod getResourceMethod() {
-        return resourceMethod;
-    }
-
-    public MediaType getMediaType() {
-        return mediaType;
+    @Override
+    public int getContentLength(Book entity, MediaType acceptedMediaType) {
+        return -1;
     }
 }

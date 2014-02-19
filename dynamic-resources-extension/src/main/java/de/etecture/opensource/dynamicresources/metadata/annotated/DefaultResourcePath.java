@@ -37,8 +37,11 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.metadata;
+package de.etecture.opensource.dynamicresources.metadata.annotated;
 
+import de.etecture.opensource.dynamicresources.metadata.Resource;
+import de.etecture.opensource.dynamicresources.metadata.ResourcePath;
+import de.etecture.opensource.dynamicresources.metadata.ResourcePathNotMatchException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -102,8 +105,12 @@ public class DefaultResourcePath implements ResourcePath {
     public String buildCompleteUri(String... pathParamValues) {
         Matcher matcher = GROUP_PATTERN.matcher(path);
         StringBuffer buffer = new StringBuffer();
-        for (int i = 0; matcher.find() && i < pathParamValues.length; i++) {
-            matcher.appendReplacement(buffer, pathParamValues[i]);
+        for (int i = 0; matcher.find(); i++) {
+            if (i < pathParamValues.length) {
+                matcher.appendReplacement(buffer, pathParamValues[i]);
+            } else {
+                matcher.appendReplacement(buffer, "*");
+            }
         }
         matcher.appendTail(buffer);
         return buffer.toString();

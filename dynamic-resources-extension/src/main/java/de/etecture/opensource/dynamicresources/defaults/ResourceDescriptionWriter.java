@@ -88,25 +88,31 @@ public class ResourceDescriptionWriter implements ResponseWriter<Resource> {
             writer
                     .printf("\t%s: %s%n", rdm.getName(), rdm
                     .getDescription());
-            writer.println("\t\tFilters:");
-            for (ResourceMethodFilter rdmf : rdm.getFilters()) {
-                writer.printf("\t\t\t- %s: %s%n", rdmf.getName(),
-                        rdmf
-                        .getDescription());
-            }
-            writer.println("\t\tConsumes:");
-            for (ResourceMethodRequest<?> rdmr : rdm.getRequests().values()) {
-                for (MediaType mediatype : rdmr
-                        .getAcceptedRequestMediaTypes()) {
-                    writer.printf("\t\t\t- %s%n", mediatype);
+            if (!rdm.getFilters().isEmpty()) {
+                writer.println("\t\tFilters:");
+                for (ResourceMethodFilter rdmf : rdm.getFilters()) {
+                    writer.printf("\t\t\t- %s: %s%n", rdmf.getName(),
+                            rdmf
+                            .getDescription());
                 }
             }
-            writer.println("\t\tProduces:");
-            for (ResourceMethodResponse<?> rdmrr : rdm.getResponses()
-                    .values()) {
-                for (MediaType mediatype : rdmrr
-                        .getSupportedResponseMediaTypes()) {
-                    writer.printf("\t\t\t- %s%n", mediatype);
+            if (!rdm.getRequests().isEmpty()) {
+                writer.println("\t\tConsumes:");
+                for (ResourceMethodRequest<?> rdmr : rdm.getRequests().values()) {
+                    for (MediaType mediatype : rdmr
+                            .getAllowedRequestMediaTypes()) {
+                        writer.printf("\t\t\t- %s%n", mediatype);
+                    }
+                }
+            }
+            if (!rdm.getResponses().isEmpty()) {
+                writer.println("\t\tProduces:");
+                for (ResourceMethodResponse<?> rdmrr : rdm.getResponses()
+                        .values()) {
+                    for (MediaType mediatype : rdmrr
+                            .getSupportedResponseMediaTypes()) {
+                        writer.printf("\t\t\t- %s%n", mediatype);
+                    }
                 }
             }
         }

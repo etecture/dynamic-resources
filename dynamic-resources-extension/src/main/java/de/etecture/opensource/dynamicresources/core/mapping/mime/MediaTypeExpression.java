@@ -39,9 +39,9 @@
  */
 package de.etecture.opensource.dynamicresources.core.mapping.mime;
 
-import de.etecture.opensource.dynamicresources.core.mapping.versions.VersionExpression;
 import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.api.Version;
+import de.etecture.opensource.dynamicresources.core.mapping.versions.VersionExpression;
 import java.nio.charset.Charset;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -152,6 +152,9 @@ public class MediaTypeExpression implements MediaType {
 
     @Override
     public boolean isCompatibleTo(MediaType... mediaTypes) {
+        if (mediaTypes.length == 0) {
+            return true;
+        }
         for (MediaType mediaType : mediaTypes) {
             if (isCompatible(mediaType)) {
                 return true;
@@ -161,8 +164,10 @@ public class MediaTypeExpression implements MediaType {
     }
 
     private boolean isCompatible(MediaType mediaType) {
-        if ("*".equals(this.subtype) || this.subtype.equalsIgnoreCase(mediaType
-                .subType())) {
+        System.out.println("check if: " + mediaType + " is compatible to: "
+                + this);
+        if ("*".equals(mediaType.subType())
+                || this.subtype.equalsIgnoreCase(mediaType.subType())) {
             return true;
         } else if (StringUtils.isNotBlank(this.alttype) && this.alttype
                 .equalsIgnoreCase(mediaType.subType())) {

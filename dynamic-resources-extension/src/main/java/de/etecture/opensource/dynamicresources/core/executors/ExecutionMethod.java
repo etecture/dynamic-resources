@@ -252,9 +252,7 @@ public class ExecutionMethod<T> implements AnnotatedMethod<T>, Executes {
     public boolean matches(ResourceMethod method) {
         return matches(method.getResource().getApplication())
                 && matches(method.getResource())
-                && method.getName().matches(method())
-                && method.getResponses().containsKey(responseType())
-                && method.getRequests().containsKey(requestType());
+                && method.getName().matches(method());
     }
 
     @Override

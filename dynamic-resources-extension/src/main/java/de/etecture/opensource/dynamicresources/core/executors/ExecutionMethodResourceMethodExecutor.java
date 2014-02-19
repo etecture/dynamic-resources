@@ -41,7 +41,6 @@ package de.etecture.opensource.dynamicresources.core.executors;
 
 import de.etecture.opensource.dynamicresources.api.ExecutionContext;
 import de.etecture.opensource.dynamicresources.api.ResourceException;
-import de.etecture.opensource.dynamicresources.api.Response;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import javax.annotation.PostConstruct;
@@ -103,11 +102,7 @@ public class ExecutionMethodResourceMethodExecutor<T> extends AbstractResourceMe
         }
         try {
             Object result = method.getJavaMember().invoke(bean, arguments);
-            if (Response.class.isInstance(result)) {
-                return (R) Response.class.cast(result).getEntity();
-            } else {
-                return (R) result;
-            }
+            return (R) result;
         } catch (IllegalAccessException | IllegalArgumentException |
                 InvocationTargetException ex) {
             throw new ResourceException("cannot call the execution method!", ex);

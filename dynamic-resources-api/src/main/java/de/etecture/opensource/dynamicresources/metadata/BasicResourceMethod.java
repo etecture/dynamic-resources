@@ -125,9 +125,10 @@ public class BasicResourceMethod implements ResourceMethod {
             MediaTypeNotAllowedException {
         Set<ResourceMethodRequest<?>> possibleRequests = new HashSet<>();
         for (ResourceMethodRequest<?> request : requests) {
-            if (mediaType.isCompatibleTo(request.getAcceptedRequestMediaTypes().
-                    toArray(new MediaType[request.getAcceptedRequestMediaTypes()
-                    .size()]))) {
+            final MediaType[] allowed = request.getAllowedRequestMediaTypes()
+                    .toArray(new MediaType[request.getAllowedRequestMediaTypes()
+                    .size()]);
+            if (mediaType.isCompatibleTo(allowed)) {
                 possibleRequests.add(request);
                 continue;
             }

@@ -40,10 +40,9 @@
 package de.etecture.opensource.dynamicresources.test;
 
 import de.etecture.opensource.dynamicresources.api.SecurityContext;
-import javax.annotation.Resource;
-import javax.ejb.SessionContext;
-import javax.enterprise.context.RequestScoped;
 import javax.enterprise.inject.Default;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  *
@@ -52,19 +51,18 @@ import javax.enterprise.inject.Default;
  * @since
  */
 @Default
-@RequestScoped
 public class DefaultSecurityContext implements SecurityContext {
 
-    @Resource
-    SessionContext ctx;
+    @Inject
+    HttpServletRequest ctx;
 
     @Override
     public boolean isUserInRole(String role) {
-        return ctx != null && ctx.isCallerInRole(role);
+        return ctx != null && ctx.isUserInRole(role);
     }
 
     @Override
     public String getUserPrincipal() {
-        return ctx == null ? "" : ctx.getCallerPrincipal().getName();
+        return ctx == null ? "" : ctx.getUserPrincipal().getName();
     }
 }

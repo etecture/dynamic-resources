@@ -70,6 +70,6 @@ public interface ResourceMethodRequest<B> {
      *
      * @return
      */
-    Set<MediaType> getAcceptedRequestMediaTypes();
+    Set<MediaType> getAllowedRequestMediaTypes();
 
 }

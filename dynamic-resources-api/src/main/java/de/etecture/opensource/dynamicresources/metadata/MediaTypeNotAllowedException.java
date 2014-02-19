@@ -41,6 +41,9 @@ package de.etecture.opensource.dynamicresources.metadata;
 
 import de.etecture.opensource.dynamicresources.api.MediaType;
 import de.etecture.opensource.dynamicresources.api.ResourceException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  *
@@ -52,30 +55,49 @@ public class MediaTypeNotAllowedException extends ResourceException {
 
     private static final long serialVersionUID = 1L;
     private final MediaType mediaType;
+    private final Set<MediaType> allowedMediaTypes = new HashSet<>();
 
-    public MediaTypeNotAllowedException(MediaType mediaType) {
-        super("The requested response-mediaType: " + mediaType
+    public MediaTypeNotAllowedException(MediaType mediaType,
+            MediaType... allowed) {
+        super("The requested request-mediaType: " + mediaType
                 + " is not provided");
         this.mediaType = mediaType;
+        this.allowedMediaTypes.addAll(Arrays.asList(allowed));
     }
 
     public MediaTypeNotAllowedException(ResourceMethod resourceMethod,
             MediaType mediaType) {
-        super("The requested response-mediaType: " + mediaType
+        super("The requested request-mediaType: " + mediaType
                 + " is not provided by resourceMethod: " + resourceMethod
                 .getName() + " for resource: " + resourceMethod.getResource()
                 .getName());
         this.mediaType = mediaType;
+        for (ResourceMethodRequest request : resourceMethod.getRequests()
+                .values()) {
+            this.allowedMediaTypes
+                    .addAll(request.getAllowedRequestMediaTypes());
+        }
     }
 
     public MediaTypeNotAllowedException(Resource resource,
             MediaType mediaType) {
-        super("The requested response-mediaType: " + mediaType
+        super("The requested request-mediaType: " + mediaType
                 + " is not supported for resource: " + resource.getName());
         this.mediaType = mediaType;
+        for (ResourceMethod resourceMethod : resource.getMethods().values()) {
+            for (ResourceMethodRequest request : resourceMethod.getRequests()
+                    .values()) {
+                this.allowedMediaTypes
+                        .addAll(request.getAllowedRequestMediaTypes());
+            }
+        }
     }
 
     public MediaType getMediaType() {
         return mediaType;
+    }
+
+    public Set<MediaType> getAllowedMediaTypes() {
+        return allowedMediaTypes;
     }
 }

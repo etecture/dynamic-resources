@@ -37,13 +37,19 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.metadata;
+package de.etecture.opensource.dynamicresources.defaults;
 
+import de.etecture.opensource.dynamicresources.annotations.Produces;
 import de.etecture.opensource.dynamicresources.api.MediaType;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import de.etecture.opensource.dynamicresources.api.ResponseWriter;
+import de.etecture.opensource.dynamicresources.metadata.Application;
+import de.etecture.opensource.dynamicresources.metadata.Resource;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import org.apache.commons.lang.StringUtils;
 
 /**
  *
@@ -51,35 +57,44 @@ import java.util.Set;
  * @version
  * @since
  */
-public class BasicResourceMethodRequest<B> implements ResourceMethodRequest<B> {
+@Produces(contentType = Application.class,
+          mimeType = "text/plain")
+public class ApplicationDescriptionWriter implements ResponseWriter<Application> {
 
-    private final Set<MediaType> mediaTypes = new HashSet<>();
-    private final ResourceMethod method;
-    private final Class<B> requestType;
+    @Inject
+    HttpServletRequest req;
 
-    public BasicResourceMethodRequest(ResourceMethod method,
-            Class<B> requestType, MediaType... mediaTypes) {
-        this.method = method;
-        this.requestType = requestType;
-        this.mediaTypes.addAll(Arrays.asList(mediaTypes));
-    }
-
-    public void addAcceptedRequestMediaType(MediaType mediaType) {
-        this.mediaTypes.add(mediaType);
+    @Override
+    public int getContentLength(Application entity, MediaType acceptedMediaType) {
+        return -1;
     }
 
     @Override
-    public Set<MediaType> getAllowedRequestMediaTypes() {
-        return Collections.unmodifiableSet(mediaTypes);
-    }
+    public void processElement(Application rd, Writer w,
+            MediaType mimetype) throws IOException {
+        final PrintWriter writer = new PrintWriter(w);
+        writer.printf("Application: %s%n", rd.getName());
+        writer.println(StringUtils.repeat("=", rd.getName()
+                .length() + 10));
+        writer.println();
 
-    @Override
-    public ResourceMethod getMethod() {
-        return method;
-    }
+        if (StringUtils.isBlank(rd.getDescription())) {
+            writer.printf("\t%s%n", rd.getDescription());
+        }
 
-    @Override
-    public Class<B> getRequestType() {
-        return requestType;
+        writer.println("Available Resources");
+        writer.println("-------------------");
+        writer.println();
+
+        for (Resource r : rd.getResources().values()) {
+            writer
+                    .printf("\t%s: %s://%s:%d%s%s%s%n", r.getName(), req
+                    .getScheme(), req.getServerName(), req.getServerPort(), req
+                    .getContextPath(),
+                    rd.getBase(),
+                    r.getPath()
+                    .buildCompleteUri());
+            writer.printf("\t\t%s%n%n", r.getDescription());
+        }
     }
 }

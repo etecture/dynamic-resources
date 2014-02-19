@@ -48,13 +48,13 @@ import de.etecture.opensource.dynamicresources.utils.AnyLiteral;
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.WeakHashMap;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
+import org.apache.commons.lang.StringUtils;
 
 /**
  *
@@ -101,7 +101,7 @@ public class ResponseWriters {
         if (responseWriter == null) {
             Set<Bean<?>> beans = beanManager
                     .getBeans(Object.class, new AnyLiteral());
-            Map<Bean<?>, Class<?>> compatibleBeans = new HashMap<>();
+            Set<Bean<?>> compatibleBeans = new HashSet<>();
             for (Bean<?> bean : beans) {
                 if (ResponseWriter.class.isAssignableFrom(bean.getBeanClass())) {
                     for (Annotation annotation : bean.getQualifiers()) {
@@ -114,15 +114,11 @@ public class ResponseWriters {
                                     for (String mime : ((Produces) annotation)
                                             .mimeType()) {
                                         if (acceptedType.isCompatibleTo(mime)) {
-                                            compatibleBeans.put(bean,
-                                                    ((Produces) annotation)
-                                                    .contentType());
+                                            compatibleBeans.add(bean);
                                         }
                                     }
                                 } else {
-                                    compatibleBeans.put(bean,
-                                            ((Produces) annotation)
-                                            .contentType());
+                                    compatibleBeans.add(bean);
                                 }
                             }
                         }
@@ -132,29 +128,22 @@ public class ResponseWriters {
 
             if (compatibleBeans.isEmpty()) {
                 throw new MediaTypeNotSupportedException(acceptedType);
-            } else {
-                Bean<ResponseWriter<T>> bean = null;
-                if (compatibleBeans.size() == 1) {
-                    bean = (Bean<ResponseWriter<T>>) compatibleBeans.keySet()
-                            .iterator()
-                            .next();
-                } else {
-                    for (Map.Entry<Bean<?>, Class<?>> e : compatibleBeans
-                            .entrySet()) {
-                        if (e.getValue() != Object.class) {
-                            bean = (Bean<ResponseWriter<T>>) e.getKey();
-                        }
-                    }
-                    if (bean == null) {
-                        bean = (Bean<ResponseWriter<T>>) compatibleBeans
-                                .keySet()
-                                .iterator()
-                                .next();
-                    }
-                }
+            } else if (compatibleBeans.size() == 1) {
+                Bean<ResponseWriter<T>> bean =
+                        (Bean<ResponseWriter<T>>) compatibleBeans
+                        .iterator()
+                        .next();
                 responseWriter = (ResponseWriter<T>) bean.create(
                         beanManager.createCreationalContext(bean));
                 cache.put(key, responseWriter);
+            } else {
+                Set<String> writerClasses = new HashSet<>();
+                for (Bean<?> bean : compatibleBeans) {
+                    writerClasses.add(StringUtils.defaultIfBlank(bean.getName(),
+                            bean.getBeanClass().toString()));
+                }
+                throw new MediaTypeAmbigiousException(acceptedType,
+                        writerClasses.toArray(new String[writerClasses.size()]));
             }
         }
         return responseWriter;

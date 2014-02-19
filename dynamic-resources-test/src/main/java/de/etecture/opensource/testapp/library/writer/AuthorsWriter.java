@@ -38,11 +38,13 @@
  *
  */
 
-package de.etecture.opensource.dynamicresources.metadata;
+package de.etecture.opensource.testapp.library.writer;
 
 import de.etecture.opensource.dynamicresources.api.MediaType;
-import de.etecture.opensource.dynamicresources.api.ResourceException;
-import java.util.Arrays;
+import de.etecture.opensource.dynamicresources.api.ResponseWriter;
+import de.etecture.opensource.testapp.library.Authors;
+import java.io.IOException;
+import java.io.Writer;
 
 /**
  *
@@ -50,36 +52,16 @@ import java.util.Arrays;
  * @version
  * @since
  */
-public class MediaTypeAmbigiousException extends ResourceException {
+public class AuthorsWriter implements ResponseWriter<Authors> {
 
-    private static final long serialVersionUID = 1L;
-    private final ResourceMethod resourceMethod;
-    private final MediaType mediaType;
-
-    public MediaTypeAmbigiousException(MediaType mediaType,
-            String... writers) {
-        super("The mediaType: " + mediaType
-                + " is not unique. Possible writers are: " + Arrays.toString(
-                writers));
-        this.resourceMethod = null;
-        this.mediaType = mediaType;
+    @Override
+    public void processElement(Authors element, Writer writer,
+            MediaType mimetype) throws IOException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    public MediaTypeAmbigiousException(ResourceMethod resourceMethod,
-            MediaType mediaType) {
-        super("The mediaType: " + mediaType
-                + " is not unique for resourceMethod: " + resourceMethod
-                .getName() + " for resource: " + resourceMethod.getResource()
-                .getName());
-        this.resourceMethod = resourceMethod;
-        this.mediaType = mediaType;
-    }
-
-    public ResourceMethod getResourceMethod() {
-        return resourceMethod;
-    }
-
-    public MediaType getMediaType() {
-        return mediaType;
+    @Override
+    public int getContentLength(Authors entity, MediaType acceptedMediaType) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

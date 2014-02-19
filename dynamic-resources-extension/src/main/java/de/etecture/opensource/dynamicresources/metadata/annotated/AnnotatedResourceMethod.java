@@ -50,6 +50,7 @@ import de.etecture.opensource.dynamicresources.metadata.BasicResourceMethodReque
 import de.etecture.opensource.dynamicresources.metadata.BasicResourceMethodResponse;
 import de.etecture.opensource.dynamicresources.metadata.Resource;
 import java.lang.reflect.AnnotatedElement;
+import javax.enterprise.inject.spi.DefinitionException;
 
 /**
  *
@@ -137,6 +138,11 @@ public class AnnotatedResourceMethod extends BasicResourceMethod implements
                             new AnnotatedResourceMethodResponseHeader(
                             header));
                 }
+                if (response.getSupportedResponseMediaTypes().isEmpty()) {
+                    throw new DefinitionException(
+                            "There is no Writer that handle response types: "
+                            + response.getResponseType());
+                }
                 method.addResponse(response);
             }
         } else {
@@ -155,9 +161,11 @@ public class AnnotatedResourceMethod extends BasicResourceMethod implements
                             new MediaTypeExpression(
                             producedMime));
                 }
-            } else {
-                response.addSupportedResponseMediaType(new MediaTypeExpression(
-                        "text/plain"));
+            }
+            if (response.getSupportedResponseMediaTypes().isEmpty()) {
+                throw new DefinitionException(
+                        "There is no Writer that handle response types: "
+                        + response.getResponseType());
             }
             method.addResponse(response);
 

@@ -44,7 +44,6 @@ import de.etecture.opensource.dynamicresources.annotations.Methods;
 import de.etecture.opensource.dynamicresources.annotations.Resource;
 import de.etecture.opensource.dynamicresources.metadata.AbstractResource;
 import de.etecture.opensource.dynamicresources.metadata.Application;
-import de.etecture.opensource.dynamicresources.metadata.DefaultResourcePath;
 import de.etecture.opensource.dynamicresources.metadata.ResourcePath;
 import java.lang.reflect.AnnotatedElement;
 import java.util.Objects;

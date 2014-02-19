@@ -45,6 +45,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
@@ -54,6 +55,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
+import javax.inject.Named;
 
 /**
  *
@@ -140,6 +142,16 @@ public class BeanBuilder<T> {
         beanBuilder.qualifiers.add(new NamedLiteral(name));
         beanBuilder.name = name;
         return beanBuilder;
+    }
+
+    public BeanBuilder<T> withoutName() {
+        this.name = null;
+        for (Iterator<Annotation> it = this.qualifiers.iterator(); it.hasNext();) {
+            if (it.next() instanceof Named) {
+                it.remove();
+            }
+        }
+        return this;
     }
 
     public BeanBuilder<T> withName(String name) {

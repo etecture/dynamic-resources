@@ -37,13 +37,18 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
 package de.etecture.opensource.dynamicresources.core.executors;
 
 import de.etecture.opensource.dynamicresources.annotations.Executes;
+import de.etecture.opensource.dynamicresources.api.DefaultResponse;
 import de.etecture.opensource.dynamicresources.api.ExecutionContext;
+import de.etecture.opensource.dynamicresources.api.HttpHeaders;
 import de.etecture.opensource.dynamicresources.api.HttpMethods;
+import de.etecture.opensource.dynamicresources.api.Response;
+import de.etecture.opensource.dynamicresources.metadata.Application;
 import de.etecture.opensource.dynamicresources.metadata.Resource;
+import java.util.Arrays;
+import java.util.Set;
 
 /**
  *
@@ -53,8 +58,26 @@ import de.etecture.opensource.dynamicresources.metadata.Resource;
  */
 public class OptionsResourceExecutor {
 
-    @Executes(method = HttpMethods.OPTIONS)
-    public Resource createOptions(ExecutionContext<?, ?> context) {
-        return context.getResourceMethod().getResource();
+    @Executes(
+            resource = ".*(?<!Root)$",
+            method = HttpMethods.OPTIONS,
+            responseType = Resource.class)
+    public Response<Resource> createOptions(ExecutionContext<?, ?> context) {
+        DefaultResponse<Resource> response = new DefaultResponse(context
+                .getResourceMethod().getResource(),
+                context.getResponseMetadata().getStatusCode());
+        final Set<String> methodNames =
+                context.getResourceMethod().getResource().getMethods().keySet();
+        response.addHeader(HttpHeaders.ALLOW, Arrays.toString(methodNames
+                .toArray(new String[methodNames.size()])));
+        return response;
+    }
+
+    @Executes(
+            resource = "^.*Root$",
+            method = HttpMethods.OPTIONS,
+            responseType = Application.class)
+    public Application createApplicationOptions(ExecutionContext<?, ?> context) {
+        return context.getResourceMethod().getResource().getApplication();
     }
 }

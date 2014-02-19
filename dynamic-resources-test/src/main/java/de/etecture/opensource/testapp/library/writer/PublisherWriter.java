@@ -1,29 +1,29 @@
 /*
  *  This file is part of the ETECTURE Open Source Community Projects.
- * 
+ *
  *  Copyright (c) 2013 by:
- * 
+ *
  *  ETECTURE GmbH
  *  Darmstädter Landstraße 112
  *  60598 Frankfurt
  *  Germany
- * 
+ *
  *  All rights reserved.
- * 
+ *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
- * 
+ *
  *  1. Redistributions of source code must retain the above copyright notice,
  *     this list of conditions and the following disclaimer.
- * 
+ *
  *  2. Redistributions in binary form must reproduce the above copyright notice,
  *     this list of conditions and the following disclaimer in the documentation
  *     and/or other materials provided with the distribution.
- * 
+ *
  *  3. Neither the name of the author nor the names of its contributors may be
  *     used to endorse or promote products derived from this software without
  *     specific prior written permission.
- * 
+ *
  *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -35,35 +35,33 @@
  *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
  *  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
-package de.etecture.opensource.testapp.library.reader
+package de.etecture.opensource.testapp.library.writer;
 
-import de.etecture.opensource.testapp.library.Book
-import de.etecture.opensource.dynamicresources.annotations.Consumes
-import groovy.util.XmlSlurper
-import org.xml.sax.SAXParseException
-import groovy.json.JsonBuilder
-import de.etecture.opensource.dynamicresources.api.RequestReader
-import org.json.simple.JSONAware
+import de.etecture.opensource.dynamicresources.api.MediaType;
+import de.etecture.opensource.dynamicresources.api.ResponseWriter;
+import de.etecture.opensource.testapp.library.Publisher;
+import java.io.IOException;
+import java.io.Writer;
 
 /**
  *
  * @author rhk
+ * @version
+ * @since
  */
-@Consumes(requestType = Book.class,
-    mimeType = ["application/xml", "text/xml"])
-class BookReader_XML implements RequestReader<Book> {
+public class PublisherWriter implements ResponseWriter<Publisher> {
 
-    
-    public Book processRequest(Reader reader, String mediaType) throws IOException {
-        println("read Book from xml.")
-        try {
-            def ct = new XmlSlurper().parse(reader)
-            return [getISBN: {ct.'@isbn'.text()}, getTitle: {ct.'title'.text()}, getSubTitle: {ct.'sub-title'.text()}] as Book
-        } catch(SAXParseException ex) {
-            return null;
-        }
+    @Override
+    public void processElement(Publisher element, Writer writer,
+            MediaType mimetype) throws IOException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public int getContentLength(Publisher entity, MediaType acceptedMediaType) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

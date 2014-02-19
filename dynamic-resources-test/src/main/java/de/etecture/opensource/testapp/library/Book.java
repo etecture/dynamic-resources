@@ -41,6 +41,7 @@ package de.etecture.opensource.testapp.library;
 
 import de.etecture.opensource.dynamicresources.annotations.Method;
 import de.etecture.opensource.dynamicresources.annotations.Methods;
+import de.etecture.opensource.dynamicresources.annotations.Produces;
 import de.etecture.opensource.dynamicresources.annotations.Resource;
 import de.etecture.opensource.dynamicresources.api.HttpMethods;
 import de.etecture.opensource.testapp.library.security.LibraryRoles;
@@ -60,7 +61,10 @@ import java.util.Set;
     @Method(name = HttpMethods.GET),
     @Method(name = HttpMethods.PUT,
             rolesAllowed = {LibraryRoles.ADMIN}),
-    @Method(name = HttpMethods.DELETE)
+    @Method(name = HttpMethods.DELETE,
+            produces =
+            @Produces(contentType = Boolean.class,
+                      mimeType = "text/plain"))
 })
 public interface Book {
 
