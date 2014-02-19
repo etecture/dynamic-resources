@@ -53,8 +53,10 @@ public interface BodyGenerator<T> {
     /**
      *
      * @param request
-     * @param parameter
+     * @param pathParameter
+     * @param queryParameter
      * @return
      */
-    T generateBody(Request request, Map<String, Object> parameter);
+    T generateBody(Request request, Map<String, String> pathParameter,
+            Map<String, Object> queryParameter);
 }

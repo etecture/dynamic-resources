@@ -55,7 +55,8 @@ import org.apache.commons.lang.StringUtils;
 public class DefaultBodyGenerator implements BodyGenerator {
 
     @Override
-    public Object generateBody(Request request, Map parameter) {
+    public Object generateBody(Request request, Map parameter,
+            Map queryParameter) {
         if (StringUtils.isBlank(request.bodyValue())) {
             return null;
         } else {

@@ -46,16 +46,20 @@ import de.etecture.opensource.dynamicrepositories.api.annotations.Query;
 import de.etecture.opensource.dynamicrepositories.executor.Technology;
 import de.etecture.opensource.dynamicrepositories.extension.DefaultQueryExecutionContext;
 import de.etecture.opensource.dynamicrepositories.extension.QueryExecutors;
-import de.etecture.opensource.dynamicresources.extension.DefaultRequest;
-import de.etecture.opensource.dynamicresources.utils.MethodLiteral;
-import de.etecture.opensource.dynamicresources.spi.ResourceMethodHandler;
+import de.etecture.opensource.dynamicrepositories.metadata.AnnotatedQueryDefinition;
+import de.etecture.opensource.dynamicrepositories.metadata.DefaultQueryDefinition;
+import de.etecture.opensource.dynamicrepositories.metadata.QueryDefinition;
+import de.etecture.opensource.dynamicresources.api.BooleanResult;
+import de.etecture.opensource.dynamicresources.api.accesspoints.MethodAccessor;
+import de.etecture.opensource.dynamicresources.api.accesspoints.ResourceAccessor;
+import de.etecture.opensource.dynamicresources.api.accesspoints.TypedResourceAccessor;
+import de.etecture.opensource.dynamicresources.metadata.ResponseTypeNotSupportedException;
 import de.etecture.opensource.dynamicresources.test.api.Expect;
-import de.etecture.opensource.dynamicresources.test.api.ParamSet;
-import de.etecture.opensource.dynamicresources.test.api.ParamSets;
 import de.etecture.opensource.dynamicresources.test.api.Request;
 import de.etecture.opensource.dynamicresources.test.api.Response;
-import de.etecture.opensource.dynamicresources.api.BooleanResult;
 import de.etecture.opensource.dynamicresources.test.utils.Nop;
+import de.etecture.opensource.dynamicresources.utils.ApplicationLiteral;
+import de.etecture.opensource.dynamicresources.utils.ResourceLiteral;
 import de.herschke.converters.api.Converters;
 import de.herschke.testhelper.ConsoleWriter;
 import de.herschke.testhelper.ConsoleWriter.Color;
@@ -90,11 +94,12 @@ public class ResourceTestMethod extends FrameworkMethod {
             new PrintStream(new NullOutputStream());
     private final Request request;
     private final QueryExecutors executors;
-    private final Map<String, Object> requestParameter;
-    private final ResourceMethodHandler handler;
+    private final Map<String, String> pathParameter = new HashMap<>();
+    private final Map<String, Object> queryParameter = new HashMap<>();
     private final Expect expect;
     private final ConsoleWriter out = new ConsoleWriter(System.out, 80);
     private final WeldContainer container;
+    private final TypedResourceAccessor<?> accessor;
 
     private String getEntityType(Object entity) {
         if (entity instanceof Proxy) {
@@ -153,18 +158,22 @@ public class ResourceTestMethod extends FrameworkMethod {
 
     public ResourceTestMethod(WeldContainer container, Method method) {
         super(method);
-        this.container = container;
-        this.executors = container.instance()
-                .select(QueryExecutors.class).get();
-        request = method.getAnnotation(Request.class);
-        expect = method.getAnnotation(Expect.class);
         try {
-            requestParameter = buildParameter();
+            this.container = container;
+            this.executors = container.instance()
+                    .select(QueryExecutors.class).get();
+            request = method.getAnnotation(Request.class);
+            expect = method.getAnnotation(Expect.class);
+            accessor = container.instance().select(ResourceAccessor.class,
+                    new ApplicationLiteral(request.application()),
+                    new ResourceLiteral(request
+                    .resource())).get().select(request.responseType());
+            buildParameter();
+        } catch (ResponseTypeNotSupportedException ex) {
+            throw new IllegalArgumentException(ex);
         } catch (Exception ex) {
-            throw new IllegalStateException("cannot build the parameters:", ex);
+            throw new IllegalArgumentException(ex);
         }
-        this.handler = container.instance().select(ResourceMethodHandler.class,
-                new MethodLiteral(request.method())).get();
     }
 
     @Override
@@ -188,9 +197,9 @@ public class ResourceTestMethod extends FrameworkMethod {
                 out.printRight('.', Color.GREEN, "done");
             }
             out.printLeft("invoke: %s %s",
-                    request.method(), request.resource().getSimpleName());
+                    request.method(), request.resource());
             final de.etecture.opensource.dynamicresources.api.Response<?> response =
-                    requestResource(request.resource());
+                    requestResource(request.responseType());
             out.printRight('.', Color.GREEN, "done");
             out.printLeft("checking response");
             Object entity;
@@ -242,11 +251,17 @@ public class ResourceTestMethod extends FrameworkMethod {
                     } else if (Param.class.isAssignableFrom(parameterAnnotation
                             .annotationType())) {
                         Param param = (Param) parameterAnnotation;
-                        if (requestParameter.containsKey(param.name())) {
+                        if (pathParameter.containsKey(param.name())) {
                             newParams[i] = container.instance().select(
                                     Converters.class).get().select(getMethod()
                                     .getParameterTypes()[i]).convert(
-                                    requestParameter
+                                    pathParameter
+                                    .get(param.name()));
+                        } else if (queryParameter.containsKey(param.name())) {
+                            newParams[i] = container.instance().select(
+                                    Converters.class).get().select(getMethod()
+                                    .getParameterTypes()[i]).convert(
+                                    queryParameter
                                     .get(param.name()));
                         } else {
                             newParams[i] = container.instance().select(param
@@ -291,83 +306,44 @@ public class ResourceTestMethod extends FrameworkMethod {
         }
     }
 
-    private Map<String, Object> getParameterForSet(String name) throws Exception {
-        Class<?> testClass = super.getMethod()
-                .getDeclaringClass();
-        Map<String, Object> parameter = new HashMap<>();
-        if (testClass.isAnnotationPresent(ParamSets.class)) {
-            for (ParamSet set : testClass.getAnnotation(ParamSets.class).value()) {
-                if (set.name().equals(name)) {
-                    parameter.putAll(getParameterForParameterSet(set));
-                }
-            }
-        }
-        if (testClass.isAnnotationPresent(ParamSet.class)) {
-            ParamSet set = testClass.getAnnotation(ParamSet.class);
-            if (set.name().equals(name)) {
-                parameter.putAll(getParameterForParameterSet(set));
-            }
-        }
-        return parameter;
-    }
-
-    private Map<String, Object> getParameterForParameterSet(ParamSet set) throws
-            Exception {
-        Map<String, Object> parameter = new HashMap<>();
-        for (String include : set.includes()) {
-            parameter.putAll(getParameterForSet(include));
-        }
-        for (Param param : set.pathParameter()) {
-            parameter.put(param.name(), container.instance().select(param
-                    .generator()).get().generate(param));
-        }
-        for (Param param : set.queryParameter()) {
-            parameter.put(param.name(), container.instance().select(param
-                    .generator()).get().generate(param));
-        }
-        return parameter;
-    }
-
-    private Map<String, Object> buildParameter() throws Exception {
-        Map<String, Object> parameter = new HashMap<>();
-        if (StringUtils.isNotBlank(request.parameterSet())) {
-            parameter.putAll(getParameterForSet(request.parameterSet()));
-        }
+    private void buildParameter() throws Exception {
         for (Param param : request.pathParameter()) {
-            parameter.put(param.name(), container.instance().select(param
-                    .generator()).get().generate(param));
+            pathParameter.put(param.name(), (String) container.instance()
+                    .select(param.generator()).get().generate(param));
         }
         for (Param param : request.queryParameter()) {
-            parameter.put(param.name(), container.instance().select(param
+            queryParameter.put(param.name(), container.instance().select(param
                     .generator()).get().generate(param));
         }
-        return parameter;
     }
 
     private <T> de.etecture.opensource.dynamicresources.api.Response<T> requestResource(
             Class<T> responseType) throws
             Exception {
-        final DefaultRequest.Builder rq =
-                DefaultRequest
-                .fromMethod(responseType, request.method())
-                .addPathParameter((Map) requestParameter);
-        for (Map.Entry<String, Object> entry : requestParameter.entrySet()) {
-            rq.addQueryParameter(entry.getKey(), entry.getValue()
-                    .toString());
+        accessor.pathParams(pathParameter);
+        MethodAccessor<?> ma = accessor.method(request.method());
+        for (Map.Entry<String, Object> entry : queryParameter.entrySet()) {
+            ma = ma.queryParam(entry.getKey(), entry.getValue());
         }
-        final DefaultRequest req = rq
-                .withRequestContent(request.bodyGenerator().newInstance()
-                .generateBody(
-                request, requestParameter)).build();
-        return handler.handleRequest(req);
+        ma.body(container.instance().select(request.bodyGenerator()).get()
+                .generateBody(request, pathParameter, queryParameter));
+        return (de.etecture.opensource.dynamicresources.api.Response<T>) ma
+                .invoke();
     }
 
-    private boolean executeQueries(String prefix, Query... queries) throws
+    private boolean executeQueries(final String prefix, Query... queries) throws
             Exception {
         if (queries.length > 0) {
             for (Query query : request.before()) {
-                if (!executeQuery(query.statement(), prefix + getName(), query
-                        .technology(), query.connection(), query.converter())) {
+                AnnotatedQueryDefinition qd =
+                        new AnnotatedQueryDefinition(query) {
+                    @Override
+                    public String getStatement() {
+                        return createStatement(getMethod().getDeclaringClass(),
+                                prefix + getName(), super.getStatement());
+                    }
+                };
+                if (!executeQuery(qd)) {
                     return false;
                 }
             }
@@ -376,7 +352,7 @@ public class ResourceTestMethod extends FrameworkMethod {
                     ResourceBundle.getBundle(super.getMethod()
                     .getDeclaringClass().getName());
             if (bundle.containsKey(prefix + getName())) {
-                String technology;
+                final String technology;
                 if (getMethod().getDeclaringClass().isAnnotationPresent(
                         Technology.class)) {
                     technology = getMethod().getDeclaringClass().getAnnotation(
@@ -384,29 +360,29 @@ public class ResourceTestMethod extends FrameworkMethod {
                 } else {
                     technology = "default";
                 }
-                return executeQuery(bundle.getString(prefix + getName()), "",
-                        technology,
-                        "default", "");
+                return executeQuery(new DefaultQueryDefinition(bundle.getString(
+                        prefix + getName())) {
+                    @Override
+                    public String getTechnology() {
+                        return technology;
+                    }
+                });
             }
         }
         return true;
     }
 
-    private boolean executeQuery(String statement, String queryName,
-            String technology,
-            String connection, String converter) throws Exception {
+
+    private boolean executeQuery(QueryDefinition qd) throws Exception {
         DefaultQueryExecutionContext<BooleanResult> query =
                 new DefaultQueryExecutionContext(BooleanResult.class,
-                technology,
-                connection,
-                StringUtils.defaultIfBlank(statement, queryName),
-                converter);
-        for (Entry<String, Object> e : requestParameter.entrySet()) {
+                BooleanResult.class, qd);
+        for (Entry<String, String> e : pathParameter.entrySet()) {
             query.addParameter(e.getKey(), e.getValue());
         }
-        query.addParameter("request", request.bodyGenerator()
-                .newInstance().generateBody(
-                request, requestParameter));
+        for (Entry<String, Object> e : queryParameter.entrySet()) {
+            query.addParameter(e.getKey(), e.getValue());
+        }
         return ((BooleanResult) executors.execute(query)).getResult();
     }
 

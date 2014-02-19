@@ -59,7 +59,11 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Request {
 
-    Class<?> resource();
+    String application();
+
+    String resource();
+
+    Class<?> responseType() default Object.class;
 
     Class<?> requestType() default Object.class;
 
@@ -68,8 +72,6 @@ public @interface Request {
     Query[] before() default {};
 
     Query[] after() default {};
-
-    String parameterSet() default "";
 
     Param[] pathParameter() default {};
 
