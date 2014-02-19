@@ -37,7 +37,6 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
 package de.etecture.opensource.dynamicresources.metadata.annotated;
 
 import de.etecture.opensource.dynamicresources.annotations.Filter;
@@ -63,7 +62,7 @@ public class AnnotatedResourceMethodFilter<T> implements
     }
 
     AnnotatedResourceMethodFilter(ResourceMethod method,
-            Filter filter) {
+                                  Filter filter) {
         this.method = method;
         this.filter = filter;
     }
@@ -95,12 +94,10 @@ public class AnnotatedResourceMethodFilter<T> implements
 
     @Override
     public boolean isValidValue(T value) {
-        if (value != null && getType().isInstance(value)) {
-            if (getType() == String.class) {
-                return ((String) value).matches(filter.validationRegex());
-            }
+        if (value != null && getType() == String.class) {
+            return ((String) value).matches(filter.validationRegex());
         }
-        return false;
+        return true;
     }
 
     @Override
@@ -109,7 +106,7 @@ public class AnnotatedResourceMethodFilter<T> implements
     }
 
     public static AnnotatedResourceMethodFilter create(ResourceMethod method,
-            Filter annotation) {
+                                                       Filter annotation) {
         return new AnnotatedResourceMethodFilter(method, annotation);
     }
 }

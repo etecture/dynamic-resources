@@ -50,7 +50,8 @@ import de.etecture.opensource.dynamicresources.metadata.BasicResourceMethodReque
 import de.etecture.opensource.dynamicresources.metadata.BasicResourceMethodResponse;
 import de.etecture.opensource.dynamicresources.metadata.Resource;
 import java.lang.reflect.AnnotatedElement;
-import javax.enterprise.inject.spi.DefinitionException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -60,6 +61,9 @@ import javax.enterprise.inject.spi.DefinitionException;
  */
 public class AnnotatedResourceMethod extends BasicResourceMethod implements
         Annotated<Method> {
+
+    private static final Logger LOG = Logger
+            .getLogger("ResourceMetadataScanner");
 
     private final Method annotation;
     private final AnnotatedElement annotatedElement;
@@ -71,7 +75,7 @@ public class AnnotatedResourceMethod extends BasicResourceMethod implements
     }
 
     AnnotatedResourceMethod(Resource resource,
-            Method annotation, AnnotatedElement annotatedElement) {
+                            Method annotation, AnnotatedElement annotatedElement) {
         super(resource, annotation.name(), annotation.description());
         this.annotation = annotation;
         this.annotatedElement = annotatedElement;
@@ -88,10 +92,13 @@ public class AnnotatedResourceMethod extends BasicResourceMethod implements
     }
 
     public static AnnotatedResourceMethod create(Resource resource,
-            Class<?> resourceClass, Method annotation,
-            Iterable<String> producedMimes, Iterable<String> consumedMimes) {
+                                                 Class<?> resourceClass,
+                                                 Method annotation,
+                                                 Iterable<String> producedMimes,
+                                                 Iterable<String> consumedMimes) {
         AnnotatedResourceMethod method = new AnnotatedResourceMethod(resource,
-                annotation, resourceClass);
+                                                                     annotation,
+                                                                     resourceClass);
         for (String roleName : annotation.rolesAllowed()) {
             method.addAllowedRoleName(roleName);
         }
@@ -101,71 +108,85 @@ public class AnnotatedResourceMethod extends BasicResourceMethod implements
         }
         if (annotation.consumes().length > 0) {
             for (Consumes consumes : annotation.consumes()) {
-                BasicResourceMethodRequest request =
-                        new BasicResourceMethodRequest(method, consumes
-                        .requestType());
+                BasicResourceMethodRequest request
+                        = new BasicResourceMethodRequest(method, consumes
+                                                         .requestType());
                 for (String mime : consumes.mimeType()) {
                     request.addAcceptedRequestMediaType(new MediaTypeExpression(
                             mime));
                 }
                 method.addRequest(request);
+                if (request.getAllowedRequestMediaTypes().isEmpty()) {
+                    LOG.log(
+                            Level.WARNING,
+                            "There is no Reader that handle request types: {0}",
+                            request.getRequestType());
+                }
             }
         } else {
             if (consumedMimes != null) {
                 // add at least the resourceClass as a requestType.
-                final BasicResourceMethodRequest request =
-                        new BasicResourceMethodRequest(method, resourceClass);
+                final BasicResourceMethodRequest request
+                        = new BasicResourceMethodRequest(method, resourceClass);
                 for (String consumedMime : consumedMimes) {
                     request.addAcceptedRequestMediaType(new MediaTypeExpression(
                             consumedMime));
                 }
                 method.addRequest(request);
+                if (request.getAllowedRequestMediaTypes().isEmpty()) {
+                    LOG.log(
+                            Level.WARNING,
+                            "There is no Reader that handle request types: {0}",
+                            request.getRequestType());
+                }
             }
         }
         if (annotation.produces().length > 0) {
             for (Produces produces : annotation.produces()) {
-                BasicResourceMethodResponse response =
-                        new BasicResourceMethodResponse(method, produces
-                        .contentType(),
-                        annotation.status());
+                BasicResourceMethodResponse response
+                        = new BasicResourceMethodResponse(method, produces
+                                                          .contentType(),
+                                                          annotation.status());
                 for (String mime : produces.mimeType()) {
                     response.addSupportedResponseMediaType(
                             new MediaTypeExpression(
-                            mime));
+                                    mime));
                 }
                 for (Header header : annotation.headers()) {
                     response.addHeader(
                             new AnnotatedResourceMethodResponseHeader(
-                            header));
+                                    header));
                 }
                 if (response.getSupportedResponseMediaTypes().isEmpty()) {
-                    throw new DefinitionException(
-                            "There is no Writer that handle response types: "
-                            + response.getResponseType());
+                    LOG.log(
+                            Level.WARNING,
+                            "There is no Writer that handle response types: {0}",
+                            response.getResponseType());
                 }
                 method.addResponse(response);
             }
         } else {
             // add at least the resource class itself as a response
-            BasicResourceMethodResponse response =
-                    new BasicResourceMethodResponse(method, resourceClass,
-                    annotation.status());
+            BasicResourceMethodResponse response
+                    = new BasicResourceMethodResponse(method, resourceClass,
+                                                      annotation.status());
             for (Header header : annotation.headers()) {
                 response.addHeader(
                         new AnnotatedResourceMethodResponseHeader(
-                        header));
+                                header));
             }
             if (producedMimes != null) {
                 for (String producedMime : producedMimes) {
                     response.addSupportedResponseMediaType(
                             new MediaTypeExpression(
-                            producedMime));
+                                    producedMime));
                 }
             }
             if (response.getSupportedResponseMediaTypes().isEmpty()) {
-                throw new DefinitionException(
-                        "There is no Writer that handle response types: "
-                        + response.getResponseType());
+                LOG.log(
+                        Level.WARNING,
+                        "There is no Writer that handle response types: {0}",
+                        response.getResponseType());
             }
             method.addResponse(response);
 

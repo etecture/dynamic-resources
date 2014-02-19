@@ -39,6 +39,7 @@
  */
 package de.etecture.opensource.dynamicresources.core.accessors;
 
+import de.etecture.opensource.dynamicresources.api.accesspoints.AccessPoint;
 import de.etecture.opensource.dynamicresources.api.accesspoints.ApplicationAccessor;
 import de.etecture.opensource.dynamicresources.api.accesspoints.Applications;
 import de.etecture.opensource.dynamicresources.api.accesspoints.MethodAccessor;
@@ -53,19 +54,17 @@ import de.etecture.opensource.dynamicresources.utils.ApplicationLiteral;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 
 /**
  * this is the standard implementation for {@link Applications}.
- *
- * It provides the implementation for the
- * <code>select()</code>-methods in the {@link Application} interface as well as
- * producer methods to be able to inject qualified
- * {@link ApplicationAccessor}, {@link TypedResourceAccessor}s and
- * {@link MethodAccessor}s.
- *
+ * <p>
+ * It provides the implementation for the <code>select()</code>-methods in the
+ * {@link Application} interface as well as producer methods to be able to
+ * inject qualified {@link ApplicationAccessor}, {@link TypedResourceAccessor}s
+ * and {@link MethodAccessor}s.
+ * <p>
  * @author rhk
  * @version
  * @since
@@ -82,8 +81,7 @@ public class DynamicApplications implements Applications {
      * this is used to lookup or create accesspoints.
      */
     @Inject
-    @Any
-    Instance<Object> accessPoints;
+    Instance<AccessPoint> accessPoints;
 
     @Override
     public Set<String> getApplicationNames() {
@@ -97,8 +95,8 @@ public class DynamicApplications implements Applications {
     @Override
     public ApplicationAccessor selectByName(String applicationName) throws
             ApplicationNotFoundException {
-        final Instance<ApplicationAccessor> selected =
-                accessPoints.select(ApplicationAccessor.class,
+        final Instance<ApplicationAccessor> selected = accessPoints.select(
+                ApplicationAccessor.class,
                 new ApplicationLiteral(applicationName));
         if (selected.isAmbiguous()) {
             throw new ApplicationNotFoundException(
@@ -136,7 +134,7 @@ public class DynamicApplications implements Applications {
                     return selectByName(application.getName())
                             .selectByName(resource.getName())
                             .pathParams(resource.getPath()
-                            .getPathParameterValues(uri));
+                                    .getPathParameterValues(uri));
                 } catch (ResourcePathNotMatchException ex) {
                     throw new ResourceNotFoundException(ex);
                 }

@@ -37,41 +37,10 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.testapp.library.writer;
+@Application(
+        name = "Reviews",
+        base = "/reviews",
+        description = "Resources for a Demonstration Application with reviews")
+package de.etecture.opensource.dynamicresources.demo.reviews;
 
-import de.etecture.opensource.dynamicresources.annotations.Produces;
-import de.etecture.opensource.dynamicresources.api.MediaType;
-import de.etecture.opensource.dynamicresources.api.ResponseWriter;
-import de.etecture.opensource.testapp.library.Book;
-import java.io.IOException;
-import java.io.Writer;
-import org.apache.commons.lang.StringUtils;
-
-/**
- *
- * @author rhk
- * @version
- * @since
- *
- */
-@Produces(contentType = Book.class,
-          mimeType = "application/vnd.etecture.testapp.library.book+xml")
-public class BookXMLWriter implements ResponseWriter<Book> {
-
-    @Override
-    public void processElement(Book element, Writer writer, MediaType mimetype)
-            throws IOException {
-        writer.append("<book isbn=\"").append(element.getISBN()).append("\">");
-        writer.append("<title>").append(element.getTitle()).append("</title>");
-        if (StringUtils.isNotBlank(element.getSubTitle())) {
-            writer.append("<sub-title>").append(element.getSubTitle()).append(
-                    "</sub-title>");
-        }
-        writer.append("</book>");
-    }
-
-    @Override
-    public int getContentLength(Book entity, MediaType acceptedMediaType) {
-        return -1;
-    }
-}
+import de.etecture.opensource.dynamicresources.annotations.Application;

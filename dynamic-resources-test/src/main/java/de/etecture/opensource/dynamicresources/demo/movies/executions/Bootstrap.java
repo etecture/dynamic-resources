@@ -37,15 +37,15 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.defaults;
+package de.etecture.opensource.dynamicresources.demo.movies.executions;
 
+import de.etecture.opensource.dynamicresources.annotations.Body;
+import de.etecture.opensource.dynamicresources.annotations.Executes;
 import de.etecture.opensource.dynamicresources.api.ExecutionContext;
-import de.etecture.opensource.dynamicresources.api.FilterValueGenerator;
-import de.etecture.opensource.dynamicresources.api.InvalidFilterValueException;
-import de.etecture.opensource.dynamicresources.metadata.ResourceMethodFilter;
-import de.herschke.converters.api.ConvertException;
-import de.herschke.converters.api.Converters;
-import java.util.Collection;
+import de.etecture.opensource.dynamicresources.api.HttpMethods;
+import de.herschke.neo4j.uplink.api.Neo4jServerException;
+import de.herschke.neo4j.uplink.api.Neo4jUplink;
+import javax.enterprise.inject.Default;
 import javax.inject.Inject;
 
 /**
@@ -54,36 +54,48 @@ import javax.inject.Inject;
  * @version
  * @since
  */
-public class DefaultFilterValueGenerator implements FilterValueGenerator {
+public class Bootstrap {
 
     @Inject
-    Converters converters;
+    @Default
+    Neo4jUplink uplink;
 
-    @Override
-    public <T> T generate(
-            ResourceMethodFilter<T> filter, ExecutionContext<?, ?> context)
-            throws
-            InvalidFilterValueException {
-        Object value = context.getParameterValue(filter.getName());
-        try {
-            if (value instanceof Collection) {
-                if (((Collection) value).isEmpty()) {
-                    value = null;
-                } else {
-                    value = ((Collection) value).iterator().next();
-                }
-            }
-            if (value == null) {
-                value = filter.getDefaultValue();
-            }
-            T t = converters.select(filter.getType()).convert(value);
-            if (filter.isValidValue(t)) {
-                return t;
-            } else {
-                throw new InvalidFilterValueException(filter, value);
-            }
-        } catch (ConvertException ex) {
-            throw new InvalidFilterValueException(filter, ex, value);
+    @Executes(application = "MovieCatalog",
+              resource = "MovieCatalogRoot",
+              method = HttpMethods.POST,
+              responseType = Boolean.class,
+              requestType = String.class)
+    public Boolean executesBootstrap(ExecutionContext<?, ?> context,
+                                     @Body String bootstrapQuery)
+            throws Neo4jServerException {
+        // cleanup the database at first
+        if (executesCleanup()) {
+            // now perform the bootstrap
+            return (Boolean) uplink
+                    .executeCypherQuery(bootstrapQuery)
+                    .getValue(0, 0);
+
         }
+        return false;
     }
+
+    @Executes(application = "MovieCatalog",
+              resource = "MovieCatalogRoot",
+              method = HttpMethods.DELETE,
+              responseType = Boolean.class)
+    public Boolean executesCleanup() throws Neo4jServerException {
+        // delete the relationships in the db
+        if ((Boolean) uplink
+                .executeCypherQuery(
+                        "start r = relationship(*) delete r return count(*) >= 0")
+                .getValue(0, 0)) {
+            // delete the nodes
+            return (Boolean) uplink
+                    .executeCypherQuery(
+                            "start n = node(*) delete n return count(*) >= 0")
+                    .getValue(0, 0);
+        }
+        return false;
+    }
+
 }

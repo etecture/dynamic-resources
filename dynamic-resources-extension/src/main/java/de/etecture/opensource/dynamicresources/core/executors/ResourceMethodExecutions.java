@@ -55,8 +55,6 @@ import de.etecture.opensource.dynamicresources.utils.ResourceLiteral;
 import java.util.Map;
 import javax.enterprise.inject.Default;
 import javax.enterprise.inject.Instance;
-import javax.enterprise.inject.New;
-import javax.enterprise.util.AnnotationLiteral;
 import javax.inject.Inject;
 
 /**
@@ -89,12 +87,13 @@ public class ResourceMethodExecutions {
         // process the filters for the resource method
         for (ResourceMethodFilter<?> f : responseMetadata.getMethod()
                 .getFilters()) {
+            final Object value
+                    = generators.select(f
+                            .getValueGenerator()).get().generate(f, context);
             // create the generator.
-            context.setParameterValue(f.getName(), generators.select(f
-                    .getValueGenerator(), new AnnotationLiteral<New>() {
-                private static final long serialVersionUID =
-                        1L;
-            }).get().generate(f, context));
+            System.out.printf("add filter: %s with value: %s%n", f.getName(),
+                              value);
+            context.setParameterValue(f.getName(), value);
         }
 
         // resolve the executor

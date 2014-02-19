@@ -75,9 +75,9 @@ public abstract class AbstractBean<T> implements Bean<T>, PassivationCapable {
     private final String id = UUID.randomUUID().toString();
 
     public AbstractBean(BeanManager beanManager, Class<T> beanClass, String name,
-            Class<? extends Annotation> scope, boolean alternative,
-            boolean nullable,
-            Type... beanTypes) {
+                        Class<? extends Annotation> scope, boolean alternative,
+                        boolean nullable,
+                        Type... beanTypes) {
         this.beanManager = beanManager;
         this.beanClass = beanClass;
         this.name = name;

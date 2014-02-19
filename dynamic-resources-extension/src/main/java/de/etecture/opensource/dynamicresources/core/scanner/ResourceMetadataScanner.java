@@ -134,10 +134,11 @@ public class ResourceMetadataScanner implements Extension {
             "ResourceMetadataScanner");
     private final Map<Application, Set<Class<?>>> resourceTypes =
             new HashMap<>();
-    private Map<Class<?>, Set<String>> consumedMimeTypes = new HashMap<>();
-    private Map<Class<?>, Set<String>> producedMimeTypes = new HashMap<>();
-    private Set<ExecutionMethod<?>> executionMethods = new HashSet<>();
-    private Set<ResourceMethod> resourceMethodsWithExecution = new HashSet<>();
+    private final Map<Class<?>, Set<String>> consumedMimeTypes = new HashMap<>();
+    private final Map<Class<?>, Set<String>> producedMimeTypes = new HashMap<>();
+    private final Set<ExecutionMethod<?>> executionMethods = new HashSet<>();
+    private final Set<ResourceMethod> resourceMethodsWithExecution
+            = new HashSet<>();
 
     /**
      * scans for any type that is annotated with &#64;{@link Application}
@@ -587,7 +588,7 @@ public class ResourceMetadataScanner implements Extension {
                 .withQualifier(qualifier)
                 .withDefault()
                 .withAny()
-                .applicationScoped()
+                .dependent()
                 .createdBy(creator)
                 .build();
     }

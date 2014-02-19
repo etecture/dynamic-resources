@@ -97,11 +97,11 @@ public class DynamicResourceAccessor implements ResourceAccessor {
             if (method.getResponses().containsKey(responseType)) {
                 return accessPoints.select(
                         new TypeLiteral<TypedResourceAccessor<R>>() {
-                    private static final long serialVersionUID =
-                            1L;
-                }, new ResourceLiteral(resource), new TypedLiteral(responseType))
+                            private static final long serialVersionUID = 1L;
+                        }, new ResourceLiteral(resource), new TypedLiteral(
+                                responseType))
                         .get().pathParams(
-                        pathParams);
+                                pathParams);
             }
         }
         throw new ResponseTypeNotSupportedException(resource, responseType);
@@ -124,11 +124,11 @@ public class DynamicResourceAccessor implements ResourceAccessor {
         if (responseType != null) {
             return accessPoints.select(
                     new TypeLiteral<TypedResourceAccessor<R>>() {
-                private static final long serialVersionUID =
-                        1L;
-            }, new ResourceLiteral(resource), new TypedLiteral(responseType))
+                        private static final long serialVersionUID = 1L;
+                    }, new ResourceLiteral(resource), new TypedLiteral(
+                            responseType))
                     .get().pathParams(
-                    pathParams);
+                            pathParams);
         } else {
             throw new MediaTypeNotAllowedException(resource, mediaType);
         }
@@ -136,13 +136,15 @@ public class DynamicResourceAccessor implements ResourceAccessor {
 
     @Override
     public <R> Response<R> invoke(String method,
-            Class<R> responseType) throws ResourceException {
+                                  Class<R> responseType) throws
+            ResourceException {
         return method(method, responseType).invoke();
     }
 
     @Override
     public <R> MethodAccessor<R> method(String methodName,
-            Class<R> responseType) throws ResponseTypeNotSupportedException,
+                                        Class<R> responseType) throws
+            ResponseTypeNotSupportedException,
             ResourceMethodNotFoundException {
         return select(responseType).pathParams(pathParams).method(methodName);
     }
@@ -156,8 +158,8 @@ public class DynamicResourceAccessor implements ResourceAccessor {
                 .getResponse(produces);
         return accessPoints.select(
                 new TypeLiteral<MethodAccessor<R>>() {
-            private static final long serialVersionUID = 1L;
-        }, new ResourceLiteral(method.getResource()),
+                    private static final long serialVersionUID = 1L;
+                }, new ResourceLiteral(method.getResource()),
                 new MethodLiteral(method.getName()),
                 new TypedLiteral(response.getResponseType())).get();
     }

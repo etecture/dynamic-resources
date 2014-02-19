@@ -37,12 +37,12 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+package de.etecture.opensource.dynamicresources.demo;
 
-package de.etecture.opensource.testapp.library;
-
-import de.etecture.opensource.dynamicresources.annotations.Method;
-import de.etecture.opensource.dynamicresources.annotations.Resource;
-import de.etecture.opensource.dynamicresources.api.HttpMethods;
+import de.etecture.opensource.dynamicresources.api.SecurityContext;
+import javax.enterprise.inject.Default;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  *
@@ -50,17 +50,19 @@ import de.etecture.opensource.dynamicresources.api.HttpMethods;
  * @version
  * @since
  */
-@Resource(
-        name = "Author",
-        path = "/authors/{id}")
-@Method(name = HttpMethods.GET)
-public interface Author {
+@Default
+public class DefaultSecurityContext implements SecurityContext {
 
-    long getId();
+    @Inject
+    HttpServletRequest ctx;
 
-    String getFirstName();
+    @Override
+    public boolean isUserInRole(String role) {
+        return ctx != null && ctx.isUserInRole(role);
+    }
 
-    String getLastName();
-
-    String getSynonym();
+    @Override
+    public String getUserPrincipal() {
+        return ctx == null ? "" : ctx.getUserPrincipal().getName();
+    }
 }

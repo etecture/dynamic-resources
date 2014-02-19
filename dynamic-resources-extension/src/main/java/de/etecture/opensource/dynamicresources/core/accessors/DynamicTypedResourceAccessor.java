@@ -98,18 +98,18 @@ public class DynamicTypedResourceAccessor<T> implements TypedResourceAccessor<T>
         for (ResourceMethod method : resource.getMethods().values()) {
             return accessPoints.select(
                     new TypeLiteral<TypedResourceAccessor<R>>() {
-                private static final long serialVersionUID =
-                        1L;
-            }, new ResourceLiteral(resource), new TypedLiteral(responseType))
+                        private static final long serialVersionUID = 1L;
+                    }, new ResourceLiteral(resource), new TypedLiteral(
+                            responseType))
                     .get().pathParams(
-                    pathParameters);
+                            pathParameters);
         }
         throw new ResponseTypeNotSupportedException(resource, responseType);
     }
 
     @Override
     public TypedResourceAccessor<T> pathParam(String paramName,
-            String paramValue) {
+                                              String paramValue) {
         this.pathParameters.put(paramName, paramValue);
         return this;
     }
@@ -132,14 +132,15 @@ public class DynamicTypedResourceAccessor<T> implements TypedResourceAccessor<T>
             if (method.getResponses().containsKey(responseType)) {
                 return accessPoints.select(
                         new TypeLiteral<MethodAccessor<T>>() {
-                    private static final long serialVersionUID = 1L;
-                }, new ResourceLiteral(method.getResource()),
+                            private static final long serialVersionUID = 1L;
+                        }, new ResourceLiteral(method.getResource()),
                         new MethodLiteral(method.getName()),
                         new TypedLiteral(responseType)).get();
             } else {
                 throw new ResourceMethodNotFoundException(resource, methodName,
-                        new ResponseTypeNotSupportedException(method,
-                        responseType));
+                                                          new ResponseTypeNotSupportedException(
+                                                                  method,
+                                                                  responseType));
             }
         }
     }

@@ -37,14 +37,10 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+package de.etecture.opensource.dynamicresources.demo.reviews;
 
-package de.etecture.opensource.testapp.library.writer;
-
-import de.etecture.opensource.dynamicresources.api.MediaType;
-import de.etecture.opensource.dynamicresources.api.ResponseWriter;
-import de.etecture.opensource.testapp.library.Authors;
-import java.io.IOException;
-import java.io.Writer;
+import de.etecture.opensource.dynamicresources.annotations.Resource;
+import de.etecture.opensource.dynamicresources.demo.movies.Person;
 
 /**
  *
@@ -52,16 +48,16 @@ import java.io.Writer;
  * @version
  * @since
  */
-public class AuthorsWriter implements ResponseWriter<Authors> {
+@Resource(
+        name = "ReviewResource",
+        path = "/{movietitle}/reviewer/{reviewername}",
+        description = "a resource representing a review"
+)
+public interface Review {
 
-    @Override
-    public void processElement(Authors element, Writer writer,
-            MediaType mimetype) throws IOException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+    Person getPerson();
 
-    @Override
-    public int getContentLength(Authors entity, MediaType acceptedMediaType) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+    int getRating();
+
+    String getSummary();
 }

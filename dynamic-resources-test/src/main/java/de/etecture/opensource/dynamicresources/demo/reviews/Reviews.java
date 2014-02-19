@@ -38,11 +38,10 @@
  *
  */
 
-package de.etecture.opensource.testapp.library;
+package de.etecture.opensource.dynamicresources.demo.reviews;
 
-import de.etecture.opensource.dynamicresources.annotations.Method;
 import de.etecture.opensource.dynamicresources.annotations.Resource;
-import de.etecture.opensource.dynamicresources.api.HttpMethods;
+import de.etecture.opensource.dynamicresources.demo.movies.Movie;
 import java.util.List;
 
 /**
@@ -50,13 +49,14 @@ import java.util.List;
  * @author rhk
  * @version
  * @since
-
  */
-@Resource(name = "Authors",
-          path = "/authors")
-@Method(name = HttpMethods.GET)
-public interface Authors {
+@Resource(name = "ReviewsResource",
+          path = "/{movietitle}",
+          description = "a list of reviews made for a movie")
+public interface Reviews {
 
-    List<Author> getAuthors();
+    Movie getMovie();
+
+    List<Review> getReviews();
 
 }

@@ -37,31 +37,11 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+@Application(
+        name = "MovieCatalog",
+        base = "/catalog",
+        description
+        = "Resources for a Demonstration Application with a catalog of movies")
+package de.etecture.opensource.dynamicresources.demo.movies;
 
-package de.etecture.opensource.testapp.library.writer;
-
-import de.etecture.opensource.dynamicresources.api.MediaType;
-import de.etecture.opensource.dynamicresources.api.ResponseWriter;
-import de.etecture.opensource.testapp.library.Publisher;
-import java.io.IOException;
-import java.io.Writer;
-
-/**
- *
- * @author rhk
- * @version
- * @since
- */
-public class PublisherWriter implements ResponseWriter<Publisher> {
-
-    @Override
-    public void processElement(Publisher element, Writer writer,
-            MediaType mimetype) throws IOException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public int getContentLength(Publisher entity, MediaType acceptedMediaType) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-}
+import de.etecture.opensource.dynamicresources.annotations.Application;

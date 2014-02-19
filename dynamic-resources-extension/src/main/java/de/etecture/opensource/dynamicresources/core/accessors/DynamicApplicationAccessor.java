@@ -84,14 +84,16 @@ public class DynamicApplicationAccessor implements ApplicationAccessor {
 
     @Override
     public <X> TypedResourceAccessor<X> selectByName(String name,
-            Class<X> responseType) throws ResourceNotFoundException,
+                                                     Class<X> responseType)
+            throws ResourceNotFoundException,
             ResponseTypeNotSupportedException {
         return selectByName(name).select(responseType);
     }
 
     @Override
     public <X> TypedResourceAccessor<X> selectByPath(String path,
-            Class<X> responseType) throws ResourceNotFoundException,
+                                                     Class<X> responseType)
+            throws ResourceNotFoundException,
             ResponseTypeNotSupportedException {
         return selectByPath(path).select(responseType);
     }
@@ -106,7 +108,7 @@ public class DynamicApplicationAccessor implements ApplicationAccessor {
                     .getName());
         }
         return accessPoints.select(ResourceAccessor.class, new ResourceLiteral(
-                name)).get();
+                                   name)).get();
     }
 
     @Override
@@ -116,8 +118,8 @@ public class DynamicApplicationAccessor implements ApplicationAccessor {
         try {
             return selectByName(resource.getName())
                     .pathParams(
-                    resource.getPath().
-                    getPathParameterValues(path));
+                            resource.getPath().
+                            getPathParameterValues(path));
         } catch (ResourcePathNotMatchException ex) {
             throw new ResourceNotFoundException(
                     "cannot extract path parameters from path: " + path
@@ -127,40 +129,44 @@ public class DynamicApplicationAccessor implements ApplicationAccessor {
 
     @Override
     public <X> MethodAccessor<X> selectByPath(String path, String method,
-            Class<X> responseType) throws ResourceMethodNotFoundException,
+                                              Class<X> responseType) throws
+            ResourceMethodNotFoundException,
             ResourceNotFoundException, ResponseTypeNotSupportedException {
         return selectByPath(path, responseType).method(method);
     }
 
     @Override
     public <X> MethodAccessor<X> selectByPathAndMime(String path, String method,
-            MediaType acceptedMediaType) throws
+                                                     MediaType acceptedMediaType)
+            throws
             ResourceNotFoundException,
             MediaTypeNotSupportedException, MediaTypeAmbigiousException,
             ResourceMethodNotFoundException {
         return (MethodAccessor<X>) selectByPath(path).method(method,
-                acceptedMediaType);
+                                                             acceptedMediaType);
     }
 
     @Override
     public <X> MethodAccessor<X> selectByName(String name, String method,
-            Class<X> responseType, String... pathParamValues) throws
+                                              Class<X> responseType,
+                                              String... pathParamValues) throws
             ResourceMethodNotFoundException, ResourceNotFoundException,
             ResponseTypeNotSupportedException {
         TypedResourceAccessor<X> accessor = selectByName(name, responseType);
         int i = 0;
         for (String pathParameterName : accessor.getMetadata().getPath().
                 getPathParameterNames()) {
-            accessor =
-                    accessor.pathParam(pathParameterName, pathParamValues[i++]);
+            accessor = accessor.pathParam(pathParameterName,
+                                          pathParamValues[i++]);
         }
         return accessor.method(method);
     }
 
     @Override
     public <X> MethodAccessor<X> selectByName(String name, String method,
-            Class<X> responseType,
-            Map<String, String> pathParams) throws
+                                              Class<X> responseType,
+                                              Map<String, String> pathParams)
+            throws
             ResourceMethodNotFoundException, ResourceNotFoundException,
             ResponseTypeNotSupportedException {
         return selectByName(name, responseType).pathParams(pathParams).

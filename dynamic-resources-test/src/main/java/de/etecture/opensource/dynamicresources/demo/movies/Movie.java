@@ -37,45 +37,35 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.testapp.library.writer;
 
-import de.etecture.opensource.dynamicresources.annotations.Produces;
-import de.etecture.opensource.dynamicresources.api.MediaType;
-import de.etecture.opensource.dynamicresources.api.ResponseWriter;
-import de.etecture.opensource.testapp.library.Book;
-import de.etecture.opensource.testapp.library.Books;
-import java.io.IOException;
-import java.io.Writer;
-import javax.enterprise.inject.Any;
-import javax.inject.Inject;
+package de.etecture.opensource.dynamicresources.demo.movies;
+
+import de.etecture.opensource.dynamicresources.annotations.Resource;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
  * @author rhk
  * @version
  * @since
- *
  */
-@Produces(contentType = Books.class,
-          mimeType = "application/vnd.etecture.testapp.library.books+xml")
-public class BooksXMLWriter implements ResponseWriter<Books> {
+@Resource(name = "MovieResource",
+          path = "/movies/{title}",
+          description = "A resource describing a plain movie")
+public interface Movie {
 
-    @Inject
-    @Any
-    BookXMLWriter bookWriter;
+    String getTitle();
 
-    @Override
-    public void processElement(Books element, Writer writer, MediaType mimetype)
-            throws IOException {
-        writer.append("<books>");
-        for (Book book : element.getBooks()) {
-            bookWriter.processElement(book, writer, mimetype);
-        }
-        writer.append("</books>");
-    }
+    String getTagline();
 
-    @Override
-    public int getContentLength(Books entity, MediaType acceptedMediaType) {
-        return -1;
-    }
+    String getReleased();
+
+    Map<String, Person> getRoles();
+
+    Set<Person> getDirectors();
+
+    Set<Person> getProducers();
+
+    Set<Person> getEditors();
 }
