@@ -62,13 +62,15 @@ class MovieXMLWriter implements ResponseWriter<Movie> {
     public void processElement(Movie _movie, Writer writer, MediaType mediatype) {
         def xml = new MarkupBuilder(writer)
         xml.movie() {
-            title(_movie.getTitle)
+            title(_movie.getTitle())
             'tag-line'(_movie.getTagline())
-            roles() {
-                _movie.getRoles().each { _role, _actor ->
-                    xml.role() {
-                        name(_role)
-                        'played-by'(_actor.getName())
+            actors() {
+                _movie.getRoles().each { _actor, _roles ->
+                    xml.actor() {
+                        name(_actor.getName())
+                        _roles.each {_role ->
+                            xml.role(_role)        
+                        }
                     }
                     
                 }
@@ -79,7 +81,7 @@ class MovieXMLWriter implements ResponseWriter<Movie> {
                 }
             }
             directors() {
-                _movie.getDirectors().each { _directors ->
+                _movie.getDirectors().each { _director ->
                     xml.director(_director.getName())
                 }
             }
