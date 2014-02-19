@@ -37,10 +37,13 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
 package de.etecture.opensource.dynamicresources.demo.movies;
 
+import de.etecture.opensource.dynamicrepositories.api.annotations.Query;
+import de.etecture.opensource.dynamicresources.annotations.Method;
+import de.etecture.opensource.dynamicresources.annotations.Methods;
 import de.etecture.opensource.dynamicresources.annotations.Resource;
+import de.etecture.opensource.dynamicresources.api.HttpMethods;
 import java.util.Map;
 import java.util.Set;
 
@@ -53,6 +56,39 @@ import java.util.Set;
 @Resource(name = "MovieResource",
           path = "/movies/{title}",
           description = "A resource describing a plain movie")
+@Methods(
+        @Method(name = HttpMethods.GET,
+                description = "get the movie with the title.",
+                query = @Query(
+                        technology = "Neo4j",
+                        statement = ""
+                        + "MATCH "
+                        + "  (m:Movie {title : {title}}) "
+                        + "OPTIONAL MATCH "
+                        + "  (d:Person)-[:DIRECTED]->(m) "
+                        + "OPTIONAL MATCH "
+                        + "  (p:Person)-[:PRODUCED]->(m) "
+                        + "OPTIONAL MATCH "
+                        + "  (w:Person)-[:WROTE]->(m) "
+                        + "OPTIONAL MATCH "
+                        + "  (a:Person)-[r:ACTED_IN]->(m) "
+                        + "WITH "
+                        + "  m AS m, "
+                        + "  CASE WHEN HAS(d.name) THEN {name: d.name} END AS d, "
+                        + "  CASE WHEN HAS(p.name) THEN {name: p.name} END AS p, "
+                        + "  CASE WHEN HAS(w.name) THEN {name: w.name} END AS w, "
+                        + "  {key: {name: a.name}, value: r.roles} AS x "
+                        + "RETURN "
+                        + "  m.title AS title, "
+                        + "  m.tagline AS tagline, "
+                        + "  m.released AS released, "
+                        + "  COLLECT(d) AS directors, "
+                        + "  COLLECT(p) AS producers, "
+                        + "  COLLECT(w) AS editors, "
+                        + "  COLLECT(x) AS roles "
+                )
+        )
+)
 public interface Movie {
 
     String getTitle();
@@ -61,7 +97,7 @@ public interface Movie {
 
     String getReleased();
 
-    Map<String, Person> getRoles();
+    Map<Person, Set<String>> getRoles();
 
     Set<Person> getDirectors();
 
