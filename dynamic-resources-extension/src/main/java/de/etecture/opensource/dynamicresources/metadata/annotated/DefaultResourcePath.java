@@ -43,6 +43,7 @@ import de.etecture.opensource.dynamicresources.metadata.Resource;
 import de.etecture.opensource.dynamicresources.metadata.ResourcePath;
 import de.etecture.opensource.dynamicresources.metadata.ResourcePathNotMatchException;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -55,7 +56,7 @@ import org.apache.commons.lang.StringUtils;
 
 /**
  * represents a default implementation of a {@link ResourcePath}
- *
+ * <p>
  * @author rhk
  * @version
  * @since
@@ -84,7 +85,7 @@ public class DefaultResourcePath implements ResourcePath {
             }
             pattern = pattern.replaceAll("\\\\", "\\\\\\\\");
             matcher.appendReplacement(buffer, String.format("(?<%s>%s)",
-                    name, pattern));
+                                                            name, pattern));
         }
         matcher.appendTail(buffer);
         buffer.append("$");
@@ -124,7 +125,7 @@ public class DefaultResourcePath implements ResourcePath {
         Matcher matcher = compiledPath.matcher(uri);
         if (matcher.matches()) {
             for (String groupName : getPathParameterNames()) {
-                values.put(groupName, matcher.group(groupName));
+                values.put(groupName, decode(matcher.group(groupName)));
             }
             return values;
         } else {
@@ -147,6 +148,14 @@ public class DefaultResourcePath implements ResourcePath {
     private static String encode(String string) {
         try {
             return URLEncoder.encode(string, "UTF-8");
+        } catch (UnsupportedEncodingException ex) {
+            return string;
+        }
+    }
+
+    private static String decode(String string) {
+        try {
+            return URLDecoder.decode(string, "UTF-8");
         } catch (UnsupportedEncodingException ex) {
             return string;
         }
