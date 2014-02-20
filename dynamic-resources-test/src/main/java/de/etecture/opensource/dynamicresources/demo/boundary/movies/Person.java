@@ -76,7 +76,7 @@
  *
  */
 
-package de.etecture.opensource.dynamicresources.demo.movies;
+package de.etecture.opensource.dynamicresources.demo.boundary.movies;
 
 import de.etecture.opensource.dynamicresources.annotations.Resource;
 

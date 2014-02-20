@@ -38,10 +38,10 @@
  * 
  */
 
-package de.etecture.opensource.dynamicresources.demo.movies.writer
+package de.etecture.opensource.dynamicresources.demo.boundary.movies.writer
 
 import de.etecture.opensource.dynamicresources.api.ResponseWriter
-import de.etecture.opensource.dynamicresources.demo.movies.Movie
+import de.etecture.opensource.dynamicresources.demo.boundary.movies.Movies
 import de.etecture.opensource.dynamicresources.annotations.Produces
 import de.etecture.opensource.dynamicresources.api.MediaType
 import java.io.Writer
@@ -51,43 +51,20 @@ import groovy.xml.MarkupBuilder
  *
  * @author rhk
  */
-@Produces(contentType = Movie.class, mimeType = ["application/vnd.etecture.demo.movie+xml"])
-class MovieXMLWriter implements ResponseWriter<Movie> {
+@Produces(contentType = Movies.class, mimeType = ["application/vnd.etecture.demo.movies+xml"])
+class MoviesXMLWriter implements ResponseWriter<Movies> {
 	
     
-    public int getContentLength(Movie movie, MediaType mediatype) {
+    public int getContentLength(Movies movies, MediaType mediatype) {
         return -1;
     }
     
-    public void processElement(Movie _movie, Writer writer, MediaType mediatype) {
+    public void processElement(Movies _movies, Writer writer, MediaType mediatype) {
         def xml = new MarkupBuilder(writer)
-        xml.movie() {
-            title(_movie.getTitle())
-            'tag-line'(_movie.getTagline())
-            actors() {
-                _movie.getRoles().each { _actor, _roles ->
-                    xml.actor() {
-                        name(_actor.getName())
-                        _roles.each {_role ->
-                            xml.role(_role)        
-                        }
-                    }
-                    
-                }
-            }
-            producers() {
-                _movie.getProducers().each { _producer ->
-                    xml.producer(_producer.getName())
-                }
-            }
-            directors() {
-                _movie.getDirectors().each { _director ->
-                    xml.director(_director.getName())
-                }
-            }
-            editors() {
-                _movie.getEditors().each { _editor ->
-                    xml.editor(_editor.getName())
+        xml.movies() {
+            _movies.getMovies().each { _movie ->
+                xml.movie() {
+                    title(_movie.getTitle())
                 }
             }
         }

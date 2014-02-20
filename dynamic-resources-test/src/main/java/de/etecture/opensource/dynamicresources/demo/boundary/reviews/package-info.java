@@ -38,10 +38,9 @@
  *
  */
 @Application(
-        name = "MovieCatalog",
-        base = "/catalog",
-        description
-        = "Resources for a Demonstration Application with a catalog of movies")
-package de.etecture.opensource.dynamicresources.demo.movies;
+        name = "Reviews",
+        base = "/reviews",
+        description = "Resources for a Demonstration Application with reviews")
+package de.etecture.opensource.dynamicresources.demo.boundary.reviews;
 
 import de.etecture.opensource.dynamicresources.annotations.Application;

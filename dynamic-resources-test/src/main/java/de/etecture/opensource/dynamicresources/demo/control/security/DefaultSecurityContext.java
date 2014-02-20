@@ -37,10 +37,32 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-@Application(
-        name = "Reviews",
-        base = "/reviews",
-        description = "Resources for a Demonstration Application with reviews")
-package de.etecture.opensource.dynamicresources.demo.reviews;
+package de.etecture.opensource.dynamicresources.demo.control.security;
 
-import de.etecture.opensource.dynamicresources.annotations.Application;
+import de.etecture.opensource.dynamicresources.api.SecurityContext;
+import javax.enterprise.inject.Default;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+
+/**
+ *
+ * @author rhk
+ * @version
+ * @since
+ */
+@Default
+public class DefaultSecurityContext implements SecurityContext {
+
+    @Inject
+    HttpServletRequest ctx;
+
+    @Override
+    public boolean isUserInRole(String role) {
+        return ctx != null && ctx.isUserInRole(role);
+    }
+
+    @Override
+    public String getUserPrincipal() {
+        return ctx == null ? "" : ctx.getUserPrincipal().getName();
+    }
+}

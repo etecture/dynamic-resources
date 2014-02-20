@@ -37,27 +37,11 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.demo.reviews;
+@Application(
+        name = "MovieCatalog",
+        base = "/catalog",
+        description
+        = "Resources for a Demonstration Application with a catalog of movies")
+package de.etecture.opensource.dynamicresources.demo.boundary.movies;
 
-import de.etecture.opensource.dynamicresources.annotations.Resource;
-import de.etecture.opensource.dynamicresources.demo.movies.Person;
-
-/**
- *
- * @author rhk
- * @version
- * @since
- */
-@Resource(
-        name = "ReviewResource",
-        path = "/{movietitle}/reviewer/{reviewername}",
-        description = "a resource representing a review"
-)
-public interface Review {
-
-    Person getPerson();
-
-    int getRating();
-
-    String getSummary();
-}
+import de.etecture.opensource.dynamicresources.annotations.Application;

@@ -37,7 +37,7 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.demo.movies;
+package de.etecture.opensource.dynamicresources.demo.boundary.movies;
 
 import de.etecture.opensource.dynamicrepositories.api.annotations.Query;
 import de.etecture.opensource.dynamicresources.annotations.Method;

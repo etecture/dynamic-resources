@@ -37,7 +37,7 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.demo.movies.executions;
+package de.etecture.opensource.dynamicresources.demo.control;
 
 import de.etecture.opensource.dynamicresources.annotations.Body;
 import de.etecture.opensource.dynamicresources.annotations.Executes;

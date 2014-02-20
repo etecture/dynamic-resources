@@ -37,14 +37,11 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.etecture.opensource.dynamicresources.demo.movies;
 
-import de.etecture.opensource.dynamicrepositories.api.annotations.Query;
-import de.etecture.opensource.dynamicresources.annotations.Filter;
-import de.etecture.opensource.dynamicresources.annotations.Method;
-import de.etecture.opensource.dynamicresources.annotations.Methods;
+package de.etecture.opensource.dynamicresources.demo.boundary.reviews;
+
 import de.etecture.opensource.dynamicresources.annotations.Resource;
-import de.etecture.opensource.dynamicresources.api.HttpMethods;
+import de.etecture.opensource.dynamicresources.demo.boundary.movies.Movie;
 import java.util.List;
 
 /**
@@ -53,35 +50,13 @@ import java.util.List;
  * @version
  * @since
  */
-@Resource(name = "MoviesResource",
-          path = "/movies",
-          description = "A list resource that returns all movies.")
-@Methods(
-        @Method(name = HttpMethods.GET,
-                description = "gets the movies.",
-                filters = {
-                    @Filter(name = "limit",
-                            defaultValue = "100",
-                            type = Integer.class),
-                    @Filter(name = "skip",
-                            defaultValue = "0",
-                            type = Integer.class)},
-                query = @Query(
-                        technology = "Neo4j",
-                        statement = ""
-                        + "MATCH "
-                        + "  (m:Movie) "
-                        + "WITH "
-                        + "  {title: m.title} AS m "
-                        + "SKIP {skip} "
-                        + "LIMIT {limit} "
-                        + "RETURN "
-                        + "  COLLECT(m) AS movies"
-                )
-        )
-)
-public interface Movies {
+@Resource(name = "ReviewsResource",
+          path = "/{movietitle}",
+          description = "a list of reviews made for a movie")
+public interface Reviews {
 
-    List<Movie> getMovies();
+    Movie getMovie();
+
+    List<Review> getReviews();
 
 }
