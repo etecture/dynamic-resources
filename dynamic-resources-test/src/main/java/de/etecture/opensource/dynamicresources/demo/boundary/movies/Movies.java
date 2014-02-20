@@ -60,6 +60,9 @@ import java.util.List;
         @Method(name = HttpMethods.GET,
                 description = "gets the movies.",
                 filters = {
+                    @Filter(name = "query",
+                            defaultValue = "title:*",
+                            type = String.class),
                     @Filter(name = "limit",
                             defaultValue = "100",
                             type = Integer.class),
@@ -69,8 +72,8 @@ import java.util.List;
                 query = @Query(
                         technology = "Neo4j",
                         statement = ""
-                        + "MATCH "
-                        + "  (m:Movie) "
+                        + "START "
+                        + "  m=node:movies({query}) "
                         + "WITH "
                         + "  {title: m.title} AS m "
                         + "SKIP {skip} "

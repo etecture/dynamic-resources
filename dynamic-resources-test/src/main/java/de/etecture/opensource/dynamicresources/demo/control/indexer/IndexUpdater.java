@@ -85,10 +85,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Resource;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
+import org.apache.commons.lang.StringUtils;
 
 /**
  *
@@ -100,22 +102,17 @@ import javax.inject.Inject;
 public class IndexUpdater {
 
     private static final Logger LOG = Logger.getLogger("IndexUpdater");
-    private static final String NEXT_NODE_QUERY
-            = ""
-            + "MATCH "
-            + "  (m:Movie) "
-            + "RETURN "
-            + "  ID(m) AS nodeId, "
-            + "  'movies' AS indexName, "
-            + "  COLLECT({key: 'title', value: m.title}) AS indexProperties "
-            + "SKIP {skip}"
-            + "LIMIT {limit} ";
-    private static final long limit = 10;
     @Inject
     Event<IndexEvent> events;
     @Inject
     Neo4jUplink uplink;
     private long current = 0;
+
+    @Resource(name = "index-update-fetch-size")
+    Long limit = 10l;
+
+    @Resource(name = "index-update-fetch-query")
+    String query = null;
 
     public interface NodeToIndex {
 
@@ -131,54 +128,61 @@ public class IndexUpdater {
               second = "*/15",
               persistent = false)
     public void onTimer() {
-        try {
-            LOG.info("scheduled index updater started.");
+        if (limit > 0) {
+            try {
+                LOG.info("scheduled index updater started.");
 
-            LOG.log(Level.FINE,
-                    "requesting {0} nodes to index, starting at node: {1}",
-                    new Object[]{
-                        limit,
-                        current});
-            // queries the nodes to index.
-            Map<String, Object> params = new HashMap<>();
-            params.put("skip", (Object) current);
-            params.put("limit", (Object) limit);
-            List<NodeToIndex> nodes = uplink.executeCypherQuery(
-                    NodeToIndex.class,
-                    NEXT_NODE_QUERY,
-                    params);
+                if (StringUtils.isBlank(query)) {
+                    LOG.warning("query not defined for index updater!");
+                } else {
+                    LOG.log(Level.FINE,
+                            "requesting {0} nodes to index, starting at node: {1}",
+                            new Object[]{
+                                limit,
+                                current});
+                    // queries the nodes to index.
+                    Map<String, Object> params = new HashMap<>();
+                    params.put("skip", (Object) current);
+                    params.put("limit", (Object) limit);
+                    List<NodeToIndex> nodes = uplink.executeCypherQuery(
+                            NodeToIndex.class,
+                            query,
+                            params);
 
-            LOG.log(Level.FINE,
-                    "nodes to index requested. found {0} nodes.",
-                    nodes.size());
-            if (nodes.isEmpty()) {
-                // start again at the beginning.
-                current = 0;
-                LOG.log(Level.FINE, "restart index updater.");
-            } else {
-                // for each node to be indexed...
-                for (NodeToIndex node : nodes) {
-                    // ... create and fire an IndexEvent
-                    LOG.log(Level.FINER,
-                            "add node with id: {0} to index.",
-                            node.getNodeId());
-                    fireEvent(
-                            new IndexEvent(
-                                    IndexEvent.Action.REPLACE,
-                                    node.getNodeId(),
-                                    node.getIndexName()
-                            )
-                            .properties(node.getIndexProperties())
-                    );
+                    LOG.log(Level.FINE,
+                            "nodes to index requested. found {0} nodes.",
+                            nodes.size());
+                    if (nodes.isEmpty()) {
+                        // start again at the beginning.
+                        current = 0;
+                        LOG.log(Level.FINE, "restart index updater.");
+                    } else {
+                        // for each node to be indexed...
+                        for (NodeToIndex node : nodes) {
+                            // ... create and fire an IndexEvent
+                            LOG.log(Level.FINER,
+                                    "add node with id: {0} to index.",
+                                    node.getNodeId());
+                            fireEvent(
+                                    new IndexEvent(
+                                            IndexEvent.Action.REPLACE,
+                                            node.getNodeId(),
+                                            node.getIndexName()
+                                    )
+                                    .properties(node.getIndexProperties())
+                            );
+                        }
+
+                        // increment the index to get the next event
+                        current += limit;
+                    }
                 }
-
-                // increment the index to get the next event
-                current += limit;
+                LOG.log(Level.INFO, "scheduled index updater done for now.");
+            } catch (Neo4jServerException |
+                    CypherResultMappingException ex) {
+                LOG.log(Level.SEVERE, "cannot request nodes to index, due to: ",
+                        ex);
             }
-            LOG.log(Level.INFO, "scheduled index updater done for now.");
-        } catch (Neo4jServerException |
-                CypherResultMappingException ex) {
-            LOG.log(Level.SEVERE, "cannot request nodes to index, due to: ", ex);
         }
     }
 

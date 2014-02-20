@@ -1,8 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <ejb-jar xmlns = "http://java.sun.com/xml/ns/javaee" 
-         version = "3.0" 
+         version = "3.1" 
          xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
-         xsi:schemaLocation = "http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/ejb-jar_3_0.xsd">
+         xsi:schemaLocation = "http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/ejb-jar_3_1.xsd">
+
+    <enterprise-beans>
+        <session>
+            <ejb-name>Bootstrap</ejb-name>
+            <env-entry>
+                <env-entry-name>create-schema-indexes-at-startup</env-entry-name>
+                <env-entry-type>java.lang.Boolean</env-entry-type>
+                <env-entry-value>false</env-entry-value>
+            </env-entry>
+        </session>
+        <session>
+            <ejb-name>IndexUpdater</ejb-name>
+            <timer>
+                <schedule>
+                    <second>*/30</second>
+                    <minute>*</minute>
+                    <hour>*</hour>
+                    <month>*</month>
+                    <year>*</year>
+                </schedule>
+                <timeout-method>
+                    <method-name>onTimer</method-name>
+                </timeout-method>
+                <persistent>false</persistent>
+            </timer>
+            <env-entry>
+                <env-entry-name>index-update-fetch-size</env-entry-name>
+                <env-entry-type>java.lang.Long</env-entry-type>
+                <env-entry-value>25</env-entry-value>
+            </env-entry>
+            <env-entry>
+                <env-entry-name>index-update-fetch-query</env-entry-name>
+                <env-entry-type>java.lang.String</env-entry-type>
+                <env-entry-value>
+                <![CDATA[
+MATCH
+  (m:Movie)
+RETURN
+  ID(m) AS nodeId,
+  'movies' AS indexName,
+  COLLECT({key: 'title', value: m.title}) AS indexProperties
+SKIP {skip}
+LIMIT {limit}
+                ]]>
+                </env-entry-value>
+            </env-entry>
+        </session>
+    </enterprise-beans>
 
 </ejb-jar>

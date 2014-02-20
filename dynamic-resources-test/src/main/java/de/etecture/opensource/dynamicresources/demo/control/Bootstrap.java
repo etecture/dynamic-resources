@@ -45,6 +45,12 @@ import de.etecture.opensource.dynamicresources.api.ExecutionContext;
 import de.etecture.opensource.dynamicresources.api.HttpMethods;
 import de.herschke.neo4j.uplink.api.Neo4jServerException;
 import de.herschke.neo4j.uplink.api.Neo4jUplink;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
 import javax.enterprise.inject.Default;
 import javax.inject.Inject;
 
@@ -54,11 +60,33 @@ import javax.inject.Inject;
  * @version
  * @since
  */
+@Singleton
+@Startup
 public class Bootstrap {
+
+    private static final Logger LOG = Logger.getLogger("Bootstrap");
 
     @Inject
     @Default
     Neo4jUplink uplink;
+
+    @Resource(name = "create-schema-indexes-at-startup")
+    Boolean createSchemaIndexesAtStartup = Boolean.TRUE;
+
+    @PostConstruct
+    public void onStartup() {
+        LOG.info("starting the demonstration app.");
+        if (createSchemaIndexesAtStartup) {
+            LOG.fine("creating schema indexes.");
+            try {
+                uplink.createSchemaIndex("Movie", "title");
+            } catch (Neo4jServerException ex) {
+                LOG.log(Level.SEVERE,
+                        "cannot create schema indexes.",
+                        ex);
+            }
+        }
+    }
 
     @Executes(application = "MovieCatalog",
               resource = "MovieCatalogRoot",
