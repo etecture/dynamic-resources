@@ -41,10 +41,16 @@
                 <![CDATA[
 MATCH
   (m:Movie)
+OPTIONAL MATCH
+  (m)<-[r:ACTED_IN]-(p:Person)
 RETURN
   ID(m) AS nodeId,
   'movies' AS indexName,
-  COLLECT({key: 'title', value: m.title}) AS indexProperties
+  [
+    {key: 'title', value: m.title},
+    {key: 'released', value: m.released},
+    {key: 'actor', value: COLLECT(p.name)}
+  ] AS indexProperties
 SKIP {skip}
 LIMIT {limit}
                 ]]>

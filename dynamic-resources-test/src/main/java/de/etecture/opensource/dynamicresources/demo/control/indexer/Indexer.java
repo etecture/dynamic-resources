@@ -42,6 +42,8 @@ package de.etecture.opensource.dynamicresources.demo.control.indexer;
 import de.herschke.converters.api.Converters;
 import de.herschke.neo4j.uplink.api.Neo4jServerException;
 import de.herschke.neo4j.uplink.api.Neo4jUplink;
+import java.lang.reflect.Array;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Level;
@@ -105,18 +107,42 @@ public class Indexer {
             IndexEvent evt)
             throws Neo4jServerException {
         for (Map.Entry<String, Object> property : evt.getProperties().entrySet()) {
-            LOG.log(Level.FINER,
-                    "add node with id: {0} to index with name: {1} using query: {2} = {3}",
-                    new Object[]{
-                        evt.getNodeId(),
-                        evt.getIndexName(),
-                        property.getKey(),
-                        property.getValue()});
-            uplink.addNodeToLegacyIndex(
-                    evt.getIndexName(),
-                    evt.getNodeId(),
-                    property.getKey(),
-                    converters.toString(property.getValue()));
+            if (property.getValue() != null) {
+                LOG.log(Level.INFO,
+                        "add node with id: {0} to index with name: {1} using query: {2} = {3}",
+                        new Object[]{
+                            evt.getNodeId(),
+                            evt.getIndexName(),
+                            property.getKey(),
+                            converters.toString(property.getValue())});
+                if (property.getValue() instanceof Collection) {
+                    for (Object value : (Collection) property.getValue()) {
+
+                        uplink.addNodeToLegacyIndex(
+                                evt.getIndexName(),
+                                evt.getNodeId(),
+                                property.getKey(),
+                                converters.toString(value));
+                    }
+                } else if (property.getValue().getClass().isArray()) {
+                    for (int i = 0; i < Array.getLength(property.getValue());
+                         i++) {
+                        uplink.addNodeToLegacyIndex(
+                                evt.getIndexName(),
+                                evt.getNodeId(),
+                                property.getKey(),
+                                converters.toString(Array.get(property
+                                                .getValue(), i)));
+
+                    }
+                } else {
+                    uplink.addNodeToLegacyIndex(
+                            evt.getIndexName(),
+                            evt.getNodeId(),
+                            property.getKey(),
+                            converters.toString(property.getValue()));
+                }
+            }
         }
     }
 
