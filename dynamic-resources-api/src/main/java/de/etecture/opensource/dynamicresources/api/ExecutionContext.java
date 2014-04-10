@@ -42,15 +42,17 @@ package de.etecture.opensource.dynamicresources.api;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethod;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodRequest;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponse;
+import java.lang.reflect.Array;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
  * defines an execution context for a resource method, that provide the
  * response.
- *
+ * <p>
  * @param <R>
  * @author rhk
  * @version
@@ -59,9 +61,13 @@ import java.util.Set;
 public final class ExecutionContext<R, B> {
 
     private final ResourceMethodRequest<B> requestMetadata;
+
     private final ResourceMethodResponse<R> responseMetadata;
+
     private final ResourceMethod resourceMethod;
+
     private final Map<String, Object> parameters = new HashMap<>();
+
     private final B body;
 
     public ExecutionContext(
@@ -75,7 +81,7 @@ public final class ExecutionContext<R, B> {
             ResourceMethodRequest<B> requestMetadata,
             B body) {
         this(responseMetadata, requestMetadata, body, Collections
-                .<String, Object>emptyMap());
+             .<String, Object>emptyMap());
     }
 
     public ExecutionContext(
@@ -98,7 +104,7 @@ public final class ExecutionContext<R, B> {
      * <p>
      * N.B. if the body of this request is null, which means, that no body is
      * associated with this request, then this method may also return null.
-     *
+     * <p>
      * @return
      */
     public ResourceMethodRequest<B> getRequestMetadata() {
@@ -108,7 +114,7 @@ public final class ExecutionContext<R, B> {
     /**
      * returns the metadata for the resource method response associated with
      * this request.
-     *
+     * <p>
      * @return
      */
     public ResourceMethodResponse<R> getResponseMetadata() {
@@ -117,7 +123,7 @@ public final class ExecutionContext<R, B> {
 
     /**
      * returns the resource-method for this request.
-     *
+     * <p>
      * @return
      */
     public ResourceMethod getResourceMethod() {
@@ -126,7 +132,7 @@ public final class ExecutionContext<R, B> {
 
     /**
      * returns all the names of the parameters for this request.
-     *
+     * <p>
      * @return
      */
     public Set<String> getParameterNames() {
@@ -136,15 +142,16 @@ public final class ExecutionContext<R, B> {
     /**
      * returns the value for the parameter with the given name defined for this
      * request.
-     *
+     * <p>
      * If no parameter with the given name was defined, the defaultValue is
      * returned.
-     *
+     * <p>
      * @param <T>
      * @param name
      * @param defaultValue
      * @return
      */
+    @SuppressWarnings("unchecked")
     public <T> T getParameterValue(String name, T defaultValue) {
         Object value = getParameterValue(name);
         if (value == null) {
@@ -154,12 +161,24 @@ public final class ExecutionContext<R, B> {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    public <T> T getSingleParameterValue(String name, T defaultValue) {
+        Object val = getParameterValue(name, defaultValue);
+        if (val instanceof List) {
+            return ((List<T>) val).get(0);
+        } else if (val != null && val.getClass().isArray()) {
+            return (T) Array.get(val, 0);
+        } else {
+            return (T) val;
+        }
+    }
+
     /**
      * returns the value for the parameter with the given name defined for this
      * request.
-     *
+     * <p>
      * If no parameter with the given name was defined, null is returned.
-     *
+     * <p>
      * @param name
      * @return
      */
@@ -170,7 +189,7 @@ public final class ExecutionContext<R, B> {
     /**
      * defines a new value for the parameter with the specified name of this
      * request.
-     *
+     * <p>
      * @param name
      * @param value
      */
@@ -181,7 +200,7 @@ public final class ExecutionContext<R, B> {
     /**
      * returns true, if a parameter with the given name was defined for this
      * request.
-     *
+     * <p>
      * @param name
      * @return
      */
@@ -191,7 +210,7 @@ public final class ExecutionContext<R, B> {
 
     /**
      * removes a parameter with the specified name from this request.
-     *
+     * <p>
      * @param name
      */
     public void removeParameter(String name) {
@@ -200,7 +219,7 @@ public final class ExecutionContext<R, B> {
 
     /**
      * returns the request body.
-     *
+     * <p>
      * @return
      */
     public B getBody() {

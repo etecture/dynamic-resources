@@ -58,7 +58,6 @@ import de.etecture.opensource.dynamicresources.test.api.Expect;
 import de.etecture.opensource.dynamicresources.test.api.Request;
 import de.etecture.opensource.dynamicresources.test.api.Response;
 import de.etecture.opensource.dynamicresources.test.utils.Nop;
-import de.etecture.opensource.dynamicresources.utils.ApplicationLiteral;
 import de.etecture.opensource.dynamicresources.utils.ResourceLiteral;
 import de.herschke.converters.api.Converters;
 import de.herschke.testhelper.ConsoleWriter;
@@ -90,15 +89,23 @@ import org.junit.runners.model.FrameworkMethod;
  */
 public class ResourceTestMethod extends FrameworkMethod {
 
-    public static final PrintStream newOut =
-            new PrintStream(new NullOutputStream());
+    public static final PrintStream newOut = new PrintStream(
+            new NullOutputStream());
+
     private final Request request;
+
     private final QueryExecutors executors;
+
     private final Map<String, String> pathParameter = new HashMap<>();
+
     private final Map<String, Object> queryParameter = new HashMap<>();
+
     private final Expect expect;
+
     private final ConsoleWriter out = new ConsoleWriter(System.out, 80);
+
     private final WeldContainer container;
+
     private final TypedResourceAccessor<?> accessor;
 
     private String getEntityType(Object entity) {
@@ -128,8 +135,11 @@ public class ResourceTestMethod extends FrameworkMethod {
                         }
                     }
                     Object value = container.instance().select(field.getType(),
-                            qualifiers
-                            .toArray(new Annotation[qualifiers.size()])).get();
+                                                               qualifiers
+                                                               .toArray(
+                                                                       new Annotation[qualifiers
+                                                                       .size()]))
+                            .get();
                     field.setAccessible(true);
                     field.set(target, value);
                 } catch (IllegalArgumentException | IllegalAccessException ex) {
@@ -145,6 +155,7 @@ public class ResourceTestMethod extends FrameworkMethod {
         PASSED(Color.GREEN),
         FAILED(Color.BROWN),
         ERROR(Color.RED);
+
         private final Color color;
 
         private Status(Color color) {
@@ -165,9 +176,10 @@ public class ResourceTestMethod extends FrameworkMethod {
             request = method.getAnnotation(Request.class);
             expect = method.getAnnotation(Expect.class);
             accessor = container.instance().select(ResourceAccessor.class,
-                    new ApplicationLiteral(request.application()),
-                    new ResourceLiteral(request
-                    .resource())).get().select(request.responseType());
+                                                   //new ApplicationLiteral(request.application()),
+                                                   new ResourceLiteral(request
+                                                           .resource())).get()
+                    .select(request.responseType());
             buildParameter();
         } catch (ResponseTypeNotSupportedException ex) {
             throw new IllegalArgumentException(ex);
@@ -192,14 +204,14 @@ public class ResourceTestMethod extends FrameworkMethod {
             out.printRight('.', Color.GREEN, "done");
             if (request.beforeRequest() != Nop.class) {
                 out.printLeft("invoke: %s", request.beforeRequest()
-                        .getSimpleName());
+                              .getSimpleName());
                 container.instance().select(request.beforeRequest()).get().run();
                 out.printRight('.', Color.GREEN, "done");
             }
             out.printLeft("invoke: %s %s",
-                    request.method(), request.resource());
-            final de.etecture.opensource.dynamicresources.api.Response<?> response =
-                    requestResource(request.responseType());
+                          request.method(), request.resource());
+            final de.etecture.opensource.dynamicresources.api.Response<?> response
+                    = requestResource(request.responseType());
             out.printRight('.', Color.GREEN, "done");
             out.printLeft("checking response");
             Object entity;
@@ -219,8 +231,14 @@ public class ResourceTestMethod extends FrameworkMethod {
             if (entity != null) {
                 out.println("  --> Type: %s", getEntityType(entity));
                 out.println("  --> Entity:");
-                out.println("  %s", StringUtils
-                        .abbreviate(entity.toString().replaceAll("\n", ""), 74));
+                if (entity instanceof Throwable) {
+                    out.println("  %s", StringUtils.abbreviate(
+                                ((Throwable) entity).getMessage(), 74));
+                } else {
+                    out.println("  %s", StringUtils
+                                .abbreviate(entity.toString().replaceAll("\n",
+                                                                         ""), 74));
+                }
             } else {
                 out.println("  --> Entity: null");
             }
@@ -237,8 +255,7 @@ public class ResourceTestMethod extends FrameworkMethod {
                 for (Annotation parameterAnnotation : parameterAnnotations) {
                     if (Response.class.isAssignableFrom(parameterAnnotation
                             .annotationType())) {
-                        Class<?> paramType =
-                                getMethod().getParameterTypes()[i];
+                        Class<?> paramType = getMethod().getParameterTypes()[i];
                         if (de.etecture.opensource.dynamicresources.api.Response.class
                                 .isAssignableFrom(paramType)) {
                             newParams[i] = response;
@@ -246,7 +263,9 @@ public class ResourceTestMethod extends FrameworkMethod {
                             newParams[i] = entity;
                         } else {
                             throw new IllegalStateException(
-                                    "Can only handle a resource-interface or Response as type for response-injection!");
+                                    "Can only handle an entity of type "
+                                    + paramType
+                                    + " or of type Response as type for response-injection!");
                         }
                     } else if (Param.class.isAssignableFrom(parameterAnnotation
                             .annotationType())) {
@@ -254,15 +273,15 @@ public class ResourceTestMethod extends FrameworkMethod {
                         if (pathParameter.containsKey(param.name())) {
                             newParams[i] = container.instance().select(
                                     Converters.class).get().select(getMethod()
-                                    .getParameterTypes()[i]).convert(
-                                    pathParameter
-                                    .get(param.name()));
+                                            .getParameterTypes()[i]).convert(
+                                            pathParameter
+                                            .get(param.name()));
                         } else if (queryParameter.containsKey(param.name())) {
                             newParams[i] = container.instance().select(
                                     Converters.class).get().select(getMethod()
-                                    .getParameterTypes()[i]).convert(
-                                    queryParameter
-                                    .get(param.name()));
+                                            .getParameterTypes()[i]).convert(
+                                            queryParameter
+                                            .get(param.name()));
                         } else {
                             newParams[i] = container.instance().select(param
                                     .generator()).get()
@@ -289,7 +308,7 @@ public class ResourceTestMethod extends FrameworkMethod {
             out.printRuler();
             if (request.afterRequest() != Nop.class) {
                 out.printLeft("invoke: %s", request.afterRequest()
-                        .getSimpleName());
+                              .getSimpleName());
                 container.instance().select(request.afterRequest()).get().run();
                 out.printRight('.', Color.GREEN, "done");
             }
@@ -298,7 +317,7 @@ public class ResourceTestMethod extends FrameworkMethod {
             out.printRight('.', Color.GREEN, "done");
             out.printRuler();
             out.printCentered(status.color(), "%s %s", super.getName(), status
-                    .name());
+                              .name());
             out.endBox();
             out.println();
             System.setOut(oldOut);
@@ -309,11 +328,11 @@ public class ResourceTestMethod extends FrameworkMethod {
     private void buildParameter() throws Exception {
         for (Param param : request.pathParameter()) {
             pathParameter.put(param.name(), (String) container.instance()
-                    .select(param.generator()).get().generate(param));
+                              .select(param.generator()).get().generate(param));
         }
         for (Param param : request.queryParameter()) {
             queryParameter.put(param.name(), container.instance().select(param
-                    .generator()).get().generate(param));
+                               .generator()).get().generate(param));
         }
     }
 
@@ -335,21 +354,23 @@ public class ResourceTestMethod extends FrameworkMethod {
             Exception {
         if (queries.length > 0) {
             for (Query query : request.before()) {
-                AnnotatedQueryDefinition qd =
-                        new AnnotatedQueryDefinition(query) {
-                    @Override
-                    public String getStatement() {
-                        return createStatement(getMethod().getDeclaringClass(),
-                                prefix + getName(), super.getStatement());
-                    }
-                };
+                AnnotatedQueryDefinition qd
+                        = new AnnotatedQueryDefinition(query) {
+                            @Override
+                            public String getStatement() {
+                                return createStatement(getMethod()
+                                        .getDeclaringClass(),
+                                                       prefix + getName(), super
+                                                       .getStatement());
+                            }
+                        };
                 if (!executeQuery(qd)) {
                     return false;
                 }
             }
         } else {
-            final ResourceBundle bundle =
-                    ResourceBundle.getBundle(super.getMethod()
+            final ResourceBundle bundle = ResourceBundle.getBundle(super
+                    .getMethod()
                     .getDeclaringClass().getName());
             if (bundle.containsKey(prefix + getName())) {
                 final String technology;
@@ -362,21 +383,20 @@ public class ResourceTestMethod extends FrameworkMethod {
                 }
                 return executeQuery(new DefaultQueryDefinition(bundle.getString(
                         prefix + getName())) {
-                    @Override
-                    public String getTechnology() {
-                        return technology;
-                    }
-                });
+                            @Override
+                            public String getTechnology() {
+                                return technology;
+                            }
+                        });
             }
         }
         return true;
     }
 
-
     private boolean executeQuery(QueryDefinition qd) throws Exception {
-        DefaultQueryExecutionContext<BooleanResult> query =
-                new DefaultQueryExecutionContext(BooleanResult.class,
-                BooleanResult.class, qd);
+        DefaultQueryExecutionContext<BooleanResult> query
+                = new DefaultQueryExecutionContext(BooleanResult.class,
+                                                   BooleanResult.class, qd);
         for (Entry<String, String> e : pathParameter.entrySet()) {
             query.addParameter(e.getKey(), e.getValue());
         }
@@ -387,7 +407,7 @@ public class ResourceTestMethod extends FrameworkMethod {
     }
 
     private String createStatement(Class<?> type, String name,
-            String statement) {
+                                   String statement) {
         if (statement == null || statement.trim().isEmpty()) {
             statement = name;
         }
@@ -402,14 +422,14 @@ public class ResourceTestMethod extends FrameworkMethod {
     private void addHints(DefaultQueryExecutionContext query, Hint... hints) {
         for (Hint hint : hints) {
             query.addHint(hint.name(), container.instance().select(hint
-                    .generator()).get().generate(hint));
+                          .generator()).get().generate(hint));
         }
     }
 
     private void addParams(DefaultQueryExecutionContext query, Param... params) {
         for (Param param : params) {
             query.addParameter(param.name(), container.instance()
-                    .select(param.generator()).get().generate(param));
+                               .select(param.generator()).get().generate(param));
         }
     }
 
@@ -447,7 +467,7 @@ public class ResourceTestMethod extends FrameworkMethod {
                     throw new ExpectationFailedError(
                             "response exception is not of type " + Arrays
                             .toString(
-                            expect.exception()), cause);
+                                    expect.exception()), cause);
                 }
             }
             throw new ExpectationFailedError(

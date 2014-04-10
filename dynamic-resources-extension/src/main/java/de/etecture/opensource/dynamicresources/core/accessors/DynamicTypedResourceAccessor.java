@@ -135,7 +135,8 @@ public class DynamicTypedResourceAccessor<T> implements TypedResourceAccessor<T>
                             private static final long serialVersionUID = 1L;
                         }, new ResourceLiteral(method.getResource()),
                         new MethodLiteral(method.getName()),
-                        new TypedLiteral(responseType)).get();
+                        new TypedLiteral(responseType)).get().pathParams(
+                                pathParameters);
             } else {
                 throw new ResourceMethodNotFoundException(resource, methodName,
                                                           new ResponseTypeNotSupportedException(
