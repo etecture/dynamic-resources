@@ -62,6 +62,13 @@ import javax.inject.Inject;
 public abstract class AbstractCompoundFilterConverter<F extends FilterPart>
         implements FilterValueGenerator {
 
+    @Inject
+    Converters converters;
+
+    private final Set<F> parts = new HashSet<>();
+
+    private final String template;
+
     public interface FilterPart {
 
         String name();
@@ -70,10 +77,6 @@ public abstract class AbstractCompoundFilterConverter<F extends FilterPart>
 
         Object value(ExecutionContext context);
     }
-    private final Set<F> parts = new HashSet<>();
-    private final String template;
-    @Inject
-    Converters converters;
 
     protected AbstractCompoundFilterConverter(String template, F... parts) {
         this(template, Arrays.asList(parts));
@@ -94,13 +97,14 @@ public abstract class AbstractCompoundFilterConverter<F extends FilterPart>
             InvalidFilterValueException {
         try {
             if (!context.hasParameter(filter.getName())) {
-            Object[] partValues = new Object[parts.size()];
-            for (F part : parts) {
-                partValues[part.ordinal()] = part.value(context);
-            }
-            return converters.select(filter.getType()).convert(String.format(
-                    template, partValues));
-        } else {
+                Object[] partValues = new Object[parts.size()];
+                for (F part : parts) {
+                    partValues[part.ordinal()] = part.value(context);
+                }
+                return converters.select(filter.getType()).convert(String
+                        .format(
+                                template, partValues));
+            } else {
                 return converters.select(filter.getType()).convert(context
                         .getParameterValue(filter.getName()));
             }
