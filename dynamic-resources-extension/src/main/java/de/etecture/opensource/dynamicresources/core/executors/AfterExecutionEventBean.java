@@ -53,8 +53,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import javax.enterprise.inject.Instance;
-import javax.enterprise.inject.New;
-import javax.enterprise.util.AnnotationLiteral;
 import javax.inject.Inject;
 
 class AfterExecutionEventBean implements
@@ -75,10 +73,7 @@ class AfterExecutionEventBean implements
                 .getResponseHeaders()) {
             // create the generator.
             this.headers.add(h.getName(), h.getType(), generators.select(h
-                    .getGenerator(), new AnnotationLiteral<New>() {
-                private static final long serialVersionUID =
-                        1L;
-            }).get().generateHeaderValue(h, context));
+                    .getGenerator()).get().generateHeaderValue(h, context));
         }
         if (originalEntity instanceof Response) {
             this.currentStatus = ((Response<?>) originalEntity).getStatus();
