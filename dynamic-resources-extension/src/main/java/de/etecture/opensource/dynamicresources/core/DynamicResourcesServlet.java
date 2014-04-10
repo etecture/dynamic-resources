@@ -77,7 +77,7 @@ import org.apache.commons.lang.StringUtils;
  * implements a {@link HttpServlet} that maps all {@link HttpServletRequest} to
  * the {@link Resource} for the given request-uri and the {@link ResourceMethod}
  * for the given request-method.
- *
+ * <p>
  * @author rhk
  * @version
  * @since
@@ -85,25 +85,30 @@ import org.apache.commons.lang.StringUtils;
 public class DynamicResourcesServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
+
     /**
      * the name of the init-parameter 'application-name'.
      */
     public static final String APPLICATION_NAME = "application-name";
+
     /**
      * resolves a writer for a given type, mediatype and version.
      */
     @Inject
     ResponseWriters responseWriters;
+
     /**
      * resolves a reader for a given type, mediatype and version.
      */
     @Inject
     RequestReaders requestReaders;
+
     /**
      * these are all the applications found by scanning.
      */
     @Inject
     Applications applications;
+
     /**
      * these are the resources of the application. they are resolved in the
      * {@link HttpServlet#init()} method for the application specified by an
@@ -137,44 +142,44 @@ public class DynamicResourcesServlet extends HttpServlet {
     protected void service(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         log(String.format("handle: %S %s in application: %s", req.getMethod(),
-                req.getRequestURI(), resources.getMetadata().getName()));
+                          req.getRequestURI(), resources.getMetadata().getName()));
         resp.setCharacterEncoding("UTF-8");
         try {
             executeResource(req, resp);
         } catch (ResourceNotFoundException | ApplicationNotFoundException ex) {
             log(String.format("resource or application not found for: %s",
-                    req.getRequestURI()), ex);
+                              req.getRequestURI()), ex);
             resp.sendError(StatusCodes.NOT_FOUND, ex.getMessage());
         } catch (ResourceMethodNotFoundException ex) {
             log(String.format("resource method: %S not found for: %s",
-                    req.getMethod(), req.getRequestURI()), ex);
+                              req.getMethod(), req.getRequestURI()), ex);
             resp.sendError(StatusCodes.METHOD_NOT_ALLOWED, ex.getMessage());
         } catch (RequestTypeNotSupportedException ex) {
             log(String.format("resource method: %S not available for: %s",
-                    req.getMethod(), req.getRequestURI()), ex);
+                              req.getMethod(), req.getRequestURI()), ex);
             resp.sendError(StatusCodes.UNSUPPORTED_MEDIA_TYPE, ex
-                    .getMessage());
+                           .getMessage());
         } catch (MediaTypeNotAllowedException ex) {
             log(String.format("resource method: %S not available for: %s",
-                    req.getMethod(), req.getRequestURI()), ex);
-            final String allowed =
-                    Arrays.toString(ex.getAllowedMediaTypes().toArray());
+                              req.getMethod(), req.getRequestURI()), ex);
+            final String allowed = Arrays.toString(ex.getAllowedMediaTypes()
+                    .toArray());
             log(String
                     .format("allowed request mediatypes for %S %s are: %s",
-                    req.getMethod(), req.getRequestURI(), allowed));
+                            req.getMethod(), req.getRequestURI(), allowed));
             resp.sendError(StatusCodes.UNSUPPORTED_MEDIA_TYPE, "allowed: "
-                    + allowed);
+                           + allowed);
         } catch (ResponseTypeNotSupportedException |
                 MediaTypeNotSupportedException ex) {
             log(String.format("resource method: %S not acceptable for: %s",
-                    req.getMethod(), req.getRequestURI()), ex);
+                              req.getMethod(), req.getRequestURI()), ex);
             resp.sendError(StatusCodes.NOT_ACCEPTABLE, ex.getMessage());
         } catch (ResourceException ex) {
             log(String.format("resource method: %S for: %s was in error",
-                    req.getMethod(), req.getRequestURI()), ex);
+                              req.getMethod(), req.getRequestURI()), ex);
             resp
                     .sendError(StatusCodes.UNPROCESSABLE_ENTITY, ex
-                    .getMessage());
+                               .getMessage());
         }
         resp.getWriter().flush();
         resp.getWriter().close();
@@ -188,14 +193,15 @@ public class DynamicResourcesServlet extends HttpServlet {
 
     /**
      * executes the resource.
-     *
+     * <p>
      * @param req
      * @param resp
      * @throws ResourceException
      * @throws IOException
      */
     private void executeResource(HttpServletRequest req,
-            HttpServletResponse resp) throws ResourceException, IOException {
+                                 HttpServletResponse resp) throws
+            ResourceException, IOException {
         // get the contentType
         final MediaType contentType = getContentType(req);
 
@@ -204,7 +210,7 @@ public class DynamicResourcesServlet extends HttpServlet {
 
         // get the path of the request
         final String path = StringUtils.removeStart(req.getRequestURI(), req
-                .getContextPath());
+                                                    .getContextPath());
 
         // get the method of the request
         final String methodName = req.getMethod();
@@ -214,12 +220,14 @@ public class DynamicResourcesServlet extends HttpServlet {
                 path, methodName, acceptedType, contentType));
 
         // select the accesspoint for the given uri and method.
-        MethodAccessor<?> responses =
-                resources.selectByPathAndMime(path, methodName, acceptedType);
+        MethodAccessor<?> responses = resources.selectByPathAndMime(path,
+                                                                    methodName,
+                                                                    acceptedType);
 
         log(String.format("found resource: %s to handle: %S %s", responses
-                .getMetadata().getMethod().getResource().getName(), responses
-                .getMetadata().getMethod().getName(), path));
+                          .getMetadata().getMethod().getResource().getName(),
+                          responses
+                          .getMetadata().getMethod().getName(), path));
 
         // get the request that is responsible for this contentType
         ResourceMethodRequest requestMeta = responses.getMetadata().getMethod()
@@ -227,35 +235,39 @@ public class DynamicResourcesServlet extends HttpServlet {
 
         // add the query parameters
         for (Entry<String, String[]> e : req.getParameterMap().entrySet()) {
+            log(String.format("add query-param '%s' = %s", e.getKey(),
+                              Arrays.toString(e.getValue())));
             responses = responses.queryParam(e.getKey(), (Object[]) e
-                    .getValue());
+                                             .getValue());
         }
 
         if (requestMeta != null) {
             log(String.format("read request with type: %s and mimes: %s",
-                    requestMeta.getRequestType().getSimpleName(), contentType));
+                              requestMeta.getRequestType().getSimpleName(),
+                              contentType));
             // read the request body
             Object body = requestReaders
                     .read(requestMeta.getRequestType(), contentType, req
-                    .getReader());
+                          .getReader());
             responses = responses.body(body);
         }
         // invoke the resource method
         log(String.format("invoke the resource: %s with method: %S",
-                responses.getMetadata().getMethod().getResource().getName(),
-                responses.getMetadata().getMethod().getName()));
+                          responses.getMetadata().getMethod().getResource()
+                          .getName(),
+                          responses.getMetadata().getMethod().getName()));
         Response<?> response = responses.invoke();
         Object entity;
         try {
             entity = response.getEntity();
             log(String.format("got entity: %s for: %S %s", entity, responses
-                    .getMetadata().getMethod().getName(), responses
-                    .getMetadata().getMethod().getResource().getName()));
+                              .getMetadata().getMethod().getName(), responses
+                              .getMetadata().getMethod().getResource().getName()));
         } catch (ResponseException ex) {
             entity = ex.getCause();
             log(String.format("got exception: %s for: %S %s", entity, responses
-                    .getMetadata().getMethod().getName(), responses
-                    .getMetadata().getMethod().getResource().getName()));
+                              .getMetadata().getMethod().getName(), responses
+                              .getMetadata().getMethod().getResource().getName()));
         }
         addResponseHeaders(response, resp);
         writeResponse(entity, acceptedType, resp);
@@ -289,14 +301,15 @@ public class DynamicResourcesServlet extends HttpServlet {
     }
 
     private void writeResponse(Object entity, final MediaType acceptedType,
-            HttpServletResponse resp) throws MediaTypeNotSupportedException,
+                               HttpServletResponse resp) throws
+            MediaTypeNotSupportedException,
             MediaTypeAmbigiousException, IOException {
         // write the response.
         if (entity != null) {
             log(String.format("write response with type: %s and mimes: %s",
-                    entity.getClass().getSimpleName(), acceptedType));
+                              entity.getClass().getSimpleName(), acceptedType));
             resp.setContentLength(responseWriters.getContentLength(entity,
-                    acceptedType));
+                                                                   acceptedType));
             responseWriters.write(entity, acceptedType, resp.getWriter());
         }
     }
