@@ -88,7 +88,7 @@ public class DefaultResourcePath implements ResourcePath {
                                                             name, pattern));
         }
         matcher.appendTail(buffer);
-        buffer.append("$");
+        buffer.append("(?:\\?.*)?$");
         this.compiledPath = Pattern.compile(buffer.toString());
     }
 
