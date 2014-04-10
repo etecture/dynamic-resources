@@ -100,6 +100,17 @@ public class HeaderValueMap extends AbstractMap<String, List<Object>> {
         values.addAll(value);
     }
 
+    public void set(String name, ResourceMethodResponseHeader.Type type,
+                    List<? extends Object> value) {
+        HeaderValue values = headerValues.get(name);
+        if (values == null) {
+            values = new HeaderValue(type);
+            headerValues.put(name, values);
+        }
+        values.clear();
+        values.addAll(value);
+    }
+
     @Override
     public List<Object> put(String key,
             List<Object> value) {

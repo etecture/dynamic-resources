@@ -49,7 +49,7 @@ import java.util.Date;
  * <p>
  * Observers of this event may use {@link Succeed} or {@link Failed} to catch
  * only succeed or failed resource method executions.
- *
+ * <p>
  * @author rhk
  * @version
  * @since
@@ -59,7 +59,7 @@ public interface AfterExecutionEvent extends
 
     /**
      * returns the original response that was produced by the method execution.
-     *
+     * <p>
      * @return
      */
     Object getOriginalEntity();
@@ -67,21 +67,21 @@ public interface AfterExecutionEvent extends
     /**
      * specifies the new response entity, that should be returned for this
      * method execution other then the original entity.
-     *
+     * <p>
      * @param entity
      */
     void setNewEntity(Object entity);
 
     /**
      * specifies the new status code.
-     *
+     * <p>
      * @param statusCode
      */
     void setStatusCode(int statusCode);
 
     /**
      * adds a string header value.
-     *
+     * <p>
      * @param name
      * @param value
      */
@@ -89,7 +89,7 @@ public interface AfterExecutionEvent extends
 
     /**
      * adds a number header value.
-     *
+     * <p>
      * @param name
      * @param number
      */
@@ -97,9 +97,33 @@ public interface AfterExecutionEvent extends
 
     /**
      * adds a date header value.
-     *
+     * <p>
      * @param name
      * @param date
      */
     void addHeaderValue(String name, Date date);
+
+    /**
+     * sets a single string header value.
+     * <p>
+     * @param name
+     * @param value
+     */
+    void setHeaderValue(String name, String value);
+
+    /**
+     * sets a single number header value.
+     * <p>
+     * @param name
+     * @param number
+     */
+    void setHeaderValue(String name, Number number);
+
+    /**
+     * sets a single date header value.
+     * <p>
+     * @param name
+     * @param date
+     */
+    void setHeaderValue(String name, Date date);
 }

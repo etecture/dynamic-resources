@@ -46,6 +46,7 @@ import de.etecture.opensource.dynamicresources.api.ResponseException;
 import de.etecture.opensource.dynamicresources.api.events.AfterExecutionEvent;
 import de.etecture.opensource.dynamicresources.metadata.ResourceMethodResponseHeader;
 import de.etecture.opensource.dynamicresources.utils.HeaderValueMap;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -140,6 +141,24 @@ class AfterExecutionEventBean implements
     @Override
     public final void addHeaderValue(String name, Number number) {
         headers.add(name, ResourceMethodResponseHeader.Type.INTEGER, number);
+    }
+
+    @Override
+    public final void setHeaderValue(String name, String value) {
+        headers.set(name, ResourceMethodResponseHeader.Type.DEFAULT, Arrays
+                    .asList(value));
+    }
+
+    @Override
+    public final void setHeaderValue(String name, Date date) {
+        headers.set(name, ResourceMethodResponseHeader.Type.DATE, Arrays.asList(
+                    date));
+    }
+
+    @Override
+    public final void setHeaderValue(String name, Number number) {
+        headers.set(name, ResourceMethodResponseHeader.Type.INTEGER, Arrays
+                    .asList(number));
     }
 
     @Override
