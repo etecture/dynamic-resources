@@ -90,9 +90,6 @@ public class ResourceMethodExecutions {
             final Object value
                     = generators.select(f
                             .getValueGenerator()).get().generate(f, context);
-            // create the generator.
-            System.out.printf("add filter: %s with value: %s%n", f.getName(),
-                              value);
             context.setParameterValue(f.getName(), value);
         }
 
