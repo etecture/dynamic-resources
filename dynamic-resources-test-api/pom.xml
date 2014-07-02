@@ -69,7 +69,7 @@
                             <goal>perform</goal>
                         </goals>
                         <configuration>
-                            <pomFileName>dynamic-resources-api/pom.xml</pomFileName>
+                            <pomFileName>dynamic-resources-test-api/pom.xml</pomFileName>
                         </configuration>
                     </execution>
                 </executions>
