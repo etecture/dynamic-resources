@@ -116,6 +116,36 @@
                     </execution>
                 </executions>
             </plugin>
+             <!-- Package source to JAR to upload to repo-->
+             <plugin>
+                 <groupId>org.apache.maven.plugins</groupId>
+                 <artifactId>maven-source-plugin</artifactId>
+                 <executions>
+                     <execution>
+                         <!-- Restrict execution of source compilation to install or deploy. -->
+                         <!-- The default is package. -->
+                         <phase>install</phase>
+                         <goals>
+                             <goal>jar</goal>
+                         </goals>
+                     </execution>
+                 </executions>
+             </plugin>
+             <!-- Package JavaDocs to JAR to upload to repo -->
+             <plugin>
+                 <groupId>org.apache.maven.plugins</groupId>
+                 <artifactId>maven-javadoc-plugin</artifactId>
+                 <executions>
+                     <execution>
+                         <id>attach-javadocs</id>
+                         <!-- Restrict execution of source compilation to install -->
+                         <phase>install</phase>
+                         <goals>
+                             <goal>jar</goal>
+                         </goals>
+                     </execution>
+                 </executions>
+             </plugin>            
         </plugins>
     </build>
 
@@ -123,8 +153,8 @@
         <connection>scm:git:https://github.com/etecture/dynamic-resources.git</connection>
         <developerConnection>scm:git:https://github.com/etecture/dynamic-resources.git</developerConnection>
         <url>https://github.com/etecture/dynamic-resources</url>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
 
     <repositories>
         <repository>
@@ -136,7 +166,7 @@
             <url>http://artifactory.intern.etecture.de/artifactory/etecture-snapshots/</url>
         </repository>
     </repositories>
-	
+
     <distributionManagement>
         <repository>
             <id>etecture-releases</id>
@@ -151,6 +181,6 @@
             <url>scp://maven:maven@jenkins.intern.etecture.de/home/maven/commons/resources</url>
         </site>
     </distributionManagement>
-    
+
 </project>
 
