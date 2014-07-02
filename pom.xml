@@ -4,7 +4,7 @@
 	
     <groupId>de.etecture.opensource</groupId>
     <artifactId>dynamic-resources</artifactId>
-    <version>2.0.5-SNAPSHOT</version>
+    <version>2.0.5</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -123,7 +123,7 @@
         <connection>scm:git:https://github.com/etecture/dynamic-resources.git</connection>
         <developerConnection>scm:git:https://github.com/etecture/dynamic-resources.git</developerConnection>
         <url>https://github.com/etecture/dynamic-resources</url>
-      <tag>HEAD</tag>
+      <tag>dynamic-resources-2.0.5</tag>
   </scm>
 
     <repositories>
