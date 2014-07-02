@@ -5,11 +5,11 @@
     <parent>
         <groupId>de.etecture.opensource</groupId>
         <artifactId>dynamic-resources</artifactId>
-        <version>2.0.5-SNAPSHOT</version>
+        <version>2.0.9</version>
     </parent>
 
     <artifactId>dynamic-resources-api</artifactId>
-    <version>2.0.5-SNAPSHOT</version>
+    <version>2.0.9</version>
     <packaging>jar</packaging>
 	
     <name>Dynamic CDI Resources - API</name>
@@ -82,7 +82,7 @@
         <connection>scm:git:https://github.com/etecture/dynamic-resources.git</connection>
         <developerConnection>scm:git:https://github.com/etecture/dynamic-resources.git</developerConnection>
         <url>https://github.com/etecture/dynamic-resources</url>
-      <tag>HEAD</tag>
+      <tag>dynamic-resources-2.0.9</tag>
   </scm>
     <dependencies>
         <dependency>
