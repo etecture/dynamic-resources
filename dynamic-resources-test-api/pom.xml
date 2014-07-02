@@ -99,7 +99,7 @@
         <dependency>
             <groupId>de.etecture.opensource</groupId>
             <artifactId>dynamic-resources-api</artifactId>
-            <version>${project.version}</version>
+            <version>[2.0.5-SNAPSHOT,2.1.0-SNAPSHOT)</version>
             <type>jar</type>
         </dependency>
         <dependency>
